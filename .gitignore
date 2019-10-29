@@ -1,0 +1,7 @@
+
+//Client token repo
+App.config
+
+.vs/
+bin/
+obj/

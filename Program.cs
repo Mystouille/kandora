@@ -3,8 +3,9 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using System.Collections.Generic;
+using System.Configuration;
 
-namespace kandora
+namespace Kandora
 {
     class Program
     {
@@ -13,7 +14,6 @@ namespace kandora
         static void Main(string[] args)
         {
             MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
-
         }
 
 
@@ -22,10 +22,9 @@ namespace kandora
         {
             client = new DiscordClient(new DiscordConfiguration
             {
-                Token = "",
+                Token = ConfigurationManager.AppSettings.Get("ClientToken"),
                 TokenType = TokenType.Bot
             });
-
 
             client.MessageCreated += async e =>
             {
@@ -36,8 +35,6 @@ namespace kandora
                     await e.Message.RespondAsync(HandParser.GetHandEmojiCode(hand, client));
                 }
             };
-
-
 
             await client.ConnectAsync();
 
