@@ -1,7 +1,10 @@
 
 //Client token repo
 App.config
+//User config files
+Properties/PublishProfiles/Kandora - Web Deploy.pubxml.user
 
 .vs/
 bin/
 obj/
+
