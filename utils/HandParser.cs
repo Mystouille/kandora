@@ -1,7 +1,5 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
-using Microsoft.CSharp.RuntimeBinder;
-using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -16,9 +14,7 @@ namespace Kandora
             {"m",9},
             {"s",9},
             {"z",7}
-    };
-
-        private static ISet<char> SUIT_NAMES = new HashSet<char>() { 'p', 'm', 's', 'z', 'w', 'd' };
+        };
 
         private static Dictionary<string, string> ALTERNATIVE_IDS = new Dictionary<string, string>()
             {
@@ -36,7 +32,7 @@ namespace Kandora
             {"1d","5z"},
             {"2d","6z"},
             {"3d","7z"}
-    };
+        };
 
         public static string GetEmojiCode(string tileName, DiscordClient client)
         {
@@ -72,12 +68,27 @@ namespace Kandora
         {
             var tileNames = new List<string>();
             int i = 0;
-            while (!SUIT_NAMES.Contains(hand[i]) && i < hand.Length)
+            var found = false;
+            while (i < hand.Length)
             {
+                switch (hand[i])
+                {
+                    case 'p': found = true; break;
+                    case 'm': found = true; break;
+                    case 's': found = true; break;
+                    case 'z': found = true; break;
+                    case 'w': found = true; break;
+                    case 'd': found = true; break;
+                }
+                if (found) break;
                 i++;
             }
+            if (i == hand.Length)
+            {
+                return tileNames;
+            }
             var subHandValues = hand.Substring(0, i);
-            var subHandSuit = hand[i].ToString(); ;
+            var subHandSuit = hand[i].ToString();
             foreach (char c in subHandValues)
             {
                 if (c == ' ') continue;

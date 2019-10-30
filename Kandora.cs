@@ -4,12 +4,14 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using System.Collections.Generic;
 using System.Configuration;
+using DSharpPlus.CommandsNext;
 
 namespace Kandora
 {
-    class Program
+    class Kandora
     {
         static DiscordClient client;
+        static CommandsNextModule commands;
 
         static void Main(string[] args)
         {
@@ -23,18 +25,18 @@ namespace Kandora
             client = new DiscordClient(new DiscordConfiguration
             {
                 Token = ConfigurationManager.AppSettings.Get("ClientToken"),
-                TokenType = TokenType.Bot
+                TokenType = TokenType.Bot,
+                UseInternalLogHandler = true,
+                LogLevel = LogLevel.Debug
             });
 
-            client.MessageCreated += async e =>
+
+            commands = client.UseCommandsNext(new CommandsNextConfiguration
             {
-                if (e.Message.Content.ToLower().StartsWith("!hand"))
-                {
-                    var messageSplit = e.Message.Content.Split("!hand");
-                    var hand = messageSplit.Length>0 ? messageSplit[messageSplit.Length - 1] : "";
-                    await e.Message.RespondAsync(HandParser.GetHandEmojiCode(hand, client));
-                }
-            };
+                StringPrefix = "!"
+            });
+
+            commands.RegisterCommands<KandoraCommands>();
 
             await client.ConnectAsync();
 
