@@ -4,10 +4,12 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Discord.Net.Commands" Version="2.1.1" />
+    <PackageReference Include="Discord.Net.WebSocket" Version="2.1.1" />
     <PackageReference Include="DSharpPlus" Version="3.2.3" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="3.2.3" />
     <PackageReference Include="MySql.Data" Version="8.0.18" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.6.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.7.0" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Settings.job">

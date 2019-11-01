@@ -1,14 +1,16 @@
-﻿using DSharpPlus;
-using DSharpPlus.Entities;
+﻿using Discord.WebSocket;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 
 namespace Kandora
 {
-    public static class HandParser
+    public class HandParser
     {
-        private static Dictionary<string, int> SUIT_SIZES = new Dictionary<string, int>()
+        private DiscordSocketClient client;
+        private Dictionary<string, int> SUIT_SIZES = new Dictionary<string, int>()
             {
             {"p",9},
             {"m",9},
@@ -16,7 +18,7 @@ namespace Kandora
             {"z",7}
         };
 
-        private static Dictionary<string, string> ALTERNATIVE_IDS = new Dictionary<string, string>()
+        private Dictionary<string, string> ALTERNATIVE_IDS = new Dictionary<string, string>()
             {
             {"Ew","1z"},
             {"Sw","2z"},
@@ -34,29 +36,38 @@ namespace Kandora
             {"3d","7z"}
         };
 
-        public static string GetEmojiCode(string tileName, DiscordClient client)
+        public HandParser(DiscordSocketClient client)
+        {
+            this.client = client;
+        }
+
+        public string getEmojiCode(string tileName)
         {
             try
             {
-                return DiscordEmoji.FromName(client, ":" + tileName + ":");
+                var emote = client.Guilds.SelectMany(x => x.Emotes).FirstOrDefault(x => x.Name.IndexOf(tileName, StringComparison.OrdinalIgnoreCase) != -1);
+                return emote != null ? emote.Name : "";
             }
             catch
             {
-                if (ALTERNATIVE_IDS.ContainsKey(tileName))
+                lock (ALTERNATIVE_IDS)
                 {
-                    return GetEmojiCode(ALTERNATIVE_IDS.GetValueOrDefault(tileName), client);
+                    if (ALTERNATIVE_IDS.ContainsKey(tileName))
+                    {
+                        return this.getEmojiCode(ALTERNATIVE_IDS.GetValueOrDefault(tileName));
+                    }
+                    return "";
                 }
-                return "";
             }
         }
 
-        public static string GetHandEmojiCode(string hand, DiscordClient client)
+        public string getHandEmojiCode(string hand)
         {
             StringBuilder sb = new StringBuilder();
             var tileList = ParseHand(hand);
             foreach (var tile in tileList)
             {
-                sb.Append(GetEmojiCode(tile, client));
+                sb.Append(this.getEmojiCode(tile));
             }
 
             return sb.ToString();
@@ -64,7 +75,7 @@ namespace Kandora
 
 
         //Recursively builds the hand
-        private static List<string> ParseHand(string hand)
+        private List<string> ParseHand(string hand)
         {
             var tileNames = new List<string>();
             int i = 0;
