@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Ranking] (
-    [Id]        INT        NOT NULL,
+    [Id]        INT        NOT NULL IDENTITY(1,1),
     [userId]    INT        NOT NULL,
     [elo]       NCHAR (10) NULL,
     [timestamp] ROWVERSION NOT NULL,

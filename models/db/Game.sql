@@ -1,6 +1,6 @@
 ﻿CREATE TABLE [dbo].[Game]
 (
-	[Id] INT NOT NULL PRIMARY KEY, 
+	[Id] INT NOT NULL IDENTITY(1,1), 
     [mahjsoulId] NCHAR(50) NULL, 
     [user1Id] INT NOT NULL,
 	FOREIGN KEY (user1Id) REFERENCES [User] ([Id]),
@@ -15,4 +15,5 @@
 	FOREIGN KEY (user4Id) REFERENCES [User] ([Id]),
     [user4Score] INT NOT NULL, 
     [timestamp] TIMESTAMP 
+    PRIMARY KEY CLUSTERED ([Id] ASC),
 )

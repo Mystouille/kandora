@@ -6,33 +6,30 @@ namespace Kandora
 {
     class User
     {
-        public int id { get; }
-        public string displayName {
-            set {
+        private string displayName;
+        private int mahjsoulId;
+
+        public int Id { get; }
+        public ulong DiscordId { get; }
+        public string DisplayName
+        {
+            set
+            {
                 displayName = value;
-                UserDb.setDiplayName(id, value);
+                UserDb.SetDiplayName(Id, value);
             }
             get
             {
                 return displayName;
             }
         }
-        public string uniqueName {
-            set
-            {
-                uniqueName = value;
-                UserDb.setUniqueName(id, value);
-            }
-            get
-            {
-                return uniqueName;
-            }
-        }
-        public string mahjsoulId {
+
+        public int MahjsoulId
+        {
             set
             {
                 mahjsoulId = value;
-                UserDb.setMahjsoulId(id, value);
+                UserDb.SetMahjsoulId(Id, value);
             }
             get
             {
@@ -40,11 +37,11 @@ namespace Kandora
             }
         }
 
-        public User(int id, string displayName, string uniqueName, string mahjsoulId)
+        public User(int id, string displayName, ulong discordId, int mahjsoulId)
         {
-            this.id = id;
+            this.Id = id;
             this.displayName = displayName;
-            this.uniqueName = uniqueName;
+            this.DiscordId = discordId;
             this.mahjsoulId = mahjsoulId;
         }
     }

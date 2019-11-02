@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -16,24 +17,34 @@ namespace Kandora
         }
 
         [Command("register")]
-        public async Task Register(CommandContext ctx, string mahjsoulId)
+        public async Task Register(CommandContext ctx, int mahjsoulId)
         {
-
-            await ctx.RespondAsync("Tu es enregistré dans la ligue!");
+            var displayName = ctx.Member.Username;
+            var discordId = ctx.Member.Id;
+            var isOk = UserDb.AddUser(displayName, discordId, mahjsoulId);
+            await ctx.RespondAsync(isOk ? 
+                $"<@{ctx.Member.Id}> a été enregistré" : 
+                $"Erreur, <@{ctx.Member.Id}> n'a pas été enregistré");
         }
 
 
-        [Command("list")]
+        [Command("listusers")]
         public async Task List(CommandContext ctx)
         {
-
-            var users = UserDb.getUsers();
-            int i = 1;
-            await foreach (var user in users)
+            try
             {
-                await ctx.RespondAsync(""+i+": "+ user.displayName +" "+ user.mahjsoulId);
+                var users = UserDb.getUsers();
+                int i = 1;
+                foreach (var user in users)
+                {
+                    await ctx.RespondAsync($"{i}: <@{user.DiscordId}> {user.MahjsoulId}");
+                    i++;
+                }
             }
-
+            catch (Exception e)
+            {
+                await ctx.RespondAsync(e.Message);
+            }
         }
     }
 }
