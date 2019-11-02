@@ -16,6 +16,8 @@ namespace Kandora
             {"z",7}
         };
 
+        private static HashSet<char> SUIT_NAMES = new HashSet<char>() { 'p', 'm', 's', 'z', 'w', 'd' };
+
         private static Dictionary<string, string> ALTERNATIVE_IDS = new Dictionary<string, string>()
             {
             {"Ew","1z"},
@@ -26,7 +28,7 @@ namespace Kandora
             {"2w","2z"},
             {"3w","3z"},
             {"4w","4z"},
-            {"Wd","5z"},
+            {"Rd","5z"},
             {"Wd","6z"},
             {"Gd","7z"},
             {"1d","5z"},
@@ -68,19 +70,9 @@ namespace Kandora
         {
             var tileNames = new List<string>();
             int i = 0;
-            var found = false;
             while (i < hand.Length)
             {
-                switch (hand[i])
-                {
-                    case 'p': found = true; break;
-                    case 'm': found = true; break;
-                    case 's': found = true; break;
-                    case 'z': found = true; break;
-                    case 'w': found = true; break;
-                    case 'd': found = true; break;
-                }
-                if (found) break;
+                if (SUIT_NAMES.Contains(hand[i])) break;
                 i++;
             }
             if (i == hand.Length)

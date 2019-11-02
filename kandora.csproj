@@ -2,6 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
+    <StartupObject>Kandora.Kandora</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="DSharpPlus" Version="3.2.3" />

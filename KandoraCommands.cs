@@ -21,5 +21,19 @@ namespace Kandora
 
             await ctx.RespondAsync("Tu es enregistré dans la ligue!");
         }
+
+
+        [Command("list")]
+        public async Task List(CommandContext ctx)
+        {
+
+            var users = UserDb.getUsers();
+            int i = 1;
+            await foreach (var user in users)
+            {
+                await ctx.RespondAsync(""+i+": "+ user.displayName +" "+ user.mahjsoulId);
+            }
+
+        }
     }
 }
