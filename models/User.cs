@@ -8,9 +8,9 @@ namespace Kandora
     {
         private string displayName;
         private int mahjsoulId;
+        private bool isAdmin;
 
-        public int Id { get; }
-        public ulong DiscordId { get; }
+        public ulong Id { get; }
         public string DisplayName
         {
             set
@@ -21,6 +21,18 @@ namespace Kandora
             get
             {
                 return displayName;
+            }
+        }
+        public bool IsAdmin
+        {
+            set
+            {
+                isAdmin = value;
+                UserDb.SetIsAdmin(Id, value);
+            }
+            get
+            {
+                return isAdmin;
             }
         }
 
@@ -37,12 +49,12 @@ namespace Kandora
             }
         }
 
-        public User(int id, string displayName, ulong discordId, int mahjsoulId)
+        public User(ulong id, string displayName, int mahjsoulId, bool isAdmin)
         {
             this.Id = id;
             this.displayName = displayName;
-            this.DiscordId = discordId;
             this.mahjsoulId = mahjsoulId;
+            this.isAdmin = isAdmin;
         }
     }
 }

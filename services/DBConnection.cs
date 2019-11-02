@@ -52,22 +52,5 @@ namespace Kandora
         {
             connection.Close();
         }
-
-        public bool updateColumnInTable<T>(string tableName, string columnName, T value, int id)
-        {
-            if (this.IsConnect())
-            {
-                using (var command = SqlClientFactory.Instance.CreateCommand())
-                {
-                    command.Connection = connection;
-                    command.CommandType = DT.CommandType.Text;
-                    command.CommandText = string.Format("UPDATE {0} SET {1} = {2} WHERE Id = ${3}", tableName, columnName, value, id);
-                    command.CommandType = DT.CommandType.Text;
-
-                    return command.ExecuteNonQuery() > 0;
-                }
-            }
-            return false;
-        }
     }
 }
