@@ -13,7 +13,7 @@
     [user4Id]     NUMERIC (20) NOT NULL,
     [user4Score]  INT          ,
     [user4Signed] BIT          DEFAULT ((0)) NOT NULL,
-    [timestamp]   ROWVERSION   NOT NULL,
+    [timestamp]   DATETIME   NOT NULL DEFAULT SYSDATETIME(),
     PRIMARY KEY CLUSTERED ([Id] ASC),
     FOREIGN KEY ([user1Id]) REFERENCES [dbo].[User] ([Id]),
     FOREIGN KEY ([user2Id]) REFERENCES [dbo].[User] ([Id]),

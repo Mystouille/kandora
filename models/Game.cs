@@ -39,6 +39,10 @@ namespace Kandora
                 {
                     this.user1Signed = true;
                 }
+                else
+                {
+                    throw (new SignGameException());
+                }
             }
         }
         public bool User2Signed
@@ -50,6 +54,10 @@ namespace Kandora
                 if (success)
                 {
                     this.user2Signed = true;
+                }
+                else
+                {
+                    throw (new SignGameException());
                 }
             }
         }
@@ -75,30 +83,47 @@ namespace Kandora
                 {
                     this.user4Signed = true;
                 }
+                else
+                {
+                    throw (new SignGameException());
+                }
             }
         }
+        public bool IsSigned
+        {
+            get
+            {
+                return user1Signed && user2Signed && user3Signed && user4Signed;
+            }
+        }
+        
 
         public bool TrySignGameByUser(ulong userId)
         {
+            bool result = false;
             if (User1Id == userId) {
-                return ScoreDb.SignGameByUserPos(Id, 1);
+                result = ScoreDb.SignGameByUserPos(Id, 1);
+                user1Signed = user1Signed || result;
             }
             else if (User2Id == userId)
             {
-                return ScoreDb.SignGameByUserPos(Id, 2);
+                result = ScoreDb.SignGameByUserPos(Id, 2);
+                user2Signed = user2Signed || result;
             }
             else if (User3Id == userId)
             {
-                return ScoreDb.SignGameByUserPos(Id, 3);
+                result = ScoreDb.SignGameByUserPos(Id, 3);
+                user3Signed = user3Signed || result;
             }
             else if (User4Id == userId)
             {
-                return ScoreDb.SignGameByUserPos(Id, 4);
+                result = ScoreDb.SignGameByUserPos(Id, 4);
+                user4Signed = user4Signed || result;
             }
             else {
-                throw (new Exception("Cancelled. It seems like you didn't play that game."));
+                throw (new UserNotFoundInGameException());
             }
+            return result;
         }
-
     }
 }
