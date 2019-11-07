@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.CommandsNext.Converters;
 using DSharpPlus.Entities;
 using DescriptionAttribute = DSharpPlus.CommandsNext.Attributes.DescriptionAttribute;
 
@@ -110,9 +108,24 @@ namespace Kandora
                     await ctx.RespondAsync($"Cancelled. Couldn't find user named \"{currentUser}\" in the list");
                     return;
                 }
-                ScoreDb.RecordGame(users, sourceMember: ctx.User.Id, signed: true);
-                var game = ScoreDb.GetLastRecordedGame();
-                ScoreDb.SignGameByUser(game.Id, ctx.User.Id);
+                var newGame = ScoreDb.RecordGame(users, sourceMember: ctx.User.Id, signed: true);
+                if (!newGame.Item2)
+                {
+                    await ctx.RespondAsync($"Error, game n°{newGame.Item1.Id} not recorded. Cleaning up potential dirty DB entries...");
+                    var nbLines = ScoreDb.RevertGame(newGame.Item1.Id);
+                    if (nbLines > 0)
+                    {
+                        await ctx.RespondAsync($"DB cleaned up.");
+                    }
+                    else
+                    {
+                        await ctx.RespondAsync($"Error cleaning up DB. Contact an admin");
+                    }
+                }
+                else
+                {
+                    await ctx.RespondAsync($"Game n°{newGame.Item1.Id} recorded.");
+                }
             }
             catch (Exception e)
             {
@@ -156,14 +169,12 @@ namespace Kandora
 
                 try
                 {
-                    ScoreDb.RecordGame(usersIds, sourceMember: ctx.User.Id, signed: isAdmin);
-                    var game = ScoreDb.GetLastRecordedGame();
-                    ScoreDb.SignGameByUser(game.Id, ctx.User.Id);
+                    var gameId = ScoreDb.RecordGame(usersIds, sourceMember: ctx.User.Id, signed: isAdmin);
 
                     foreach (var member in members)
                     {
                         var message = $"{ctx.User.Username} tries to record a game: {members[0].DisplayName} > {members[1].DisplayName} > {members[2].DisplayName} > {members[3].DisplayName}.\n" +
-                                    $"Use the \'!accept {game.Id}\' command if you agree,\n";
+                                    $"Use the \'!accept {gameId}\' command if you agree,\n";
                         if (!isAdmin)
                         {
                             if (member != ctx.User)
@@ -194,11 +205,6 @@ namespace Kandora
             try
             {
                 ScoreDb.SignGameByUser(id, ctx.User.Id);
-                var game = ScoreDb.GetGame(id);
-                if (game.IsSigned)
-                {
-
-                }
                 await ctx.RespondAsync($"You accepted the game n°{id}");
             }
             catch (Exception e)

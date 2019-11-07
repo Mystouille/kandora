@@ -8,7 +8,7 @@ namespace Kandora
 {
     public static class HandParser
     {
-        private static HashSet<char> SUIT_NAMES = new HashSet<char>() { 'p', 'm', 's', 'z', 'w', 'd' };
+        private static readonly HashSet<char> SUIT_NAMES = new HashSet<char>() { 'p', 'm', 's', 'z', 'w', 'd' };
 
         private static Dictionary<string, string> ALTERNATIVE_IDS = new Dictionary<string, string>()
             {

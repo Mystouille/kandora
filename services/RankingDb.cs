@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DSharpPlus.EventArgs;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -21,6 +22,10 @@ namespace Kandora
 
         internal static bool UpdateRankings(Game game)
         {
+            if (!game.IsSigned)
+            {
+                throw (new GameNotSignedException());
+            }
             List<Ranking> rkList1 = GetRankingsFor(columnName: userIdCol, value: $"{game.User1Id}");
             List<Ranking> rkList2 = GetRankingsFor(columnName: userIdCol, value: $"{game.User2Id}");
             List<Ranking> rkList3 = GetRankingsFor(columnName: userIdCol, value: $"{game.User3Id}");
@@ -30,6 +35,7 @@ namespace Kandora
             {
                 throw (new UserRankingMissingException());
             }
+
             List<Ranking> newRkList = new List<Ranking>();
             newRkList.Add(new Ranking(game.User1Id, rkList1, rkList2.Last(), rkList3.Last(), rkList4.Last(), 1, game.Id));
             newRkList.Add(new Ranking(game.User2Id, rkList2, rkList1.Last(), rkList3.Last(), rkList4.Last(), 2, game.Id));

@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[Game] (
-    [Id]          INT          IDENTITY (1, 1) NOT NULL,
+    [Id]          INT          NOT NULL,
     [mahjsoulId]  NCHAR (50)   NULL,
     [user1Id]     NUMERIC (20) NOT NULL,
     [user1Score]  INT          ,

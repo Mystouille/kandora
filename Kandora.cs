@@ -13,14 +13,12 @@ namespace Kandora
         static DiscordClient client;
         static CommandsNextModule commands;
 
-        static void Main(string[] args)
+        static void Main()
         {
-            MainAsync(args).ConfigureAwait(false).GetAwaiter().GetResult();
+            MainAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
-
-
-        static async Task MainAsync(string[] args)
+        static async Task MainAsync()
         {
             client = new DiscordClient(new DiscordConfiguration
             {

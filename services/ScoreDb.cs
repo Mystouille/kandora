@@ -8,6 +8,8 @@ namespace Kandora
     class ScoreDb
     {
         private const string GameTableName = "[dbo].[Game]";
+        private const string RankingTableName = "[dbo].[Ranking]";
+        private const string RankingTableGameIdCol = "gameId";
         private const string User1Id = "user1Id";
         private const string User1Signed = "user1Signed";
         private const string User2Id = "user2Id";
@@ -19,7 +21,7 @@ namespace Kandora
         private const string Timestamp = "timestamp";
         private const string IdCol = "Id";
 
-        public static bool RecordGame(ulong[] members, ulong sourceMember, bool signed = false)
+        public static Tuple<Game,bool> RecordGame(ulong[] members, ulong sourceMember, bool signed = false)
         {
             var dbCon = DBConnection.Instance();
 
@@ -35,15 +37,58 @@ namespace Kandora
             string bitSigned3 = (signed || sourceMember == members[2]) ? "1" : "0";
             string bitSigned4 = (signed || sourceMember == members[3]) ? "1" : "0";
 
+            int gameId = GetMaxId() + 1;
+
             if (dbCon.IsConnect())
             {
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"INSERT INTO {GameTableName} ({User1Id}, {User2Id}, {User3Id}, {User4Id}, {User1Signed}, {User2Signed}, {User3Signed}, {User4Signed}) " +
-                    $"VALUES ({members[0]}, {members[1]}, {members[2]}, {members[3]}, {bitSigned1}, {bitSigned2}, {bitSigned3}, {bitSigned4});";
+                command.CommandText = $"SET IDENTITY_INSERT {GameTableName} ON \n" +
+                    $"INSERT INTO {GameTableName} ({IdCol}, {User1Id}, {User2Id}, {User3Id}, {User4Id}, {User1Signed}, {User2Signed}, {User3Signed}, {User4Signed}) " +
+                    $"VALUES ({gameId}, {members[0]}, {members[1]}, {members[2]}, {members[3]}, {bitSigned1}, {bitSigned2}, {bitSigned3}, {bitSigned4});";
                 command.CommandType = CommandType.Text;
 
-                return command.ExecuteNonQuery() > 0;
+                command.ExecuteNonQuery();
+                var game = GetGame(gameId);
+                var success = RankingDb.UpdateRankings(game);
+                return new Tuple<Game,bool>(game, success);
+            }
+            throw (new DbConnectionException());
+        }
+
+        public static int RevertGame(int gameId)
+        {
+            var dbCon = DBConnection.Instance();
+
+            if (dbCon.IsConnect())
+            {
+                using var command = SqlClientFactory.Instance.CreateCommand();
+                command.Connection = dbCon.Connection;
+                command.CommandText = $"DELETE FROM {RankingTableName} WHERE {RankingTableGameIdCol} = {gameId}" +
+                    $"DELETE FROM {GameTableName} WHERE {IdCol} = {gameId}";
+                command.CommandType = CommandType.Text;
+
+                return command.ExecuteNonQuery();
+            }
+            throw (new DbConnectionException());
+        }
+
+        private static int GetMaxId()
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = SqlClientFactory.Instance.CreateCommand();
+                command.Connection = dbCon.Connection;
+                command.CommandText = $"SELECT MAX({IdCol}) FROM {GameTableName}";
+                command.CommandType = CommandType.Text;
+                var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    int id = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
+                    reader.Close();
+                    return id;
+                }
             }
             throw (new DbConnectionException());
         }
@@ -118,6 +163,7 @@ namespace Kandora
                     }
                     return new Game(id, user1Id, user2Id, user3Id, user4Id, user1Signed, user2Signed, user3Signed, user4Signed);
                 }
+                throw (new GetGameException($"Game n°{gameId} not found after creating it"));
             }
             throw (new DbConnectionException());
         }

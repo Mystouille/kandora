@@ -38,7 +38,7 @@ namespace Kandora
 
         public static readonly double INITIAL_ELO = 1500;
         public static readonly double MIN_ELO = 1200;
-        public static readonly int DAMPENING = 15;
+        public static readonly int DAMPENING = 10;
         public static readonly int[] BASE_PTS = new int[] { 30, 10, -10, -30 };
 
         public int Id { get; }
