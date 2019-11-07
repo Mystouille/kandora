@@ -19,7 +19,7 @@ namespace Kandora
         private const string Timestamp = "timestamp";
         private const string IdCol = "Id";
 
-        public static bool RecordGame(DiscordMember[] members, DiscordMember sourceMember, bool signed = false)
+        public static bool RecordGame(ulong[] members, ulong sourceMember, bool signed = false)
         {
             var dbCon = DBConnection.Instance();
 
@@ -40,7 +40,7 @@ namespace Kandora
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
                 command.CommandText = $"INSERT INTO {GameTableName} ({User1Id}, {User2Id}, {User3Id}, {User4Id}, {User1Signed}, {User2Signed}, {User3Signed}, {User4Signed}) " +
-                    $"VALUES ({members[0].Id}, {members[1].Id}, {members[2].Id}, {members[3].Id}, {bitSigned1}, {bitSigned2}, {bitSigned3}, {bitSigned4});";
+                    $"VALUES ({members[0]}, {members[1]}, {members[2]}, {members[3]}, {bitSigned1}, {bitSigned2}, {bitSigned3}, {bitSigned4});";
                 command.CommandType = CommandType.Text;
 
                 return command.ExecuteNonQuery() > 0;
@@ -86,7 +86,7 @@ namespace Kandora
             {
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {User1Id}, {User2Id}, {User3Id}, {User4Id}, {User1Signed}, {User2Signed}, {User3Signed}, {User4Signed}" +
+                command.CommandText = $"SELECT {IdCol}, {User1Id}, {User2Id}, {User3Id}, {User4Id}, {User1Signed}, {User2Signed}, {User3Signed}, {User4Signed}" +
                     $" FROM {GameTableName}" +
                     $" WHERE {IdCol} = @gameId";
 

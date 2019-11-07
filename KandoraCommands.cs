@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.CommandsNext.Converters;
 using DSharpPlus.Entities;
 using DescriptionAttribute = DSharpPlus.CommandsNext.Attributes.DescriptionAttribute;
 
@@ -67,15 +68,72 @@ namespace Kandora
             }
         }
 
-        [Command("scorematch"), Description("Record a game"), Aliases("score", "score_match", "s")]
-        public async Task ScoreMatch(CommandContext ctx, [Description("The winner of the game")] DiscordMember user1, [Description("The2nd place")] DiscordMember user2, [Description("The 3rd place")] DiscordMember user3, [Description("The last place")] DiscordMember user4 )
+        [Command("scorename"), Description("Record a game from users name")]
+        public async Task ScoreMatchWithName(CommandContext ctx, [Description("The winner of the game")] string id1, [Description("The2nd place")] string id2, [Description("The 3rd place")] string id3, [Description("The last place")] string id4)
         {
-            var users = new DiscordMember[4];
-            users[0] = user1;
-            users[1] = user2;
-            users[2] = user3;
-            users[3] = user4;
-            if(ctx.Member == null)
+            try
+            {
+                var userList = UserDb.GetUsers();
+                bool isAdmin = false;
+                foreach (var user in userList)
+                {
+                    if (user.Id == ctx.User.Id)
+                    {
+                        if (user.IsAdmin)
+                        {
+                            isAdmin = true;
+                        }
+                        break;
+                    }
+                }
+                if (!isAdmin)
+                {
+                    await ctx.RespondAsync("Cancelled. Only admins can use this command.");
+                    return;
+                }
+
+                var users = new ulong[4];
+                string currentUser = "";
+                try
+                {
+                    currentUser = id1;
+                    users[0] = userList.FindLast(x => x.DisplayName == id1).Id;
+                    currentUser = id2;
+                    users[1] = userList.FindLast(x => x.DisplayName == id2).Id;
+                    currentUser = id3;
+                    users[2] = userList.FindLast(x => x.DisplayName == id3).Id;
+                    currentUser = id4;
+                    users[3] = userList.FindLast(x => x.DisplayName == id4).Id;
+                }
+                catch
+                {
+                    await ctx.RespondAsync($"Cancelled. Couldn't find user named \"{currentUser}\" in the list");
+                    return;
+                }
+                ScoreDb.RecordGame(users, sourceMember: ctx.User.Id, signed: true);
+                var game = ScoreDb.GetLastRecordedGame();
+                ScoreDb.SignGameByUser(game.Id, ctx.User.Id);
+            }
+            catch (Exception e)
+            {
+                await ctx.RespondAsync(e.Message);
+            }
+        }
+
+        [Command("scorematch"), Description("Record a game"), Aliases("score", "score_match", "s")]
+        public async Task ScoreMatch(CommandContext ctx, [Description("The winner of the game")] DiscordMember user1, [Description("The2nd place")] DiscordMember user2, [Description("The 3rd place")] DiscordMember user3, [Description("The last place")] DiscordMember user4)
+        {
+            var usersIds = new ulong[4];
+            usersIds[0] = user1.Id;
+            usersIds[1] = user2.Id;
+            usersIds[2] = user3.Id;
+            usersIds[3] = user4.Id;
+            var members = new DiscordMember[4];
+            members[0] = user1;
+            members[1] = user2;
+            members[2] = user3;
+            members[3] = user4;
+            if (ctx.Member == null)
             {
                 await ctx.RespondAsync("Cancelled. You must be in a text channel for that command");
                 return;
@@ -98,22 +156,24 @@ namespace Kandora
 
                 try
                 {
-                    ScoreDb.RecordGame(users, sourceMember: ctx.Member, signed: isAdmin);
+                    ScoreDb.RecordGame(usersIds, sourceMember: ctx.User.Id, signed: isAdmin);
                     var game = ScoreDb.GetLastRecordedGame();
+                    ScoreDb.SignGameByUser(game.Id, ctx.User.Id);
 
-                    foreach (var member in users)
+                    foreach (var member in members)
                     {
+                        var message = $"{ctx.User.Username} tries to record a game: {members[0].DisplayName} > {members[1].DisplayName} > {members[2].DisplayName} > {members[3].DisplayName}.\n" +
+                                    $"Use the \'!accept {game.Id}\' command if you agree,\n";
                         if (!isAdmin)
                         {
                             if (member != ctx.User)
                             {
-                                await member.SendMessageAsync($"{ctx.User.Username} tries to record a game: {users[0].DisplayName} > {users[1].DisplayName} > {users[2].DisplayName} > {users[3].DisplayName}.\n" +
-                                    $"Use the \'!accept {game.Id}\' command if you agree,\n");
+                                await member.SendMessageAsync(message);
                             }
                         }
                         else
                         {
-                            await member.SendMessageAsync($"{ctx.User.Username} recorded the following game with the id {game.Id}: {users[0].DisplayName} > {users[1].DisplayName} > {users[2].DisplayName} > {users[3].DisplayName}.");
+                            await member.SendMessageAsync(message);
                         }
                     }
                 }

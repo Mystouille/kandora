@@ -8,14 +8,6 @@ namespace Kandora
 {
     public static class HandParser
     {
-        private static Dictionary<string, int> SUIT_SIZES = new Dictionary<string, int>()
-            {
-            {"p",9},
-            {"m",9},
-            {"s",9},
-            {"z",7}
-        };
-
         private static HashSet<char> SUIT_NAMES = new HashSet<char>() { 'p', 'm', 's', 'z', 'w', 'd' };
 
         private static Dictionary<string, string> ALTERNATIVE_IDS = new Dictionary<string, string>()
@@ -80,11 +72,10 @@ namespace Kandora
                 return tileNames;
             }
             var subHandValues = hand.Substring(0, i);
-            var subHandSuit = hand[i].ToString();
             foreach (char c in subHandValues)
             {
                 if (c == ' ') continue;
-                tileNames.Add(c.ToString() + subHandSuit);
+                tileNames.Add($"{c}{hand[i]}");
             }
             if (i == hand.Length - 1)
             {
