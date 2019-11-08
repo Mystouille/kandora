@@ -26,7 +26,6 @@ namespace Kandora
             }
         }
 
-
         [Command("listusers"), Description("List the users in Kandora league"), Aliases("l")]
         public async Task List(CommandContext ctx)
         {
@@ -36,10 +35,10 @@ namespace Kandora
 
                 int i = 1;
                 StringBuilder sb = new StringBuilder();
-                sb.Append("Leaderboard:\n");
+                sb.Append("User list:\n");
                 foreach (var user in users)
                 {
-                    sb.Append($"{i}: <@{user.Id}> {user.MahjsoulId}");
+                    sb.Append($"{i}: <@{user.Id}> ({user.DisplayName}) {user.MahjsoulId}\n");
                     i++;
                 }
                 if (ctx != null && ctx.Member == null)
