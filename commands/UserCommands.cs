@@ -19,7 +19,26 @@ namespace Kandora
                 await ctx.RespondAsync($"<@{ctx.User.Id}> has been registered");
                 GlobalDb.Commit();
             }
-            catch(Exception e)
+            catch (Exception e)
+            {
+                await ctx.RespondAsync(e.Message);
+                GlobalDb.Rollback();
+            }
+        }
+
+        [Command("rename"), Description("Change your display name")]
+        public async Task Rename(CommandContext ctx, [Description("Your new display name")] string displayName)
+        {
+            try
+            {
+                var userList = UserDb.GetUsers();
+                var user = userList.Find(x => x.Id == ctx.User.Id);
+                var oldName = user.DisplayName;
+                user.DisplayName = displayName;
+                await ctx.RespondAsync($"<@{ctx.User.Id}>'s name has been changed from {oldName} to {displayName}");
+                GlobalDb.Commit();
+            }
+            catch (Exception e)
             {
                 await ctx.RespondAsync(e.Message);
                 GlobalDb.Rollback();
