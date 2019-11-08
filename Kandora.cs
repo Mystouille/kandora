@@ -34,7 +34,9 @@ namespace Kandora
                 StringPrefix = "!"
             });
 
-            commands.RegisterCommands<KandoraCommands>();
+            commands.RegisterCommands<MahjongCommands>();
+            commands.RegisterCommands<RankingCommands>();
+            commands.RegisterCommands<UserCommands>();
 
             await client.ConnectAsync();
 

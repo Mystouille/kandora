@@ -10,62 +10,8 @@ using DescriptionAttribute = DSharpPlus.CommandsNext.Attributes.DescriptionAttri
 
 namespace Kandora
 {
-    public class KandoraCommands
+    public class RankingCommands
     {
-        [Command("hand"), Description("Displays a specified mahjong hand with emojis"), Aliases("h")]
-        public async Task Hand(CommandContext ctx, [Description("The hand to display. Circles: [1-9]p, Chars: [1-9]m, Bamboo: [1-9]s, Honnors: [1-7]z, Dragons: [R,W,G]d, Winds: [ESWN]w")] params string[] textHand)
-        {
-            var hand = string.Join("", textHand);
-            var result = HandParser.GetHandEmojiCode(hand, ctx.Client);
-            await ctx.RespondAsync(result);
-        }
-
-        [Command("register"), Description("Register yourself in the kandora riichi league")]
-        public async Task Register(CommandContext ctx, [Description("Your mahjsoul ID")] int mahjsoulId)
-        {
-            var displayName = ctx.User.Username;
-            var discordId = ctx.User.Id;
-            try
-            {
-                var isOk = UserDb.AddUser(displayName, discordId, mahjsoulId);
-                await ctx.RespondAsync(isOk ?
-                    $"<@{ctx.User.Id}> has been registered" :
-                    $"Cancelled. <@{ctx.User.Id}> couldn't be registered");
-            }
-            catch(Exception e)
-            {
-                await ctx.RespondAsync(e.Message);
-            }
-        }
-
-
-        [Command("listusers"), Description("List the users in Kandora league"), Aliases("l")]
-        public async Task List(CommandContext ctx)
-        {
-            try
-            {
-                var users = UserDb.GetUsers();
-                int i = 1;
-
-                foreach (var user in users)
-                {
-                    if (ctx != null && ctx.Member == null)
-                    {
-                        await ctx.RespondAsync($"{i}: <@{user.Id}> {user.MahjsoulId}");
-                    }
-                    else
-                    {
-                        await ctx.Member.SendMessageAsync($"{i}: <@{user.Id}> {user.MahjsoulId}");
-                    }
-                    i++;
-                }
-            }
-            catch (Exception e)
-            {
-                await ctx.RespondAsync(e.Message);
-            }
-        }
-
         [Command("scorename"), Description("Record a game from users name")]
         public async Task ScoreMatchWithName(CommandContext ctx, [Description("The winner of the game")] string id1, [Description("The2nd place")] string id2, [Description("The 3rd place")] string id3, [Description("The last place")] string id4)
         {
