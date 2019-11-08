@@ -41,7 +41,7 @@ namespace Kandora
             throw (new DbConnectionException());
         }
 
-        public static bool AddUser(string displayName, ulong discordId, int mahjsoulId)
+        public static void AddUser(string displayName, ulong discordId, int mahjsoulId)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -64,31 +64,30 @@ namespace Kandora
                 {
                     Value = mahjsoulId
                 });
-
-
                 command.CommandType = CommandType.Text;
-                var success = command.ExecuteNonQuery() > 0;
 
-                return success & RankingDb.InitUserRanking(discordId);
+                command.ExecuteNonQuery();
+
+                RankingDb.InitUserRanking(discordId);
             }
             throw (new DbConnectionException());
         }
 
-        internal static bool SetMahjsoulId(ulong id, int value)
+        internal static void SetMahjsoulId(ulong id, int value)
         {
-            return UpdateColumnInTable("mahjsoulId", $"{value}", id);
+            UpdateColumnInTable("mahjsoulId", $"{value}", id);
         }
 
-        internal static bool SetDiplayName(ulong id, string value)
+        internal static void SetDiplayName(ulong id, string value)
         {
-            return UpdateColumnInTable("displayName", $"\'{value}\'", id);
+            UpdateColumnInTable("displayName", $"\'{value}\'", id);
         }
-        internal static bool SetIsAdmin(ulong id, bool value)
+        internal static void SetIsAdmin(ulong id, bool value)
         {
-            return UpdateColumnInTable("isAdmin", value? "1" : "0", id);
+            UpdateColumnInTable("isAdmin", value? "1" : "0", id);
         }
 
-        private static bool UpdateColumnInTable(string columnName, string value, ulong id)
+        private static void UpdateColumnInTable(string columnName, string value, ulong id)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -100,7 +99,7 @@ namespace Kandora
                     command.CommandText = $"UPDATE {TableName} SET {columnName} = {value} WHERE Id = {id}";
                     command.CommandType = CommandType.Text;
 
-                    return command.ExecuteNonQuery() > 0;
+                    command.ExecuteNonQuery();
                 }
             }
             throw (new DbConnectionException());

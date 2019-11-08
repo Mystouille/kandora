@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Attributes;
+using System;
 using System.Text;
 using System.Threading.Tasks;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.CommandsNext.Converters;
-using DSharpPlus.Entities;
-using DescriptionAttribute = DSharpPlus.CommandsNext.Attributes.DescriptionAttribute;
 
 namespace Kandora
 {
@@ -21,14 +15,14 @@ namespace Kandora
             var discordId = ctx.User.Id;
             try
             {
-                var isOk = UserDb.AddUser(displayName, discordId, mahjsoulId);
-                await ctx.RespondAsync(isOk ?
-                    $"<@{ctx.User.Id}> has been registered" :
-                    $"Cancelled. <@{ctx.User.Id}> couldn't be registered");
+                UserDb.AddUser(displayName, discordId, mahjsoulId);
+                await ctx.RespondAsync($"<@{ctx.User.Id}> has been registered");
+                GlobalDb.Commit();
             }
             catch(Exception e)
             {
                 await ctx.RespondAsync(e.Message);
+                GlobalDb.Rollback();
             }
         }
 
@@ -39,24 +33,28 @@ namespace Kandora
             try
             {
                 var users = UserDb.GetUsers();
-                int i = 1;
 
+                int i = 1;
+                StringBuilder sb = new StringBuilder();
+                sb.Append("Leaderboard:\n");
                 foreach (var user in users)
                 {
-                    if (ctx != null && ctx.Member == null)
-                    {
-                        await ctx.RespondAsync($"{i}: <@{user.Id}> {user.MahjsoulId}");
-                    }
-                    else
-                    {
-                        await ctx.Member.SendMessageAsync($"{i}: <@{user.Id}> {user.MahjsoulId}");
-                    }
+                    sb.Append($"{i}: <@{user.Id}> {user.MahjsoulId}");
                     i++;
+                }
+                if (ctx != null && ctx.Member == null)
+                {
+                    await ctx.RespondAsync(sb.ToString());
+                }
+                else
+                {
+                    await ctx.Member.SendMessageAsync(sb.ToString());
                 }
             }
             catch (Exception e)
             {
                 await ctx.RespondAsync(e.Message);
+                GlobalDb.Rollback();
             }
         }
     }

@@ -20,7 +20,7 @@ namespace Kandora
         private const string timeStampCol = "timeStamp";
         private const string gameIdCol = "gameId";
 
-        internal static bool UpdateRankings(Game game)
+        internal static void UpdateRankings(Game game)
         {
             if (!game.IsSigned)
             {
@@ -42,12 +42,10 @@ namespace Kandora
             newRkList.Add(new Ranking(game.User3Id, rkList3, rkList2.Last(), rkList1.Last(), rkList4.Last(), 3, game.Id));
             newRkList.Add(new Ranking(game.User4Id, rkList4, rkList2.Last(), rkList3.Last(), rkList1.Last(), 4, game.Id));
 
-            bool success = true;
             foreach(var ranking in newRkList)
             {
-                success &= AddRanking(ranking);
+                AddRanking(ranking);
             }
-            return success;
         }
 
         internal static bool AddRanking(Ranking rk)
@@ -66,7 +64,7 @@ namespace Kandora
             throw (new DbConnectionException());
         }
 
-        internal static bool InitUserRanking(ulong targetUserId)
+        internal static void InitUserRanking(ulong targetUserId)
         {
             List<Ranking> userRankings = GetRankingsFor(columnName: userIdCol, value: $"{targetUserId}").Where(x => x.UserId == targetUserId).ToList();
             if (userRankings.Any())
@@ -83,7 +81,7 @@ namespace Kandora
                     $"VALUES ({targetUserId}, {Ranking.INITIAL_ELO});";
 
                 command.CommandType = CommandType.Text;
-                return command.ExecuteNonQuery() > 0;
+                command.ExecuteNonQuery();
             }
             throw (new DbConnectionException());
         }

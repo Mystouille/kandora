@@ -1,12 +1,14 @@
 ﻿using DSharpPlus.Entities;
 using System;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 
 namespace Kandora
 {
     class ScoreDb
     {
+        public static DbDataReader Reader = null;
         private const string GameTableName = "[dbo].[Game]";
         private const string RankingTableName = "[dbo].[Ranking]";
         private const string RankingTableGameIdCol = "gameId";
@@ -21,7 +23,7 @@ namespace Kandora
         private const string Timestamp = "timestamp";
         private const string IdCol = "Id";
 
-        public static Tuple<Game,bool> RecordGame(ulong[] members, ulong sourceMember, bool signed = false)
+        public static Game RecordGame(ulong[] members, ulong sourceMember, bool signed = false)
         {
             var dbCon = DBConnection.Instance();
 
@@ -49,14 +51,13 @@ namespace Kandora
                 command.CommandType = CommandType.Text;
 
                 command.ExecuteNonQuery();
-                var game = GetGame(gameId);
-                var success = RankingDb.UpdateRankings(game);
-                return new Tuple<Game,bool>(game, success);
+
+                return GetGame(gameId);
             }
             throw (new DbConnectionException());
         }
 
-        public static int RevertGame(int gameId)
+        public static void RevertGame(int gameId)
         {
             var dbCon = DBConnection.Instance();
 
@@ -68,7 +69,7 @@ namespace Kandora
                     $"DELETE FROM {GameTableName} WHERE {IdCol} = {gameId}";
                 command.CommandType = CommandType.Text;
 
-                return command.ExecuteNonQuery();
+                command.ExecuteNonQuery();
             }
             throw (new DbConnectionException());
         }
@@ -82,11 +83,11 @@ namespace Kandora
                 command.Connection = dbCon.Connection;
                 command.CommandText = $"SELECT MAX({IdCol}) FROM {GameTableName}";
                 command.CommandType = CommandType.Text;
-                var reader = command.ExecuteReader();
-                while (reader.Read())
+                Reader = command.ExecuteReader();
+                while (Reader.Read())
                 {
-                    int id = reader.IsDBNull(0) ? 0 : reader.GetInt32(0);
-                    reader.Close();
+                    int id = Reader.IsDBNull(0) ? 0 : Reader.GetInt32(0);
+                    Reader.Close();
                     return id;
                 }
             }
@@ -104,20 +105,20 @@ namespace Kandora
                     $" FROM {GameTableName}" +
                     $" WHERE {Timestamp} = (SELECT MAX({Timestamp}) FROM {GameTableName})";
                 command.CommandType = CommandType.Text;
-                var reader = command.ExecuteReader();
-                while (reader.Read())
+                Reader = command.ExecuteReader();
+                while (Reader.Read())
                 {
-                    int id = reader.GetInt32(0);
-                    ulong user1Id = Convert.ToUInt64(reader.GetDecimal(1));
-                    ulong user2Id = Convert.ToUInt64(reader.GetDecimal(2));
-                    ulong user3Id = Convert.ToUInt64(reader.GetDecimal(3));
-                    ulong user4Id = Convert.ToUInt64(reader.GetDecimal(4));
-                    bool user1Signed = reader.GetBoolean(5);
-                    bool user2Signed = reader.GetBoolean(6);
-                    bool user3Signed = reader.GetBoolean(7);
-                    bool user4Signed = reader.GetBoolean(8);
+                    int id = Reader.GetInt32(0);
+                    ulong user1Id = Convert.ToUInt64(Reader.GetDecimal(1));
+                    ulong user2Id = Convert.ToUInt64(Reader.GetDecimal(2));
+                    ulong user3Id = Convert.ToUInt64(Reader.GetDecimal(3));
+                    ulong user4Id = Convert.ToUInt64(Reader.GetDecimal(4));
+                    bool user1Signed = Reader.GetBoolean(5);
+                    bool user2Signed = Reader.GetBoolean(6);
+                    bool user3Signed = Reader.GetBoolean(7);
+                    bool user4Signed = Reader.GetBoolean(8);
 
-                    reader.Close();
+                    Reader.Close();
                     return new Game(id, user1Id, user2Id, user3Id, user4Id, user1Signed, user2Signed, user3Signed, user4Signed);
                 }
             }
@@ -142,20 +143,20 @@ namespace Kandora
                 });
 
                 command.CommandType = CommandType.Text;
-                    var reader = command.ExecuteReader();
-                while (reader.Read())
+                Reader = command.ExecuteReader();
+                while (Reader.Read())
                 {
-                    int id = reader.GetInt32(0);
-                    ulong user1Id = Convert.ToUInt64(reader.GetDecimal(1));
-                    ulong user2Id = Convert.ToUInt64(reader.GetDecimal(2));
-                    ulong user3Id = Convert.ToUInt64(reader.GetDecimal(3));
-                    ulong user4Id = Convert.ToUInt64(reader.GetDecimal(4));
-                    bool user1Signed = reader.GetBoolean(5);
-                    bool user2Signed = reader.GetBoolean(6);
-                    bool user3Signed = reader.GetBoolean(7);
-                    bool user4Signed = reader.GetBoolean(8);
+                    int id = Reader.GetInt32(0);
+                    ulong user1Id = Convert.ToUInt64(Reader.GetDecimal(1));
+                    ulong user2Id = Convert.ToUInt64(Reader.GetDecimal(2));
+                    ulong user3Id = Convert.ToUInt64(Reader.GetDecimal(3));
+                    ulong user4Id = Convert.ToUInt64(Reader.GetDecimal(4));
+                    bool user1Signed = Reader.GetBoolean(5);
+                    bool user2Signed = Reader.GetBoolean(6);
+                    bool user3Signed = Reader.GetBoolean(7);
+                    bool user4Signed = Reader.GetBoolean(8);
 
-                    reader.Close();
+                    Reader.Close();
 
                     if(id != gameId)
                     {
@@ -168,22 +169,19 @@ namespace Kandora
             throw (new DbConnectionException());
         }
                
-        internal static bool SetMahjsoulId(int id, string value)
+        internal static void SetMahjsoulId(int id, string value)
         {
-            return UpdateColumnInTable("mahjsoulId", value, id);
+            UpdateColumnInTable("mahjsoulId", value, id);
         }
 
-        internal static bool SignGameByUser(int id, ulong userId)
+        internal static void SignGameByUser(int id, ulong userId)
         {
             var game = GetGame(id);
-            if (game.TrySignGameByUser(userId))
+            game.TrySignGameByUser(userId);
+            if (game.IsSigned)
             {
-                if (game.IsSigned)
-                {
-                    return RankingDb.UpdateRankings(game);
-                }
+                RankingDb.UpdateRankings(game);
             }
-            return false;
         }
 
         internal static bool SignGameByUserPos(int id, int userPos)

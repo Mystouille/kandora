@@ -1,12 +1,11 @@
-﻿using System;
+﻿using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.Entities;
-using DescriptionAttribute = DSharpPlus.CommandsNext.Attributes.DescriptionAttribute;
 
 namespace Kandora
 {
@@ -55,27 +54,12 @@ namespace Kandora
                     return;
                 }
                 var newGame = ScoreDb.RecordGame(users, sourceMember: ctx.User.Id, signed: true);
-                if (!newGame.Item2)
-                {
-                    await ctx.RespondAsync($"Error, game n°{newGame.Item1.Id} not recorded. Cleaning up potential dirty DB entries...");
-                    var nbLines = ScoreDb.RevertGame(newGame.Item1.Id);
-                    if (nbLines > 0)
-                    {
-                        await ctx.RespondAsync($"DB cleaned up.");
-                    }
-                    else
-                    {
-                        await ctx.RespondAsync($"Error cleaning up DB. Contact an admin");
-                    }
-                }
-                else
-                {
-                    await ctx.RespondAsync($"Game n°{newGame.Item1.Id} recorded.");
-                }
+                GlobalDb.Commit();
             }
             catch (Exception e)
             {
                 await ctx.RespondAsync(e.Message);
+                GlobalDb.Rollback();
             }
         }
 
@@ -112,36 +96,30 @@ namespace Kandora
                         break;
                     }
                 }
+                var gameId = ScoreDb.RecordGame(usersIds, sourceMember: ctx.User.Id, signed: isAdmin);
 
-                try
+                foreach (var member in members)
                 {
-                    var gameId = ScoreDb.RecordGame(usersIds, sourceMember: ctx.User.Id, signed: isAdmin);
-
-                    foreach (var member in members)
+                    var message = $"{ctx.User.Username} tries to record a game: {members[0].DisplayName} > {members[1].DisplayName} > {members[2].DisplayName} > {members[3].DisplayName}.\n" +
+                                $"Use the \'!accept {gameId}\' command if you agree,\n";
+                    if (!isAdmin)
                     {
-                        var message = $"{ctx.User.Username} tries to record a game: {members[0].DisplayName} > {members[1].DisplayName} > {members[2].DisplayName} > {members[3].DisplayName}.\n" +
-                                    $"Use the \'!accept {gameId}\' command if you agree,\n";
-                        if (!isAdmin)
-                        {
-                            if (member != ctx.User)
-                            {
-                                await member.SendMessageAsync(message);
-                            }
-                        }
-                        else
+                        if (member != ctx.User)
                         {
                             await member.SendMessageAsync(message);
                         }
                     }
+                    else
+                    {
+                        await member.SendMessageAsync(message);
+                    }
                 }
-                catch (Exception e)
-                {
-                    await ctx.RespondAsync(e.Message);
-                }
+                GlobalDb.Commit();
             }
             catch (Exception e)
             {
                 await ctx.RespondAsync(e.Message);
+                GlobalDb.Rollback();
             }
         }
 
@@ -152,10 +130,12 @@ namespace Kandora
             {
                 ScoreDb.SignGameByUser(id, ctx.User.Id);
                 await ctx.RespondAsync($"You accepted the game n°{id}");
+                GlobalDb.Commit();
             }
             catch (Exception e)
             {
                 await ctx.RespondAsync(e.Message);
+                GlobalDb.Rollback();
             }
         }
 
@@ -189,11 +169,11 @@ namespace Kandora
                 {
                     await ctx.Member.SendMessageAsync(sb.ToString());
                 }
-
             }
             catch (Exception e)
             {
                 await ctx.RespondAsync(e.Message);
+                GlobalDb.Rollback();
             }
         }
     }
