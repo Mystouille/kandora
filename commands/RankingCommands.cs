@@ -11,8 +11,8 @@ namespace Kandora
 {
     public class RankingCommands
     {
-        [Command("scorename"), Description("Record a game from users name")]
-        public async Task ScoreMatchWithName(CommandContext ctx, [Description("The winner of the game")] string id1, [Description("The2nd place")] string id2, [Description("The 3rd place")] string id3, [Description("The last place")] string id4)
+        [Command("scorename"), Description("Record a game using users display name (accessible from the listusers command)")]
+        public async Task ScoreMatchWithName(CommandContext ctx, [Description("The players display name, from winner to last place")] params string[] nameList)
         {
             try
             {
@@ -35,23 +35,21 @@ namespace Kandora
                     return;
                 }
 
-                var users = new ulong[4];
                 string currentUser = "";
+                var users = new ulong[4];
                 try
                 {
-                    currentUser = id1;
-                    users[0] = userList.FindLast(x => x.DisplayName == id1).Id;
-                    currentUser = id2;
-                    users[1] = userList.FindLast(x => x.DisplayName == id2).Id;
-                    currentUser = id3;
-                    users[2] = userList.FindLast(x => x.DisplayName == id3).Id;
-                    currentUser = id4;
-                    users[3] = userList.FindLast(x => x.DisplayName == id4).Id;
+                    int i = 0;
+                    foreach (var userName in nameList)
+                    {
+                        currentUser = userName;
+                        users[i] = userList.Find(x => x.DisplayName == userName).Id;
+                        i++;
+                    }
                 }
                 catch
                 {
-                    await ctx.RespondAsync($"Cancelled. Couldn't find user named \"{currentUser}\" in the list");
-                    return;
+                    throw(new Exception($"Cancelled. Couldn't find user named \"{currentUser}\" in the list"));
                 }
                 var newGame = ScoreDb.RecordGame(users, sourceMember: ctx.User.Id, signed: true);
                 GlobalDb.Commit();
@@ -64,18 +62,9 @@ namespace Kandora
         }
 
         [Command("scorematch"), Description("Record a game"), Aliases("score", "score_match", "s")]
-        public async Task ScoreMatch(CommandContext ctx, [Description("The winner of the game")] DiscordMember user1, [Description("The2nd place")] DiscordMember user2, [Description("The 3rd place")] DiscordMember user3, [Description("The last place")] DiscordMember user4)
+        public async Task ScoreMatch(CommandContext ctx, [Description("The players, from winner to last place")] params DiscordMember[] discordUserList)
         {
-            var usersIds = new ulong[4];
-            usersIds[0] = user1.Id;
-            usersIds[1] = user2.Id;
-            usersIds[2] = user3.Id;
-            usersIds[3] = user4.Id;
-            var members = new DiscordMember[4];
-            members[0] = user1;
-            members[1] = user2;
-            members[2] = user3;
-            members[3] = user4;
+            var usersIds = discordUserList.Select(x => x.Id).ToArray();
             if (ctx.Member == null)
             {
                 await ctx.RespondAsync("Cancelled. You must be in a text channel for that command");
@@ -98,10 +87,14 @@ namespace Kandora
                 }
                 var gameId = ScoreDb.RecordGame(usersIds, sourceMember: ctx.User.Id, signed: isAdmin);
 
-                foreach (var member in members)
+                foreach (var member in discordUserList)
                 {
-                    var message = $"{ctx.User.Username} tries to record a game: {members[0].DisplayName} > {members[1].DisplayName} > {members[2].DisplayName} > {members[3].DisplayName}.\n" +
-                                $"Use the \'!accept {gameId}\' command if you agree,\n";
+                    var message = $"{ctx.User.Username} tries to record a game: \n" +
+                        $"1: <@{discordUserList[0].Id}>\n" +
+                        $"2: <@{discordUserList[1].Id}>\n" +
+                        $"3: <@{discordUserList[2].Id}>\n" +
+                        $"4: <@{discordUserList[3].Id}>\n" +
+                        $"Use the \'!accept {gameId}\' command to sign the scoresheet,\n";
                     if (!isAdmin)
                     {
                         if (member != ctx.User)
