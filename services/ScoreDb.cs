@@ -52,7 +52,13 @@ namespace Kandora
 
                 command.ExecuteNonQuery();
 
-                return GetGame(gameId);
+                var game = GetGame(gameId);
+                if (signed)
+                {
+                    RankingDb.UpdateRankings(game);
+                }
+
+                return game;
             }
             throw (new DbConnectionException());
         }

@@ -15,14 +15,15 @@ namespace Kandora
             var discordId = ctx.User.Id;
             try
             {
+                GlobalDb.Begin("register");
                 UserDb.AddUser(displayName, discordId, mahjsoulId);
                 await ctx.RespondAsync($"<@{ctx.User.Id}> has been registered");
-                GlobalDb.Commit();
+                GlobalDb.Commit("register");
             }
             catch (Exception e)
             {
                 await ctx.RespondAsync(e.Message);
-                GlobalDb.Rollback();
+                GlobalDb.Rollback("register");
             }
         }
 
@@ -31,17 +32,18 @@ namespace Kandora
         {
             try
             {
+                GlobalDb.Begin("rename");
                 var userList = UserDb.GetUsers();
                 var user = userList.Find(x => x.Id == ctx.User.Id);
                 var oldName = user.DisplayName;
                 user.DisplayName = displayName;
                 await ctx.RespondAsync($"<@{ctx.User.Id}>'s name has been changed from {oldName} to {displayName}");
-                GlobalDb.Commit();
+                GlobalDb.Commit("rename");
             }
             catch (Exception e)
             {
                 await ctx.RespondAsync(e.Message);
-                GlobalDb.Rollback();
+                GlobalDb.Rollback("rename");
             }
         }
 
@@ -50,6 +52,7 @@ namespace Kandora
         {
             try
             {
+                GlobalDb.Begin("listusers");
                 var users = UserDb.GetUsers();
 
                 int i = 1;
@@ -68,11 +71,12 @@ namespace Kandora
                 {
                     await ctx.Member.SendMessageAsync(sb.ToString());
                 }
+                GlobalDb.Commit("listusers");
             }
             catch (Exception e)
             {
                 await ctx.RespondAsync(e.Message);
-                GlobalDb.Rollback();
+                GlobalDb.Rollback("listusers");
             }
         }
     }

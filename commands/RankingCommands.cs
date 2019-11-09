@@ -16,6 +16,7 @@ namespace Kandora
         {
             try
             {
+                GlobalDb.Begin("scorename");
                 var userList = UserDb.GetUsers();
                 bool isAdmin = false;
                 foreach (var user in userList)
@@ -52,12 +53,12 @@ namespace Kandora
                     throw(new Exception($"Cancelled. Couldn't find user named \"{currentUser}\" in the list"));
                 }
                 var newGame = ScoreDb.RecordGame(users, sourceMember: ctx.User.Id, signed: true);
-                GlobalDb.Commit();
+                GlobalDb.Commit("scorename");
             }
             catch (Exception e)
             {
                 await ctx.RespondAsync(e.Message);
-                GlobalDb.Rollback();
+                GlobalDb.Rollback("scorename");
             }
         }
 
@@ -72,6 +73,7 @@ namespace Kandora
             }
             try
             {
+                GlobalDb.Begin("scorematch");
                 var userList = UserDb.GetUsers();
                 bool isAdmin = false;
                 foreach (var user in userList)
@@ -85,34 +87,41 @@ namespace Kandora
                         break;
                     }
                 }
-                var gameId = ScoreDb.RecordGame(usersIds, sourceMember: ctx.User.Id, signed: isAdmin);
+                var game = ScoreDb.RecordGame(usersIds, sourceMember: ctx.User.Id, signed: isAdmin);
 
                 foreach (var member in discordUserList)
                 {
-                    var message = $"{ctx.User.Username} tries to record a game: \n" +
-                        $"1: <@{discordUserList[0].Id}>\n" +
-                        $"2: <@{discordUserList[1].Id}>\n" +
-                        $"3: <@{discordUserList[2].Id}>\n" +
-                        $"4: <@{discordUserList[3].Id}>\n" +
-                        $"Use the \'!accept {gameId}\' command to sign the scoresheet,\n";
+
                     if (!isAdmin)
                     {
                         if (member != ctx.User)
                         {
+                            var message = $"{ctx.User.Username} tries to register a game (id= {game.Id}): \n" +
+                                $"1: <@{discordUserList[0].Id}>\n" +
+                                $"2: <@{discordUserList[1].Id}>\n" +
+                                $"3: <@{discordUserList[2].Id}>\n" +
+                                $"4: <@{discordUserList[3].Id}>\n" +
+                                $"Use the \'!accept {game.Id}\' command to sign the scoresheet,\n";
                             await member.SendMessageAsync(message);
                         }
                     }
                     else
                     {
+                        var message = $"{ctx.User.Username} registered a game (id= {game.Id}): \n" +
+                            $"1: <@{discordUserList[0].Id}>\n" +
+                            $"2: <@{discordUserList[1].Id}>\n" +
+                            $"3: <@{discordUserList[2].Id}>\n" +
+                            $"4: <@{discordUserList[3].Id}>\n" +
+                            $"{ctx.User.Username} is an admin, game was auto-signed\n";
                         await member.SendMessageAsync(message);
                     }
                 }
-                GlobalDb.Commit();
+                GlobalDb.Commit("scorematch");
             }
             catch (Exception e)
             {
                 await ctx.RespondAsync(e.Message);
-                GlobalDb.Rollback();
+                GlobalDb.Rollback("scorematch");
             }
         }
 
@@ -121,14 +130,15 @@ namespace Kandora
         {
             try
             {
+                GlobalDb.Begin("accept");
                 ScoreDb.SignGameByUser(id, ctx.User.Id);
                 await ctx.RespondAsync($"You accepted the game n°{id}");
-                GlobalDb.Commit();
+                GlobalDb.Commit("accept");
             }
             catch (Exception e)
             {
                 await ctx.RespondAsync(e.Message);
-                GlobalDb.Rollback();
+                GlobalDb.Rollback("accept");
             }
         }
 
@@ -137,6 +147,7 @@ namespace Kandora
         {
             try
             {
+                GlobalDb.Begin("ranking");
                 var userList = UserDb.GetUsers().Select(u => u.Id);
                 List<Ranking> lastUserRkList = new List<Ranking>();
                 foreach (var userId in userList)
@@ -162,11 +173,12 @@ namespace Kandora
                 {
                     await ctx.Member.SendMessageAsync(sb.ToString());
                 }
+                GlobalDb.Commit("ranking");
             }
             catch (Exception e)
             {
                 await ctx.RespondAsync(e.Message);
-                GlobalDb.Rollback();
+                GlobalDb.Rollback("ranking");
             }
         }
     }
