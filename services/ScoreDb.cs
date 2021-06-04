@@ -1,5 +1,7 @@
 ﻿using DSharpPlus.Entities;
+using kandora.bot.models;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
@@ -11,6 +13,8 @@ namespace Kandora
         public static DbDataReader Reader = null;
         private const string GameTableName = "[dbo].[Game]";
         private const string RankingTableName = "[dbo].[Ranking]";
+
+        //Ranking
         private const string RankingTableGameIdCol = "gameId";
         private const string User1Id = "user1Id";
         private const string User1Signed = "user1Signed";
@@ -22,8 +26,9 @@ namespace Kandora
         private const string User4Signed = "user4Signed";
         private const string Timestamp = "timestamp";
         private const string IdCol = "Id";
+        private const string ServerIdCol = "serverId";
 
-        public static Game RecordGame(ulong[] members, ulong sourceMember, bool signed = false)
+        public static Game RecordGame(string[] members, string sourceMember, Server server, bool signed = false)
         {
             var dbCon = DBConnection.Instance();
 
@@ -52,7 +57,7 @@ namespace Kandora
 
                 command.ExecuteNonQuery();
 
-                var game = GetGame(gameId);
+                var game = GetGame(gameId, server);
                 if (signed)
                 {
                     RankingDb.UpdateRankings(game);
@@ -100,7 +105,7 @@ namespace Kandora
             throw (new DbConnectionException());
         }
 
-        public static Game GetLastRecordedGame()
+        public static Game GetLastRecordedGame(Server server)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -109,36 +114,38 @@ namespace Kandora
                 command.Connection = dbCon.Connection;
                 command.CommandText = $"SELECT {IdCol}, {User1Id}, {User2Id}, {User3Id}, {User4Id}, {User1Signed}, {User2Signed}, {User3Signed}, {User4Signed}" +
                     $" FROM {GameTableName}" +
-                    $" WHERE {Timestamp} = (SELECT MAX({Timestamp}) FROM {GameTableName})";
+                    $" WHERE {ServerIdCol} = {server.Id}" +
+                    $" ORDER BY {Timestamp} DESC";
                 command.CommandType = CommandType.Text;
                 Reader = command.ExecuteReader();
                 while (Reader.Read())
                 {
                     int id = Reader.GetInt32(0);
-                    ulong user1Id = Convert.ToUInt64(Reader.GetDecimal(1));
-                    ulong user2Id = Convert.ToUInt64(Reader.GetDecimal(2));
-                    ulong user3Id = Convert.ToUInt64(Reader.GetDecimal(3));
-                    ulong user4Id = Convert.ToUInt64(Reader.GetDecimal(4));
+                    string user1Id = Reader.GetString(1);
+                    string user2Id = Reader.GetString(2);
+                    string user3Id = Reader.GetString(3);
+                    string user4Id = Reader.GetString(4);
                     bool user1Signed = Reader.GetBoolean(5);
                     bool user2Signed = Reader.GetBoolean(6);
                     bool user3Signed = Reader.GetBoolean(7);
                     bool user4Signed = Reader.GetBoolean(8);
+                    string serverId = Reader.GetString(9);
 
                     Reader.Close();
-                    return new Game(id, user1Id, user2Id, user3Id, user4Id, user1Signed, user2Signed, user3Signed, user4Signed);
+                    return new Game(id, server, user1Id, user2Id, user3Id, user4Id, user1Signed, user2Signed, user3Signed, user4Signed);
                 }
             }
             throw (new DbConnectionException());
         }
 
-        public static Game GetGame(int gameId)
+        public static Game GetGame(int gameId, Server server)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {IdCol}, {User1Id}, {User2Id}, {User3Id}, {User4Id}, {User1Signed}, {User2Signed}, {User3Signed}, {User4Signed}" +
+                command.CommandText = $"SELECT {IdCol}, {User1Id}, {User2Id}, {User3Id}, {User4Id}, {User1Signed}, {User2Signed}, {User3Signed}, {User4Signed}, {ServerIdCol}" +
                     $" FROM {GameTableName}" +
                     $" WHERE {IdCol} = @gameId";
 
@@ -153,24 +160,29 @@ namespace Kandora
                 while (Reader.Read())
                 {
                     int id = Reader.GetInt32(0);
-                    ulong user1Id = Convert.ToUInt64(Reader.GetDecimal(1));
-                    ulong user2Id = Convert.ToUInt64(Reader.GetDecimal(2));
-                    ulong user3Id = Convert.ToUInt64(Reader.GetDecimal(3));
-                    ulong user4Id = Convert.ToUInt64(Reader.GetDecimal(4));
+                    string user1Id = Reader.GetString(1);
+                    string user2Id = Reader.GetString(2);
+                    string user3Id = Reader.GetString(3);
+                    string user4Id = Reader.GetString(4);
                     bool user1Signed = Reader.GetBoolean(5);
                     bool user2Signed = Reader.GetBoolean(6);
                     bool user3Signed = Reader.GetBoolean(7);
                     bool user4Signed = Reader.GetBoolean(8);
+                    string serverId = Reader.GetString(9);
 
                     Reader.Close();
 
+                    if(serverId != server.Id)
+                    {
+                        throw new GetGameException($"Game n°{gameId} is not in this server: {server.DisplayName}");
+                    }
                     if(id != gameId)
                     {
                         throw (new GetGameException($"Tried to fetch game n°{gameId} but got n°{id} instead."));
                     }
-                    return new Game(id, user1Id, user2Id, user3Id, user4Id, user1Signed, user2Signed, user3Signed, user4Signed);
+                    return new Game(id, server, user1Id, user2Id, user3Id, user4Id, user1Signed, user2Signed, user3Signed, user4Signed);
                 }
-                throw (new GetGameException($"Game n°{gameId} not found after creating it"));
+                throw (new GetGameException($"Game n°{gameId} not found"));
             }
             throw (new DbConnectionException());
         }
@@ -180,13 +192,37 @@ namespace Kandora
             UpdateColumnInTable("mahjsoulId", value, id);
         }
 
-        internal static void SignGameByUser(int id, ulong userId)
+        internal static void SignGameByUser(Game game, string userId)
         {
-            var game = GetGame(id);
-            game.TrySignGameByUser(userId);
-            if (game.IsSigned)
+            TrySignGameByUser(userId, game);
+            if (game.IsSignedOff)
             {
                 RankingDb.UpdateRankings(game);
+            }
+        }
+
+        public static void TrySignGameByUser(string userId, Game game)
+        {
+
+            if (game.User1Id == userId)
+            {
+                game.User1Signed |= ScoreDb.SignGameByUserPos(game.Id, 1);
+            }
+            else if (game.User2Id == userId)
+            {
+                game.User2Signed |= ScoreDb.SignGameByUserPos(game.Id, 2);
+            }
+            else if (game.User3Id == userId)
+            {
+                game.User3Signed |= ScoreDb.SignGameByUserPos(game.Id, 3);
+            }
+            else if (game.User4Id == userId)
+            {
+                game.User4Signed |= ScoreDb.SignGameByUserPos(game.Id, 4);
+            }
+            else
+            {
+                throw (new UserNotFoundInGameException());
             }
         }
 

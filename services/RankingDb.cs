@@ -1,10 +1,9 @@
-﻿using DSharpPlus.EventArgs;
+﻿using kandora.bot.models;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Text;
 
 namespace Kandora
@@ -22,9 +21,9 @@ namespace Kandora
 
         internal static void UpdateRankings(Game game)
         {
-            if (!game.IsSigned)
+            if (!game.IsSignedOff)
             {
-                throw (new GameNotSignedException());
+                throw (new GameNotSignedOffException());
             }
             List<Ranking> rkList1 = GetRankingsFor(columnName: userIdCol, value: $"{game.User1Id}");
             List<Ranking> rkList2 = GetRankingsFor(columnName: userIdCol, value: $"{game.User2Id}");
@@ -36,13 +35,15 @@ namespace Kandora
                 throw (new UserRankingMissingException());
             }
 
-            List<Ranking> newRkList = new List<Ranking>();
-            newRkList.Add(new Ranking(game.User1Id, rkList1, rkList2.Last(), rkList3.Last(), rkList4.Last(), 1, game.Id));
-            newRkList.Add(new Ranking(game.User2Id, rkList2, rkList1.Last(), rkList3.Last(), rkList4.Last(), 2, game.Id));
-            newRkList.Add(new Ranking(game.User3Id, rkList3, rkList2.Last(), rkList1.Last(), rkList4.Last(), 3, game.Id));
-            newRkList.Add(new Ranking(game.User4Id, rkList4, rkList2.Last(), rkList3.Last(), rkList1.Last(), 4, game.Id));
+            List<Ranking> newRkList = new List<Ranking>
+            {
+                new Ranking(game.User1Id, rkList1, rkList2.Last(), rkList3.Last(), rkList4.Last(), 1, game.Id),
+                new Ranking(game.User2Id, rkList2, rkList1.Last(), rkList3.Last(), rkList4.Last(), 2, game.Id),
+                new Ranking(game.User3Id, rkList3, rkList2.Last(), rkList1.Last(), rkList4.Last(), 3, game.Id),
+                new Ranking(game.User4Id, rkList4, rkList2.Last(), rkList3.Last(), rkList1.Last(), 4, game.Id)
+            };
 
-            foreach(var ranking in newRkList)
+            foreach (var ranking in newRkList)
             {
                 AddRanking(ranking);
             }
@@ -64,7 +65,7 @@ namespace Kandora
             throw (new DbConnectionException());
         }
 
-        internal static void InitUserRanking(ulong targetUserId)
+        internal static void InitUserRanking(string targetUserId)
         {
             List<Ranking> userRankings = GetRankingsFor(columnName: userIdCol, value: $"{targetUserId}").Where(x => x.UserId == targetUserId).ToList();
             if (userRankings.Any())
@@ -86,9 +87,9 @@ namespace Kandora
             throw (new DbConnectionException());
         }
 
-        public static List<Ranking> GetUserRankings(ulong userId)
+        public static List<Ranking> GetUserRankings(string userId)
         {
-            return GetRankingsFor(userIdCol, $"{userId}");
+            return GetRankingsFor(userIdCol, userId);
         }
         private static List<Ranking> GetRankingsFor(string columnName, string value)
         {
@@ -112,7 +113,7 @@ namespace Kandora
                 while (reader.Read())
                 {
                     int id = reader.GetInt32(0);
-                    ulong userId = Convert.ToUInt64(reader.GetDecimal(1));
+                    string userId = reader.GetString(1);
                     double oldElo = reader.IsDBNull(2) ? -1 : reader.GetDouble(2);
                     double newElo = reader.IsDBNull(3) ? -1 : reader.GetDouble(3);
                     int position = reader.IsDBNull(4) ? -1 : reader.GetInt32(4);

@@ -1,17 +1,15 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using DSharpPlus;
-using DSharpPlus.Entities;
-using System.Collections.Generic;
 using System.Configuration;
 using DSharpPlus.CommandsNext;
+using Microsoft.Extensions.Logging;
 
 namespace Kandora
 {
     class Kandora
     {
         static DiscordClient client;
-        static CommandsNextModule commands;
+        static CommandsNextExtension commands;
 
         static void Main()
         {
@@ -24,14 +22,13 @@ namespace Kandora
             {
                 Token = ConfigurationManager.AppSettings.Get("ClientToken"),
                 TokenType = TokenType.Bot,
-                UseInternalLogHandler = true,
-                LogLevel = LogLevel.Debug
+                MinimumLogLevel = LogLevel.Debug
             });
 
 
             commands = client.UseCommandsNext(new CommandsNextConfiguration
             {
-                StringPrefix = "!"
+                StringPrefixes = new string[1] { "!" }
             });
 
             commands.RegisterCommands<MahjongCommands>();

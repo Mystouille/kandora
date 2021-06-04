@@ -1,129 +1,87 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Kandora
+namespace kandora.bot.models
 {
-    class Game
+    public partial class Game
     {
-        public int Id { get; }
-        private bool user1Signed;
-        private bool user2Signed;
-        private bool user3Signed;
-        private bool user4Signed;
+        private ICollection<Ranking> ranking;
 
-        public Game (int id, ulong user1Id, ulong user2Id, ulong user3Id, ulong user4Id, bool user1Signed, bool user2Signed, bool user3Signed, bool user4Signed)
+        public Game(Server server)
+        {
+            this.Server = server;
+
+            ranking = new HashSet<Ranking>();
+        }
+
+        public Game(int id, Server server, string user1Id, string user2Id, string user3Id, string user4Id, bool user1Signed, bool user2Signed, bool user3Signed, bool user4Signed) : this(server)
         {
             this.Id = id;
             this.User1Id = user1Id;
             this.User2Id = user2Id;
             this.User3Id = user3Id;
             this.User4Id = user4Id;
-            this.user1Signed = user1Signed;
-            this.user2Signed = user2Signed;
-            this.user3Signed = user3Signed;
-            this.user4Signed = user4Signed;
+            this.User1Signed = user1Signed;
+            this.User2Signed = user2Signed;
+            this.User3Signed = user3Signed;
+            this.User4Signed = user4Signed;
         }
+        public int Id { get; set; }
+        public Server Server { get; set; }
+        public string GameId { get; set; }
+        public string Platform { get; set; }
+        public string User1Id { get; set; }
+        public int? User1Score { get; set; }
+        public bool User1Signed { get; set; }
+        public string User2Id { get; set; }
+        public int? User2Score { get; set; }
+        public bool User2Signed { get; set; }
+        public string User3Id { get; set; }
+        public int? User3Score { get; set; }
+        public bool User3Signed { get; set; }
+        public string User4Id { get; set; }
+        public int? User4Score { get; set; }
+        public bool User4Signed { get; set; }
+        public DateTime Timestamp { get; set; }
 
-        public ulong User1Id { get; }
-        public ulong User2Id { get; }
-        public ulong User3Id { get; }
-        public ulong User4Id { get; }
-        public bool User1Signed
-        {
-            get { return user1Signed; }
-            set
-            {
-                var success = ScoreDb.SignGameByUserPos(Id, 1);
-                if (success)
-                {
-                    this.user1Signed = true;
-                }
-                else
-                {
-                    throw (new SignGameException());
-                }
-            }
-        }
-        public bool User2Signed
-        {
-            get { return user2Signed; }
-            set
-            {
-                var success = ScoreDb.SignGameByUserPos(Id, 2);
-                if (success)
-                {
-                    this.user2Signed = true;
-                }
-                else
-                {
-                    throw (new SignGameException());
-                }
-            }
-        }
-        public bool User3Signed
-        {
-            get { return user3Signed; }
-            set
-            {
-                var success = ScoreDb.SignGameByUserPos(Id, 3);
-                if (success)
-                {
-                    this.user3Signed = true;
-                }
-            }
-        }
-        public bool User4Signed
-        {
-            get { return user4Signed; }
-            set
-            {
-                var success = ScoreDb.SignGameByUserPos(Id, 4);
-                if (success)
-                {
-                    this.user4Signed = true;
-                }
-                else
-                {
-                    throw (new SignGameException());
-                }
-            }
-        }
-        public bool IsSigned
+        public virtual User User1 { get; set; }
+        public virtual User User2 { get; set; }
+        public virtual User User3 { get; set; }
+        public virtual User User4 { get; set; }
+        public virtual ICollection<Ranking> Ranking { get => ranking;}
+        public bool IsSignedOff
         {
             get
             {
-                return user1Signed && user2Signed && user3Signed && user4Signed;
+                return User1Signed && User2Signed && User3Signed && User4Signed;
             }
         }
-        
 
-        public bool TrySignGameByUser(ulong userId)
+        public bool isSignedBy (string userId)
         {
-            bool result = false;
-            if (User1Id == userId) {
-                result = ScoreDb.SignGameByUserPos(Id, 1);
-                user1Signed = user1Signed || result;
-            }
-            else if (User2Id == userId)
+            return userId == User1Id && User1Signed
+                || userId == User2Id && User2Signed
+                || userId == User3Id && User3Signed
+                || userId == User4Id && User4Signed;
+        }
+
+        public void signBy(string userId)
+        {
+            if(userId == User1Id)
             {
-                result = ScoreDb.SignGameByUserPos(Id, 2);
-                user2Signed = user2Signed || result;
-            }
-            else if (User3Id == userId)
+                User1Signed = true;
+            } else if (userId == User2Id)
             {
-                result = ScoreDb.SignGameByUserPos(Id, 3);
-                user3Signed = user3Signed || result;
+                User2Signed = true;
             }
-            else if (User4Id == userId)
+            else if (userId == User3Id)
             {
-                result = ScoreDb.SignGameByUserPos(Id, 4);
-                user4Signed = user4Signed || result;
+                User3Signed = true;
             }
-            else {
-                throw (new UserNotFoundInGameException());
+            else if (userId == User4Id)
+            {
+                User4Signed = true;
             }
-            return result;
         }
     }
 }

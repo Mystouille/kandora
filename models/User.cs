@@ -1,60 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Kandora
+namespace kandora.bot.models
 {
-    class User
+    public partial class User
     {
-        private string displayName;
-        private int mahjsoulId;
-        private bool isAdmin;
-
-        public ulong Id { get; }
-        public string DisplayName
+        public User()
         {
-            set
-            {
-                displayName = value;
-                UserDb.SetDiplayName(Id, value);
-            }
-            get
-            {
-                return displayName;
-            }
         }
-        public bool IsAdmin
-        {
-            set
-            {
-                isAdmin = value;
-                UserDb.SetIsAdmin(Id, value);
-            }
-            get
-            {
-                return isAdmin;
-            }
-        }
-
-        public int MahjsoulId
-        {
-            set
-            {
-                mahjsoulId = value;
-                UserDb.SetMahjsoulId(Id, value);
-            }
-            get
-            {
-                return mahjsoulId;
-            }
-        }
-
-        public User(ulong id, string displayName, int mahjsoulId, bool isAdmin)
+        public User(string id, string displayName, string mahjsoulId, string tenhouId) : this()
         {
             this.Id = id;
-            this.displayName = displayName;
-            this.mahjsoulId = mahjsoulId;
-            this.isAdmin = isAdmin;
+            this.DisplayName = displayName;
+            this.MahjsoulId = mahjsoulId;
+            this.TenhouId = tenhouId;
         }
+
+        public string Id { get; set; }
+        public string DisplayName { get; set; }
+        public string MahjsoulId { get; set; }
+        public string TenhouId { get; set; }
     }
 }

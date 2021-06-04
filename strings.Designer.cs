@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace kandora {
+namespace kandora.bot {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace kandora {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("kandora.strings", typeof(strings).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("kandora.bot.strings", typeof(strings).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

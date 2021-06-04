@@ -1,6 +1,7 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using kandora.bot.models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,118 +10,109 @@ using System.Threading.Tasks;
 
 namespace Kandora
 {
-    public class RankingCommands
+    public class RankingCommands : BaseCommandModule
     {
         [Command("scorename"), Description("Record a game using users display name (accessible from the listusers command)")]
         public async Task ScoreMatchWithName(CommandContext ctx, [Description("The players display name, from winner to last place")] params string[] nameList)
         {
+            if (ctx.Channel == null)
+            {
+                throw (new NotInChannelException());
+            }
+            var userDiscordId = ctx.User.Id.ToString();
+            var serverDiscordId = ctx.Guild.Id.ToString();
+            var channelDiscordId = ctx.Channel.Id.ToString();
             try
             {
                 GlobalDb.Begin("scorename");
-                var userList = UserDb.GetUsers();
-                bool isAdmin = false;
-                foreach (var user in userList)
+                var users = UserDb.GetUsers();
+                var servers = ServerDb.GetServers(users);
+                if (!servers.ContainsKey(serverDiscordId))
                 {
-                    if (user.Id == ctx.User.Id)
-                    {
-                        if (user.IsAdmin)
-                        {
-                            isAdmin = true;
-                        }
-                        break;
-                    }
+                    throw (new ServerNotRegisteredException());
                 }
-                if (!isAdmin)
+                var activeServer = servers[serverDiscordId];
+                if (activeServer.TargetChannelId != channelDiscordId)
                 {
-                    await ctx.RespondAsync("Cancelled. Only admins can use this command.");
-                    return;
+                    throw (new SilentException());
                 }
+                if (!users.ContainsKey(userDiscordId))
+                {
+                    throw (new UserNotRegisteredException(ctx.User.Id.ToString()));
+                }
+                var activeUser = users[userDiscordId];
+                var isAdmin = activeServer.Admins.Contains(activeUser);
 
-                string currentUser = "";
-                var users = new ulong[4];
-                try
+                var usersList = new List<User>();
+                foreach (var userName in nameList)
                 {
-                    int i = 0;
-                    foreach (var userName in nameList)
-                    {
-                        currentUser = userName;
-                        users[i] = userList.Find(x => x.DisplayName == userName).Id;
-                        i++;
-                    }
+                    usersList.Add(users.Values.Where(x => x.DisplayName == userName).First());
                 }
-                catch
-                {
-                    throw(new Exception($"Cancelled. Couldn't find user named \"{currentUser}\" in the list"));
-                }
-                var newGame = ScoreDb.RecordGame(users, sourceMember: ctx.User.Id, signed: true);
+                var newGame = ScoreDb.RecordGame(usersList.Select(x => x.Id).ToArray(), sourceMember: userDiscordId, activeServer, signed: isAdmin);
                 GlobalDb.Commit("scorename");
             }
             catch (Exception e)
             {
-                await ctx.RespondAsync(e.Message);
-                GlobalDb.Rollback("scorename");
+                if (!(e is SilentException))
+                {
+                    await ctx.RespondAsync(e.Message);
+                }
+                GlobalDb.Rollback("scorematch");
             }
         }
 
         [Command("scorematch"), Description("Record a game"), Aliases("score", "score_match", "s")]
         public async Task ScoreMatch(CommandContext ctx, [Description("The players, from winner to last place")] params DiscordMember[] discordUserList)
         {
-            var usersIds = discordUserList.Select(x => x.Id).ToArray();
-            if (ctx.Member == null)
+            var usersIds = discordUserList.Select(x => x.Id.ToString()).ToArray();
+            if (ctx.Channel == null)
             {
-                await ctx.RespondAsync("Cancelled. You must be in a text channel for that command");
-                return;
+                throw (new NotInChannelException());
             }
+            var userDiscordId = ctx.User.Id.ToString();
+            var serverDiscordId = ctx.Guild.Id.ToString();
+            var channelDiscordId = ctx.Channel.Id.ToString();
             try
             {
                 GlobalDb.Begin("scorematch");
-                var userList = UserDb.GetUsers();
-                bool isAdmin = false;
-                foreach (var user in userList)
+                var users = UserDb.GetUsers();
+                var servers = ServerDb.GetServers(users);
+                if (!servers.ContainsKey(serverDiscordId))
                 {
-                    if (user.Id == ctx.User.Id)
-                    {
-                        if (user.IsAdmin)
-                        {
-                            isAdmin = true;
-                        }
-                        break;
-                    }
+                    throw (new ServerNotRegisteredException());
                 }
-                var game = ScoreDb.RecordGame(usersIds, sourceMember: ctx.User.Id, signed: isAdmin);
-
-                foreach (var member in discordUserList)
+                var activeServer = servers[serverDiscordId];
+                var activeUser = users[userDiscordId];
+                if(activeServer.TargetChannelId != channelDiscordId)
                 {
-
-                    if (!isAdmin)
-                    {
-                        if (member != ctx.User)
-                        {
-                            var message = $"{ctx.User.Username} tries to register a game (id= {game.Id}): \n" +
-                                $"1: <@{discordUserList[0].Id}>\n" +
-                                $"2: <@{discordUserList[1].Id}>\n" +
-                                $"3: <@{discordUserList[2].Id}>\n" +
-                                $"4: <@{discordUserList[3].Id}>\n" +
-                                $"Use the \'!accept {game.Id}\' command to sign the scoresheet,\n";
-                            await member.SendMessageAsync(message);
-                        }
-                    }
-                    else
-                    {
-                        var message = $"{ctx.User.Username} registered a game (id= {game.Id}): \n" +
-                            $"1: <@{discordUserList[0].Id}>\n" +
-                            $"2: <@{discordUserList[1].Id}>\n" +
-                            $"3: <@{discordUserList[2].Id}>\n" +
-                            $"4: <@{discordUserList[3].Id}>\n" +
-                            $"{ctx.User.Username} is an admin, game was auto-signed\n";
-                        await member.SendMessageAsync(message);
-                    }
+                    throw (new SilentException());
                 }
+                if (!users.ContainsKey(userDiscordId))
+                {
+                    throw (new UserNotRegisteredException(ctx.User.Id.ToString()));
+                }
+                var isAdmin = activeServer.Admins.Contains(activeUser);
+
+
+                var game = ScoreDb.RecordGame(usersIds, sourceMember: userDiscordId, activeServer, signed: isAdmin);
+                var message = $"{ctx.User.Username} tries to register a game (id= {game.Id}): \n" +
+                            $"1rst: <@{discordUserList[0].Id}>\n" +
+                            $"2nd: <@{discordUserList[1].Id}>\n" +
+                            $"3rd: <@{discordUserList[2].Id}>\n" +
+                            $"4th: <@{discordUserList[3].Id}>\n";
+                message += isAdmin 
+                    ? $"Since {ctx.User.Username} is an admin, game has been signed off\n"
+                    : $"Use the \'!accept {game.Id}\' command to sign the scoresheet,\n";
+                await ctx.Channel.SendMessageAsync(message);
+                
                 GlobalDb.Commit("scorematch");
             }
             catch (Exception e)
             {
-                await ctx.RespondAsync(e.Message);
+                if (!(e is SilentException))
+                {
+                    await ctx.RespondAsync(e.Message);
+                }
                 GlobalDb.Rollback("scorematch");
             }
         }
@@ -128,10 +120,18 @@ namespace Kandora
         [Command("accept"), Description("Accept the proposed record of the game"), Aliases("a")]
         public async Task Accept(CommandContext ctx, [Description("The id of the game")] int id)
         {
+            if (ctx.Channel == null)
+            {
+                throw (new NotInChannelException());
+            }
+            var userDiscordId = ctx.User.Id.ToString();
+            var serverDiscordId = ctx.Guild.Id.ToString();
             try
             {
                 GlobalDb.Begin("accept");
-                ScoreDb.SignGameByUser(id, ctx.User.Id);
+                var server = ServerDb.GetServer(serverDiscordId);
+                var game = ScoreDb.GetGame(id, server);
+                ScoreDb.SignGameByUser(game, userDiscordId);
                 await ctx.RespondAsync($"You accepted the game n°{id}");
                 GlobalDb.Commit("accept");
             }
@@ -145,14 +145,16 @@ namespace Kandora
         [Command("ranking"), Description("Ask Kandora your current league ranking"), Aliases("rank", "leaderboard")]
         public async Task MyRanking(CommandContext ctx)
         {
+            var userDiscordId = ctx.User.Id.ToString();
+            var serverDiscordId = ctx.Guild.Id.ToString();
             try
             {
                 GlobalDb.Begin("ranking");
-                var userList = UserDb.GetUsers().Select(u => u.Id);
+                var users = UserDb.GetUsers();
                 List<Ranking> lastUserRkList = new List<Ranking>();
-                foreach (var userId in userList)
+                foreach (var user in users.Values)
                 {
-                    lastUserRkList.Add(RankingDb.GetUserRankings(userId).LastOrDefault());
+                    lastUserRkList.Add(RankingDb.GetUserRankings(user.Id).LastOrDefault());
                 }
                 lastUserRkList.Sort((a, b) => (-1*a.NewElo.CompareTo(b.NewElo)));
 
@@ -161,7 +163,7 @@ namespace Kandora
                 int i = 1;
                 foreach (var rank in lastUserRkList)
                 {
-                    sb.Append($"{i}: <@{rank.UserId}> ({rank.NewElo}) {(rank.UserId==ctx.User.Id ? "<<< You are here": "")}\n");
+                    sb.Append($"{i}: <@{rank.UserId}> ({rank.NewElo}) {(rank.UserId== userDiscordId ? "<<< You are here": "")}\n");
                     i++;
                 }
 
@@ -177,7 +179,14 @@ namespace Kandora
             }
             catch (Exception e)
             {
-                await ctx.RespondAsync(e.Message);
+                if (ctx != null && ctx.Member == null)
+                {
+                    await ctx.RespondAsync(e.Message);
+                }
+                else
+                {
+                    await ctx.Member.SendMessageAsync(e.Message);
+                }
                 GlobalDb.Rollback("ranking");
             }
         }

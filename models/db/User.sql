@@ -1,8 +1,8 @@
 ﻿CREATE TABLE [dbo].[User]
 (
-	[Id]  NUMERIC(20,0) NOT NULL UNIQUE, 
-    [displayName] NCHAR(30) NOT NULL, 
-    [mahjsoulId] INT NOT NULL,
-    [isAdmin] BIT NOT NULL,
+	[Id]  NCHAR(20) NOT NULL UNIQUE, 
+    [displayName] NCHAR(200) NOT NULL, 
+    [mahjsoulId] NCHAR(30) NOT NULL,
+    [tenhouId] NCHAR(30) NOT NULL,
     PRIMARY KEY CLUSTERED ([Id] ASC),
-)
+);
