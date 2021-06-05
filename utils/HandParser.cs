@@ -1,6 +1,7 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 
@@ -28,7 +29,7 @@ namespace kandora.bot.utils
             {"3d","7z"}
         };
 
-        public static string GetEmojiCode(string tileName, DiscordClient client)
+        public static DiscordEmoji GetEmojiCode(string tileName, DiscordClient client)
         {
             try
             {
@@ -40,20 +41,15 @@ namespace kandora.bot.utils
                 {
                     return GetEmojiCode(ALTERNATIVE_IDS.GetValueOrDefault(tileName), client);
                 }
-                return "";
+                return null;
             }
         }
 
-        public static string GetHandEmojiCode(string hand, DiscordClient client)
+        public static IEnumerable<DiscordEmoji> GetHandEmojiCodes(string hand, DiscordClient client)
         {
             StringBuilder sb = new StringBuilder();
             var tileList = ParseHand(hand);
-            foreach (var tile in tileList)
-            {
-                sb.Append(GetEmojiCode(tile, client));
-            }
-
-            return sb.ToString();
+            return tileList.Select(x => GetEmojiCode(x, client));
         }
 
 
