@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Kandora
+namespace kandora.bot.exceptions
 {
     public class NotEnoughUsersException: Exception
     {

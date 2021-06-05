@@ -1,10 +1,10 @@
-﻿using kandora.bot.models;
-using System;
+﻿using kandora.bot.exceptions;
+using kandora.bot.models;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
-namespace Kandora
+namespace kandora.bot.services
 {
     class UserDb
     {
@@ -31,9 +31,9 @@ namespace Kandora
 
                 while (reader.Read())
                 {
-                    string id = reader.GetString(0);
+                    string id = reader.GetString(0).Trim();
                     string displayName = reader.GetString(1).Trim();
-                    string mahjsoulId = reader.GetString(2);
+                    string mahjsoulId = reader.GetString(2).Trim();
                     string tenhouId = reader.GetString(3).Trim();
                     users.Add(id, new User(id, displayName, mahjsoulId, tenhouId));
                 }
@@ -43,7 +43,31 @@ namespace Kandora
             throw (new DbConnectionException());
         }
 
-        public static void AddUser(string displayName, string discordId, string mahjsoulId, string tenhouId)
+        public static bool IsUserInDb(string userId)
+        {
+            Dictionary<string, User> users = new Dictionary<string, User>();
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = SqlClientFactory.Instance.CreateCommand();
+                command.Connection = dbCon.Connection;
+                command.CommandText = $"SELECT {idCol} FROM {TableName} WHERE {idCol} = {userId}";
+                command.CommandType = CommandType.Text;
+
+                var reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    reader.Close();
+                    return true;
+                }
+                reader.Close();
+                return false;
+            }
+            throw (new DbConnectionException());
+        }
+
+        public static void CreateUser(string displayName, string userDiscordId, string serverId, string mahjsoulId, string tenhouId)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -53,14 +77,13 @@ namespace Kandora
                 command.CommandText = $"INSERT INTO {TableName} ({displayNameCol}, {idCol}, {mahjsoulIdCol}, {tenhouIdCol}) " +
                     $"VALUES (@displayName, @discordId, @mahjsoulId, @tenhouId);";
 
-                //sql injection protection
                 command.Parameters.Add(new SqlParameter("@displayName", SqlDbType.VarChar)
                 {
                     Value = displayName
                 });
                 command.Parameters.Add(new SqlParameter("@discordId", SqlDbType.VarChar)
                 {
-                    Value = discordId
+                    Value = userDiscordId
                 });
                 command.Parameters.Add(new SqlParameter("@mahjsoulId", SqlDbType.VarChar)
                 {
@@ -73,27 +96,28 @@ namespace Kandora
                 command.CommandType = CommandType.Text;
 
                 command.ExecuteNonQuery();
+                RankingDb.InitUserRanking(userDiscordId, serverId);
 
-                RankingDb.InitUserRanking(discordId);
+                return;
             }
             throw (new DbConnectionException());
         }
 
-        internal static void SetMahjsoulId(ulong id, int value)
+        internal static void SetMahjsoulId(string id, int value)
         {
             UpdateColumnInTable("mahjsoulId", $"{value}", id);
         }
-        internal static void SetTenhoulId(ulong id, int value)
+        internal static void SetTenhoulId(string id, int value)
         {
             UpdateColumnInTable("tenhouId", $"{value}", id);
         }
 
-        internal static void SetDiplayName(ulong id, string value)
+        internal static void SetDiplayName(string id, string value)
         {
             UpdateColumnInTable("displayName", $"\'{value}\'", id);
         }
 
-        private static void UpdateColumnInTable(string columnName, string value, ulong id)
+        private static void UpdateColumnInTable(string columnName, string value, string id)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -106,6 +130,7 @@ namespace Kandora
                     command.CommandType = CommandType.Text;
 
                     command.ExecuteNonQuery();
+                    return;
                 }
             }
             throw (new DbConnectionException());

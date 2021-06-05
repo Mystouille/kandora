@@ -6,7 +6,9 @@
 	[position]	INT		   NULL,
     [timestamp] DATETIME   NOT NULL DEFAULT SYSDATETIME(),
     [gameId]    INT        NULL,
+    [serverId]  NCHAR(20) NOT NULL,
     FOREIGN KEY ([userId]) REFERENCES [dbo].[User] ([Id]),
-    FOREIGN KEY ([gameId]) REFERENCES [dbo].[Game] ([Id])
+    FOREIGN KEY ([gameId]) REFERENCES [dbo].[Game] ([Id]),
+    FOREIGN KEY ([serverId]) REFERENCES [dbo].[Server] ([Id])
 );
 

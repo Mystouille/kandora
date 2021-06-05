@@ -18,8 +18,9 @@ namespace kandora.bot.models
         public int? Position { get; set; }
         public DateTime Timestamp { get; set; }
         public int? GameId { get; set; }
+        public string ServerId { get; set; }
 
-        public Ranking(int id, string userId, double oldElo, double newElo, int position, DateTime timestamp, int gameId)
+        public Ranking(int id, string userId, double oldElo, double newElo, int position, DateTime timestamp, int gameId, string serverId)
         {
             Id = id;
             UserId = userId;
@@ -28,13 +29,15 @@ namespace kandora.bot.models
             Position = position;
             Timestamp = timestamp;
             GameId = gameId;
+            ServerId = serverId;
         }
 
-        public Ranking(string userId, List<Ranking> userOldRks, Ranking oldRk2, Ranking oldRk3, Ranking oldRk4, int position, int gameId)
+        public Ranking(string userId, List<Ranking> userOldRks, Ranking oldRk2, Ranking oldRk3, Ranking oldRk4, int position, int gameId, string serverId)
         {
             UserId = userId;
             Position = position;
             GameId = gameId;
+            ServerId = serverId;
             OldElo = userOldRks.LastOrDefault().NewElo;
             double oldElo = OldElo.HasValue ? INITIAL_ELO : OldElo.Value;
             double avgTableRk = (oldRk2.NewElo + oldRk3.NewElo + oldRk4.NewElo) / 3;

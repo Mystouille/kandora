@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Kandora
+namespace kandora.bot.exceptions
 {
     public class SignGameException: Exception
     {

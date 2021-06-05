@@ -3,6 +3,7 @@ using DSharpPlus;
 using System.Configuration;
 using DSharpPlus.CommandsNext;
 using Microsoft.Extensions.Logging;
+using kandora.bot.commands;
 
 namespace Kandora
 {

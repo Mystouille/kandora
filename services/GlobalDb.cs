@@ -1,9 +1,8 @@
-﻿using DSharpPlus.Entities;
-using System;
+﻿using kandora.bot.exceptions;
 using System.Data;
 using System.Data.SqlClient;
 
-namespace Kandora
+namespace kandora.bot.services
 {
     class GlobalDb
     {

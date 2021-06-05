@@ -1,18 +1,19 @@
-﻿using kandora.bot.models;
+﻿using kandora.bot.exceptions;
+using kandora.bot.models;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Text;
 
-namespace Kandora
+namespace kandora.bot.services
 {
     internal class RankingDb
     {
         private const string tableName = "[dbo].[Ranking]";
         private const string idCol = "Id";
         private const string userIdCol = "userId";
+        private const string serverIdCol = "serverId";
         private const string oldEloCol = "oldElo";
         private const string newEloCol = "newElo";
         private const string positionCol = "position";
@@ -25,22 +26,22 @@ namespace Kandora
             {
                 throw (new GameNotSignedOffException());
             }
-            List<Ranking> rkList1 = GetRankingsFor(columnName: userIdCol, value: $"{game.User1Id}");
-            List<Ranking> rkList2 = GetRankingsFor(columnName: userIdCol, value: $"{game.User2Id}");
-            List<Ranking> rkList3 = GetRankingsFor(columnName: userIdCol, value: $"{game.User3Id}");
-            List<Ranking> rkList4 = GetRankingsFor(columnName: userIdCol, value: $"{game.User4Id}");
+            List<Ranking> rkList1 = GetUserRankingHistory(game.User1Id, game.Server.Id);
+            List<Ranking> rkList2 = GetUserRankingHistory(game.User2Id, game.Server.Id);
+            List<Ranking> rkList3 = GetUserRankingHistory(game.User3Id, game.Server.Id);
+            List<Ranking> rkList4 = GetUserRankingHistory(game.User4Id, game.Server.Id);
 
-            if(!rkList1.Any() || !rkList2.Any() || !rkList3.Any() || !rkList4.Any())
+            if (!rkList1.Any() || !rkList2.Any() || !rkList3.Any() || !rkList4.Any())
             {
                 throw (new UserRankingMissingException());
             }
 
             List<Ranking> newRkList = new List<Ranking>
             {
-                new Ranking(game.User1Id, rkList1, rkList2.Last(), rkList3.Last(), rkList4.Last(), 1, game.Id),
-                new Ranking(game.User2Id, rkList2, rkList1.Last(), rkList3.Last(), rkList4.Last(), 2, game.Id),
-                new Ranking(game.User3Id, rkList3, rkList2.Last(), rkList1.Last(), rkList4.Last(), 3, game.Id),
-                new Ranking(game.User4Id, rkList4, rkList2.Last(), rkList3.Last(), rkList1.Last(), 4, game.Id)
+                new Ranking(game.User1Id, rkList1, rkList2.Last(), rkList3.Last(), rkList4.Last(), 1, game.Id, game.Server.Id),
+                new Ranking(game.User2Id, rkList2, rkList1.Last(), rkList3.Last(), rkList4.Last(), 2, game.Id, game.Server.Id),
+                new Ranking(game.User3Id, rkList3, rkList2.Last(), rkList1.Last(), rkList4.Last(), 3, game.Id, game.Server.Id),
+                new Ranking(game.User4Id, rkList4, rkList2.Last(), rkList3.Last(), rkList1.Last(), 4, game.Id, game.Server.Id)
             };
 
             foreach (var ranking in newRkList)
@@ -56,8 +57,8 @@ namespace Kandora
             {
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"INSERT INTO {tableName} ({userIdCol}, {oldEloCol}, {newEloCol}, {positionCol}, {gameIdCol}) " +
-                    $"VALUES ({rk.UserId}, {rk.OldElo}, {rk.NewElo}, {rk.Position}, {rk.GameId});";
+                command.CommandText = $"INSERT INTO {tableName} ({userIdCol}, {oldEloCol}, {newEloCol}, {positionCol}, {gameIdCol}, {serverIdCol}) " +
+                    $"VALUES ({rk.UserId}, {rk.OldElo}, {rk.NewElo}, {rk.Position}, {rk.GameId}, {rk.ServerId});";
 
                 command.CommandType = CommandType.Text;
                 return command.ExecuteNonQuery() > 0;
@@ -65,9 +66,9 @@ namespace Kandora
             throw (new DbConnectionException());
         }
 
-        internal static void InitUserRanking(string targetUserId)
+        internal static void InitUserRanking(string userId, string serverId)
         {
-            List<Ranking> userRankings = GetRankingsFor(columnName: userIdCol, value: $"{targetUserId}").Where(x => x.UserId == targetUserId).ToList();
+            List<Ranking> userRankings = GetUserRankingHistory(userId, serverId, latest: true);
             if (userRankings.Any())
             {
                 throw (new UserAlreadyRankedException());
@@ -78,25 +79,62 @@ namespace Kandora
             {
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"INSERT INTO {tableName} ({userIdCol}, {newEloCol}) " +
-                    $"VALUES ({targetUserId}, {Ranking.INITIAL_ELO});";
+                command.CommandText = $"INSERT INTO {tableName} ({userIdCol}, {serverIdCol}, {newEloCol}) " +
+                    $"VALUES (@userId, @serverId, @rank);";
 
+                command.Parameters.Add(new SqlParameter("@userId", SqlDbType.VarChar)
+                {
+                    Value = userId
+                });
+                command.Parameters.Add(new SqlParameter("@serverId", SqlDbType.VarChar)
+                {
+                    Value = serverId
+                });
+                command.Parameters.Add(new SqlParameter("@rank", SqlDbType.Float)
+                {
+                    Value = Ranking.INITIAL_ELO
+                });
                 command.CommandType = CommandType.Text;
                 command.ExecuteNonQuery();
+                return;
             }
             throw (new DbConnectionException());
         }
 
-        public static List<Ranking> GetUserRankings(string userId)
+        internal static List<Ranking> GetUserRankingHistory(string userId, string serverId, bool latest = false)
         {
-            return GetRankingsFor(userIdCol, userId);
-        }
-        private static List<Ranking> GetRankingsFor(string columnName, string value)
-        {
-            return GetRankingsFor(columnName, new string[] { value });
-        }
+            List<Ranking> rankingListList = new List<Ranking>();
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = SqlClientFactory.Instance.CreateCommand();
+                command.Connection = dbCon.Connection;
+                command.CommandText = $"SELECT {idCol}, {oldEloCol}, {newEloCol}, {positionCol}, {timeStampCol} , {gameIdCol} FROM {tableName} " +
+                    $"WHERE {userIdCol} = {userId} AND {serverIdCol} = {serverId} " +
+                    $"ORDER BY {idCol} DESC";
+                command.CommandType = CommandType.Text;
 
-        private static List<Ranking> GetRankingsFor(string columnName, string[] values)
+                var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    int id = reader.GetInt32(0);
+                    double oldElo = reader.IsDBNull(1) ? -1 : reader.GetDouble(1);
+                    double newElo = reader.IsDBNull(2) ? -1 : reader.GetDouble(2);
+                    int position = reader.IsDBNull(3) ? -1 : reader.GetInt32(3);
+                    DateTime timestamp = reader.GetDateTime(4);
+                    int gameId = reader.IsDBNull(5) ? -1 : reader.GetInt32(5);
+                    rankingListList.Add(new Ranking(id, userId, oldElo, newElo, position, timestamp, gameId, serverId));
+                    if (latest)
+                    {
+                        break;
+                    }
+                }
+                reader.Close();
+                return rankingListList;
+            }
+            throw (new DbConnectionException());
+        }
+        internal static List<Ranking> GetServerRanking(string serverId)
         {
             List<Ranking> rankingListList = new List<Ranking>();
             var dbCon = DBConnection.Instance();
@@ -105,8 +143,8 @@ namespace Kandora
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
                 command.CommandText = $"SELECT {idCol}, {userIdCol}, {oldEloCol}, {newEloCol}, {positionCol}, {timeStampCol} , {gameIdCol} FROM {tableName} " +
-                    $"{buildWhereClause(columnName, values)} " +
-                    $"ORDER BY {idCol} ASC";
+                    $"WHERE {serverIdCol} = {serverId} " +
+                    $"ORDER BY {newEloCol} DESC";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();
@@ -119,27 +157,12 @@ namespace Kandora
                     int position = reader.IsDBNull(4) ? -1 : reader.GetInt32(4);
                     DateTime timestamp = reader.GetDateTime(5);
                     int gameId = reader.IsDBNull(6) ? -1 : reader.GetInt32(6);
-                    rankingListList.Add(new Ranking(id, userId, oldElo, newElo, position, timestamp, gameId));
+                    rankingListList.Add(new Ranking(id, userId, oldElo, newElo, position, timestamp, gameId, serverId));
                 }
                 reader.Close();
                 return rankingListList;
             }
             throw (new DbConnectionException());
-        }
-
-        private static string buildWhereClause(string columnName, string[] values)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.Append("WHERE ");
-            for(int i = 0; i<values.Length; i++)
-            {
-                sb.Append($"{columnName} = {values[i]}");
-                if (i < values.Length - 1)
-                {
-                    sb.Append(" OR ");
-                }
-            }
-            return sb.ToString();
         }
     }
 }

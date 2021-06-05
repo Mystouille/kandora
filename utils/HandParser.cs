@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 
 
-namespace Kandora
+namespace kandora.bot.utils
 {
     public static class HandParser
     {

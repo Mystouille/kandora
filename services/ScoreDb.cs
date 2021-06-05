@@ -1,12 +1,10 @@
-﻿using DSharpPlus.Entities;
+﻿using kandora.bot.exceptions;
 using kandora.bot.models;
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 
-namespace Kandora
+namespace kandora.bot.services
 {
     class ScoreDb
     {

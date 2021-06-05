@@ -1,19 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Text;
 
 namespace kandora.bot.models
 {
     public class Server
     {
-        public Server(string id, string displayName, string targetChannelId)
+        public Server(string id, string displayName, string leagueRoleId, string targetChannelId)
         {
-            this.Id = id;
-            this.DisplayName = displayName;
-            this.TargetChannelId = targetChannelId;
+            Id = id;
+            DisplayName = displayName;
+            LeagueRoleId = leagueRoleId;
+            TargetChannelId = targetChannelId;
+            Users = new Collection<User>();
+            Admins = new Collection<User>();
+            Owners = new Collection<User>();
         }
         public string Id { get; set; }
         public string DisplayName { get; set; }
+        public string LeagueRoleId { get; set; }
         public string TargetChannelId { get; set; }
 
         public virtual ICollection<User> Users { get; set; }

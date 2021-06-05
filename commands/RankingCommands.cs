@@ -1,29 +1,31 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using kandora.bot.exceptions;
 using kandora.bot.models;
+using kandora.bot.services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Kandora
+namespace kandora.bot.commands
 {
     public class RankingCommands : BaseCommandModule
     {
         [Command("scorename"), Description("Record a game using users display name (accessible from the listusers command)")]
         public async Task ScoreMatchWithName(CommandContext ctx, [Description("The players display name, from winner to last place")] params string[] nameList)
         {
-            if (ctx.Channel == null)
-            {
-                throw (new NotInChannelException());
-            }
             var userDiscordId = ctx.User.Id.ToString();
             var serverDiscordId = ctx.Guild.Id.ToString();
-            var channelDiscordId = ctx.Channel.Id.ToString();
             try
             {
+                if (ctx.Channel == null)
+                {
+                    throw (new NotInChannelException());
+                }
+                var channelDiscordId = ctx.Channel.Id.ToString();
                 GlobalDb.Begin("scorename");
                 var users = UserDb.GetUsers();
                 var servers = ServerDb.GetServers(users);
@@ -65,15 +67,15 @@ namespace Kandora
         public async Task ScoreMatch(CommandContext ctx, [Description("The players, from winner to last place")] params DiscordMember[] discordUserList)
         {
             var usersIds = discordUserList.Select(x => x.Id.ToString()).ToArray();
-            if (ctx.Channel == null)
-            {
-                throw (new NotInChannelException());
-            }
             var userDiscordId = ctx.User.Id.ToString();
             var serverDiscordId = ctx.Guild.Id.ToString();
-            var channelDiscordId = ctx.Channel.Id.ToString();
             try
             {
+                if (ctx.Channel == null)
+                {
+                    throw (new NotInChannelException());
+                }
+                var channelDiscordId = ctx.Channel.Id.ToString();
                 GlobalDb.Begin("scorematch");
                 var users = UserDb.GetUsers();
                 var servers = ServerDb.GetServers(users);
@@ -120,14 +122,15 @@ namespace Kandora
         [Command("accept"), Description("Accept the proposed record of the game"), Aliases("a")]
         public async Task Accept(CommandContext ctx, [Description("The id of the game")] int id)
         {
-            if (ctx.Channel == null)
-            {
-                throw (new NotInChannelException());
-            }
+
             var userDiscordId = ctx.User.Id.ToString();
             var serverDiscordId = ctx.Guild.Id.ToString();
             try
             {
+                if (ctx.Channel == null)
+                {
+                    throw (new NotInChannelException());
+                }
                 GlobalDb.Begin("accept");
                 var server = ServerDb.GetServer(serverDiscordId);
                 var game = ScoreDb.GetGame(id, server);
@@ -149,44 +152,28 @@ namespace Kandora
             var serverDiscordId = ctx.Guild.Id.ToString();
             try
             {
+                if (ctx.Channel == null)
+                {
+                    throw (new NotInChannelException());
+                }
                 GlobalDb.Begin("ranking");
                 var users = UserDb.GetUsers();
-                List<Ranking> lastUserRkList = new List<Ranking>();
-                foreach (var user in users.Values)
-                {
-                    lastUserRkList.Add(RankingDb.GetUserRankings(user.Id).LastOrDefault());
-                }
-                lastUserRkList.Sort((a, b) => (-1*a.NewElo.CompareTo(b.NewElo)));
+                List<Ranking> rankingList = RankingDb.GetServerRanking(serverDiscordId);
 
                 StringBuilder sb = new StringBuilder();
                 sb.Append("Leaderboard:\n");
                 int i = 1;
-                foreach (var rank in lastUserRkList)
+                foreach (var rank in rankingList)
                 {
                     sb.Append($"{i}: <@{rank.UserId}> ({rank.NewElo}) {(rank.UserId== userDiscordId ? "<<< You are here": "")}\n");
                     i++;
                 }
-
-                if (ctx != null && ctx.Member == null)
-                {
-                    await ctx.RespondAsync(sb.ToString());
-                }
-                else
-                {
-                    await ctx.Member.SendMessageAsync(sb.ToString());
-                }
+                await ctx.RespondAsync(sb.ToString());
                 GlobalDb.Commit("ranking");
             }
             catch (Exception e)
             {
-                if (ctx != null && ctx.Member == null)
-                {
-                    await ctx.RespondAsync(e.Message);
-                }
-                else
-                {
-                    await ctx.Member.SendMessageAsync(e.Message);
-                }
+                await ctx.RespondAsync(e.Message);
                 GlobalDb.Rollback("ranking");
             }
         }

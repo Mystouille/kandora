@@ -1,9 +1,8 @@
-﻿using System;
-using System.Configuration;
+﻿using System.Configuration;
 using System.Data.SqlClient;
 using DT = System.Data;
 
-namespace Kandora
+namespace kandora.bot.services
 {
     public class DBConnection
     {
