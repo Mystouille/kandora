@@ -31,10 +31,10 @@ namespace kandora.bot.services
 
                 while (reader.Read())
                 {
-                    string id = reader.GetString(0).Trim();
-                    string displayName = reader.GetString(1).Trim();
-                    string mahjsoulId = reader.GetString(2).Trim();
-                    string tenhouId = reader.GetString(3).Trim();
+                    string id = reader.GetString(0);
+                    string displayName = reader.GetString(1);
+                    string mahjsoulId = reader.GetString(2);
+                    string tenhouId = reader.GetString(3);
                     users.Add(id, new User(id, displayName, mahjsoulId, tenhouId));
                 }
                 reader.Close();

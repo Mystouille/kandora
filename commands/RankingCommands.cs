@@ -1,6 +1,7 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using kandora.bot.client;
 using kandora.bot.exceptions;
 using kandora.bot.models;
 using kandora.bot.services;
@@ -14,6 +15,13 @@ namespace kandora.bot.commands
 {
     public class RankingCommands : BaseCommandModule
     {
+        [Command("mhloginfo"), Description("Returns various info about a mahjsoul game")]
+        public async Task MhLogInfo(CommandContext ctx, [Description("The mahjsoul log id")] string gameId)
+        {
+            var log = await TensoulClient.GetMahjsoulLog(gameId, 2);
+            await ctx.RespondAsync(log.Pretty());
+        }
+
         [Command("scorename"), Description("Record a game using users display name (accessible from the listusers command)")]
         public async Task ScoreMatchWithName(CommandContext ctx, [Description("The players display name, from winner to last place")] params string[] nameList)
         {

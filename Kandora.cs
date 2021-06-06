@@ -4,8 +4,13 @@ using System.Configuration;
 using DSharpPlus.CommandsNext;
 using Microsoft.Extensions.Logging;
 using kandora.bot.commands;
+using Newtonsoft.Json;
+using kandora.bot.http;
+using System;
+using kandora.bot.utils;
+using kandora.bot.client;
 
-namespace Kandora
+namespace kandora.bot
 {
     class Kandora
     {

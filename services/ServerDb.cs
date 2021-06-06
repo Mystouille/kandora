@@ -40,13 +40,14 @@ namespace kandora.bot.services
 
                 while (reader.Read())
                 {
-                    string displayName = reader.IsDBNull(0) ? null : reader.GetString(0).Trim();
-                    string targetChannelId = reader.IsDBNull(1) ? null : reader.GetString(1).Trim();
-                    string leagueRoleId = reader.IsDBNull(2) ? null : reader.GetString(2).Trim();
+                    string displayName = reader.IsDBNull(0) ? null : reader.GetString(0);
+                    string targetChannelId = reader.IsDBNull(1) ? null : reader.GetString(1);
+                    string leagueRoleId = reader.IsDBNull(2) ? null : reader.GetString(2);
 
                     reader.Close();
                     return new Server(serverId, displayName, leagueRoleId, targetChannelId);
                 }
+                reader.Close();
                 throw (new EntityNotFoundException("Server"));
             }
             throw (new DbConnectionException());
@@ -69,6 +70,7 @@ namespace kandora.bot.services
                     reader.Close();
                     return true;
                 }
+                reader.Close();
                 return false;
             }
             throw (new DbConnectionException());
