@@ -11,7 +11,7 @@ namespace kandora.bot.utils
 {
     class TenhouLogParser
     {
-        public static TenhouGame ParseTenhouGame(string payload)
+        public static RiichiGame ParseTenhouFormatGame(string payload)
         {
             JsonTextReader reader = new JsonTextReader(new StringReader(payload));
             reader.Read();
@@ -19,24 +19,30 @@ namespace kandora.bot.utils
             {
                 throw new System.Exception();
             }
-            var tenhouGame = new TenhouGame();
+            var tenhouGame = new RiichiGame();
             reader.Read();
 
             tenhouGame.Ver = ParseStrProp("ver", reader);
             tenhouGame.Ref = ParseStrProp("ref", reader);
-            tenhouGame.Log = ParseLog(reader);
+            tenhouGame.Rounds = ParseLog(reader);
             tenhouGame.Ratingc = ParseStrProp("ratingc", reader);
             tenhouGame.Rule = ParseRule(reader);
             tenhouGame.Lobby = ParseIntProp("lobby", reader);
             tenhouGame.Dan = ParseStrArray(reader, "dan");
-            tenhouGame.Rate = ParseIntArray(reader, "rate");
+            tenhouGame.Rate = ParseFloatArray(reader, "rate");
             tenhouGame.Sx = ParseStrArray(reader, "sx");
             var sc = ParseStrArray(reader, "sc");
             tenhouGame.FinalScores = GetScores(sc);
             tenhouGame.FinalRankDeltas = GetRanks(sc);
             tenhouGame.Name = ParseStrArray(reader, "name");
-            tenhouGame.Title = ParseStrArray(reader, "title");
-            //TODO: implement
+            try
+            {
+                tenhouGame.Title = ParseStrArray(reader, "title");
+            }
+            catch
+            {
+                //do nothing
+            }
             return tenhouGame;
         }
 
@@ -217,6 +223,26 @@ namespace kandora.bot.utils
             reader.Read();
             return list.ToArray();
         }
+        public static float[] ParseFloatArray(JsonTextReader reader, string name = null)
+        {
+            if (name != null)
+            {
+                ParsePropName(name, reader);
+            }
+            var list = new List<float>();
+            if (reader.TokenType != JsonToken.StartArray)
+            {
+                throw new System.Exception();
+            }
+            reader.Read();
+            while (reader.TokenType != JsonToken.EndArray)
+            {
+                list.Add((float)(double)reader.Value);
+                reader.Read();
+            }
+            reader.Read();
+            return list.ToArray();
+        }
         public static string[] ParseStrArray(JsonTextReader reader, string name = null)
         {
             if(name != null)
@@ -275,10 +301,6 @@ namespace kandora.bot.utils
         }
         public static string ParseStrValue(JsonTextReader reader)
         {
-            if (reader.TokenType != JsonToken.String)
-            {
-                throw new System.Exception();
-            }
             var value = reader.Value.ToString();
             reader.Read();
             return value;

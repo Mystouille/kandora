@@ -8,7 +8,7 @@ namespace kandora.bot
     {
         static void Main(string[] args)
         {
-            var game = JsonConvert.DeserializeObject<TenhouGame>(Samples.tenhouLog);
+            var game = JsonConvert.DeserializeObject<RiichiGame>(Samples.tenhouLog);
             Console.WriteLine(game.Title[0]);
         }
     }

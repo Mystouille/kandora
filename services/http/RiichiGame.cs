@@ -4,26 +4,44 @@ using System.Text;
 
 namespace kandora.bot.http
 {
-    public class TenhouGame
+    public class RiichiGame
     {
         public string Ver { get; set; }
         public string Ref { get; set; }
-        public List<Round> Log { get; set; }
+        public List<Round> Rounds { get; set; }
         public string Ratingc { get; set; }
         public Rule Rule { get; set; }
         public int Lobby { get; set; }
         public string[] Dan { get; set; }
-        public int[] Rate { get; set; }
+        public float[] Rate { get; set; }
         public string[] Sx { get; set; }
         public int[] FinalScores { get; set; }
         public float[] FinalRankDeltas { get; set; }
         public string[] Name { get; set; }
         public string[] Title { get; set; }
+        public int MahjsoulRoomId
+        {
+            get
+            {
+                try
+                {
+                    var split = this.Title[0].Split(':');
+                    return Int32.Parse(split[split.Length - 1]);
+                }
+                catch
+                {
+                    return -1;
+                }
+            }
+        }
         public string Pretty()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append($"Title: {this.Title[0]}\n");
-            sb.Append($"Time: {this.Title[1]}\n");
+            if (this.Title != null)
+            {
+                sb.Append($"Title: {this.Title[0]}\n");
+                sb.Append($"Time: {this.Title[1]}\n");
+            }
             sb.Append($"Scores: \n");
             var maxLen = 0;
             for (int i = 0; i < Name.Length; i++)
@@ -39,7 +57,7 @@ namespace kandora.bot.http
             RoundResult bestResult = null;
             Round bestRound = null;
             var player = -1;
-            foreach (var log in Log)
+            foreach (var log in Rounds)
             {
                 foreach(var res in log.Result)
                 {

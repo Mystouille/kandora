@@ -43,4 +43,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="http\" />
+  </ItemGroup>
 </Project>

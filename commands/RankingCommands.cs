@@ -1,10 +1,10 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using kandora.bot.client;
 using kandora.bot.exceptions;
 using kandora.bot.models;
 using kandora.bot.services;
+using kandora.bot.services.http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +15,10 @@ namespace kandora.bot.commands
 {
     public class RankingCommands : BaseCommandModule
     {
-        [Command("mhloginfo"), Description("Returns various info about a mahjsoul game")]
-        public async Task MhLogInfo(CommandContext ctx, [Description("The mahjsoul log id")] string gameId)
+        [Command("getloginfo"), Description("Returns various info about a mahjsoul or tenhou game")]
+        public async Task GetLogInfo(CommandContext ctx, [Description("The game id")] string gameId)
         {
-            var log = await TensoulClient.GetMahjsoulLog(gameId, 2);
+            var log = await LogService.Instance.GetLog(gameId, 2);
             await ctx.RespondAsync(log.Pretty());
         }
 
