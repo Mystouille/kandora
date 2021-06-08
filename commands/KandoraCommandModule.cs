@@ -10,6 +10,8 @@ namespace kandora.bot.commands
 {
     public class KandoraCommandModule: BaseCommandModule
     {
+        protected static KandoraContext context = KandoraContext.Instance;
+
         protected static async Task executeCommand(CommandContext ctx, Func<Task> command, bool userMustBeRegistered = true, bool userMustBeInChannel = true, bool serverMustBeRegistered = true)
         {
             var commandStr = "command";

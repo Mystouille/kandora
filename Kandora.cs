@@ -7,6 +7,8 @@ using kandora.bot.commands;
 using kandora.bot.services.http;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Interactivity;
+using DSharpPlus.EventArgs;
+using System;
 
 namespace kandora.bot
 {
@@ -40,9 +42,13 @@ namespace kandora.bot
             commands.RegisterCommands<RankingCommands>();
             commands.RegisterCommands<UserCommands>();
 
+            client.MessageReactionAdded += Listeners.OnReactionAdded;
+            client.MessageReactionRemoved += Listeners.OnReactionRemoved;
+
             await client.ConnectAsync();
 
             await Task.Delay(-1);
         }
+
     }
 }

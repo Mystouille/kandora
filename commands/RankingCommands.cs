@@ -3,6 +3,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity.Extensions;
 using kandora.bot.exceptions;
+using kandora.bot.http;
 using kandora.bot.models;
 using kandora.bot.services;
 using kandora.bot.services.db;
@@ -15,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace kandora.bot.commands
 {
-    public class RankingCommands : BaseCommandModule
+    public class RankingCommands : KandoraCommandModule
     {
         [Command("submitLog"), Description("Submit a mahjsoul or tenhou log to be counted in the league")]
         public async Task SubmitLog(CommandContext ctx, [Description("The game id")] string gameId)
@@ -24,23 +25,15 @@ namespace kandora.bot.commands
             {
                 DbService.Begin("scorematch");
                 var serverId = ctx.Guild.Id.ToString();
-                var users = UserDbService.GetUsers();
-                var servers = ServerDbService.GetServers(users);
+                var allUsers = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(allUsers);
                 var server = servers[serverId];
+                var serverUsers = server.Users;
                 var log = await LogService.Instance.GetLog(gameId, 2);
-                var gameMsg = await ctx.RespondAsync(log.Pretty());
-                var oEmoji = DiscordEmoji.FromName(ctx.Client, ":o:");
-                var xEmoji = DiscordEmoji.FromName(ctx.Client, ":x:");
-                await gameMsg.CreateReactionAsync(oEmoji);
-                await gameMsg.CreateReactionAsync(xEmoji);
-                //ctx.Client.MessageReactionAdded
-                gameMsg.WaitForReactionAsync(ctx.User, xEmoji).ContinueWith(
-                    prev =>
-                    {
-                        ScoreDbService.RecordOnlineGame(log, server);
-                        ctx.Channel.SendMessageAsync("Game recorded!");
-                    }
-                );
+
+                var users = await GetUsersFromLog(log, serverUsers, ctx);
+                var gameMsg = await ctx.RespondAsync($"I need all players to :o: or :x: please \n"+log.Pretty(ctx.Client,users));
+                await context.AddPendingGame(ctx, gameMsg, new PendingGame(users, server, log));
 
                 DbService.Commit("scorematch");
             }
@@ -51,13 +44,75 @@ namespace kandora.bot.commands
             }
         }
 
+        //Checks if a log is compatible with a player base
+        private async Task<List<User>> GetUsersFromLog(RiichiGame log, List<User> users, CommandContext ctx)
+        {
+            int nbPlayers = log.Names.Length;
+            List<string> notFound = new List<string>();
+            List<User> foundUsers = new List<User>();
+            for (int i = 0; i < nbPlayers; i++)
+            {
+                User foundUser = null;
+                foreach (var user in users)
+                {
+                    switch (log.GameType)
+                    {
+                        case GameType.Mahjsoul:
+                            bool matchName = user.MahjsoulName != null &&  user.MahjsoulName == log.Names[i];
+                            bool matchId = user.MahjsoulUserId != null && user.MahjsoulUserId == log.UserIds[i];
+                            if (matchId && !matchName)
+                            {
+                                UserDbService.SetMahjsoulName(user.Id, log.Names[i]);
+                                await ctx.RespondAsync($"Detected Bad user name for <@{user.Id}>. Changed from {user.MahjsoulName} to {log.Names[i]}, don't thank me ;)");
+                            }
+                            if (matchName && !matchId)
+                            {
+                                UserDbService.SetMahjsoulUserId(user.Id, log.UserIds[i]);
+                            }
+                            if (matchName || matchId)
+                            {
+                                foundUser = user;
+                            }
+                            break;
+                        case GameType.Tenhou:
+                            if(user.TenhouName != null && user.TenhouName == log.Names[i])
+                            {
+                                foundUser = user;
+                            }
+                            break;
+                        default:
+                            throw new Exception("Unsupported game type");
+                    }
+                    if (foundUser != null)
+                    {
+                        break;
+                    }
+                }
+                if (foundUser == null)
+                {
+                    notFound.Add(log.Names[i]);
+                }
+                else
+                {
+                    foundUsers.Add(foundUser);
+                }
+            }
+            if (notFound.Count > 0)
+            {
+                {
+                    throw new Exception($"The log has names that do not match with any players: {string.Join(", ", notFound)}");
+                }
+            }
+            return foundUsers;
+        }
+
         [Command("getloginfo"), Description("Returns various info about a mahjsoul or tenhou game")]
         public async Task GetLogInfo(CommandContext ctx, [Description("The game id")] string gameId)
         {
             try
             {
                 var log = await LogService.Instance.GetLog(gameId, 2);
-                await ctx.RespondAsync(log.Pretty());
+                await ctx.RespondAsync(log.Pretty(ctx.Client));
             }
             catch (Exception e)
             {

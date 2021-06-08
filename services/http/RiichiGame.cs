@@ -1,4 +1,7 @@
-﻿using kandora.bot.models;
+﻿using DSharpPlus;
+using DSharpPlus.Entities;
+using kandora.bot.models;
+using kandora.bot.utils;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -38,7 +41,7 @@ namespace kandora.bot.http
                 }
             }
         }
-        public string Pretty()
+        public string Pretty(DiscordClient client, List<User> users = null)
         {
             StringBuilder sb = new StringBuilder();
             if (this.Title != null)
@@ -47,15 +50,36 @@ namespace kandora.bot.http
                 sb.Append($"Time: {this.Title[1]}\n");
             }
             sb.Append($"Scores: \n");
-            var maxLen = 0;
-            for (int i = 0; i < Names.Length; i++)
-            {
-                maxLen = Names[i].Length > maxLen ? Names[i].Length : maxLen;
-            }
+            var discordIds = new string[Names.Length];
             for (int i = 0; i<Names.Length; i++)
             {
-                var name = Names[i].PadRight(maxLen);
-                sb.Append($"{name}:\t{FinalScores[i]}\t({FinalRankDeltas[i]})\n");
+                var name = Names[i];
+                //Also get the discord user's mention
+                if (users != null)
+                {
+                    User user = null;
+                    if (this.GameType == GameType.Tenhou)
+                    {
+                        user = users.Find(x => x.TenhouName == name);
+                    }
+                    else if (this.GameType == GameType.Mahjsoul)
+                    {
+                        user = users.Find(x => x.MahjsoulName == name);
+                        if (user == null)
+                        {
+                            user = users.Find(x => x.MahjsoulUserId != null && x.MahjsoulUserId == UserIds[i]);
+                        }
+                    }
+                    if (user != null)
+                    {
+                        discordIds[i] = $"<@{user.Id}>";
+                    }
+                    else
+                    {
+                        throw new Exception($"Couldn't find Discord user with game name: {name}");
+                    }
+                }
+                sb.Append($"{discordIds[i]}({name}):\t{FinalScores[i]}\t({FinalRankDeltas[i]})\n");
             }
             var bestPayment = 0;
             RoundResult bestResult = null;
@@ -79,7 +103,7 @@ namespace kandora.bot.http
                     }
                 }
             }
-            sb.Append($"Best hand: {this.Names[player]} (round {bestRound.RoundNumber}) with {bestResult.HandScore} for {bestPayment} total \n");
+            sb.Append($"Best hand: {discordIds[player]}({this.Names[player]}) (round {bestRound.RoundNumber}) with {bestResult.HandScore} for {bestPayment} total {DiscordEmoji.FromName(client, Reactions.WOW)} \n");
             return sb.ToString();
         }
 

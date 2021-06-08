@@ -37,15 +37,14 @@ namespace kandora.bot.utils
             game.FinalScores = GetScores(sc);
             game.FinalRankDeltas = GetRanks(sc);
             game.Names = ParseStrArray(reader, "name");
-            game.UserIds = ParseStrArray(reader, "mjsoulId");
-
             try
-            {
+             {
+                game.UserIds = ParseStrArray(reader, "mjsoulId");
                 game.Title = ParseStrArray(reader, "title");
             }
             catch
             {
-                //do nothing
+                game.UserIds = new string[game.Names.Length];
             }
             return game;
         }
