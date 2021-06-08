@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace kandora.bot.services
 {
-    internal class RankingDb
+    internal class RankingDbService
     {
         private const string tableName = "[dbo].[Ranking]";
         private const string idCol = "Id";
@@ -20,12 +20,8 @@ namespace kandora.bot.services
         private const string timeStampCol = "timeStamp";
         private const string gameIdCol = "gameId";
 
-        internal static void UpdateRankings(Game game)
+        internal static List<Ranking> UpdateRankings(Game game)
         {
-            if (!game.IsSignedOff)
-            {
-                throw (new GameNotSignedOffException());
-            }
             List<Ranking> rkList1 = GetUserRankingHistory(game.User1Id, game.Server.Id);
             List<Ranking> rkList2 = GetUserRankingHistory(game.User2Id, game.Server.Id);
             List<Ranking> rkList3 = GetUserRankingHistory(game.User3Id, game.Server.Id);
@@ -48,9 +44,10 @@ namespace kandora.bot.services
             {
                 AddRanking(ranking);
             }
+            return newRkList;
         }
 
-        internal static bool AddRanking(Ranking rk)
+        private static bool AddRanking(Ranking rk)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -58,8 +55,32 @@ namespace kandora.bot.services
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
                 command.CommandText = $"INSERT INTO {tableName} ({userIdCol}, {oldEloCol}, {newEloCol}, {positionCol}, {gameIdCol}, {serverIdCol}) " +
-                    $"VALUES ({rk.UserId}, {rk.OldElo}, {rk.NewElo}, {rk.Position}, {rk.GameId}, {rk.ServerId});";
+                    $"VALUES (@userId, @oldElo, @newElo, @position, @gameId, @serverId);";
 
+                command.Parameters.Add(new SqlParameter("@userId", SqlDbType.VarChar)
+                {
+                    Value = rk.UserId
+                });
+                command.Parameters.Add(new SqlParameter("@serverId", SqlDbType.VarChar)
+                {
+                    Value = rk.ServerId
+                });
+                command.Parameters.Add(new SqlParameter("@position", SqlDbType.Int)
+                {
+                    Value = rk.Position
+                });
+                command.Parameters.Add(new SqlParameter("@gameId", SqlDbType.VarChar)
+                {
+                    Value = rk.GameId
+                });
+                command.Parameters.Add(new SqlParameter("@oldElo", SqlDbType.Float)
+                {
+                    Value = rk.OldElo
+                });
+                command.Parameters.Add(new SqlParameter("@newElo", SqlDbType.Float)
+                {
+                    Value = rk.NewElo
+                });
                 command.CommandType = CommandType.Text;
                 return command.ExecuteNonQuery() > 0;
             }
@@ -110,19 +131,27 @@ namespace kandora.bot.services
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
                 command.CommandText = $"SELECT {idCol}, {oldEloCol}, {newEloCol}, {positionCol}, {timeStampCol} , {gameIdCol} FROM {tableName} " +
-                    $"WHERE {userIdCol} = {userId} AND {serverIdCol} = {serverId} " +
+                    $"WHERE {userIdCol} = @userId AND {serverIdCol} = @serverId " +
                     $"ORDER BY {idCol} DESC";
                 command.CommandType = CommandType.Text;
 
+                command.Parameters.Add(new SqlParameter("@userId", SqlDbType.VarChar)
+                {
+                    Value = userId
+                });
+                command.Parameters.Add(new SqlParameter("@serverId", SqlDbType.VarChar)
+                {
+                    Value = serverId
+                });
                 var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     int id = reader.GetInt32(0);
-                    double oldElo = reader.IsDBNull(1) ? -1 : reader.GetDouble(1);
-                    double newElo = reader.IsDBNull(2) ? -1 : reader.GetDouble(2);
+                    float oldElo = reader.IsDBNull(1) ? -1 : (float)reader.GetDouble(1);
+                    float newElo = reader.IsDBNull(2) ? -1 : (float)reader.GetDouble(2);
                     int position = reader.IsDBNull(3) ? -1 : reader.GetInt32(3);
                     DateTime timestamp = reader.GetDateTime(4);
-                    int gameId = reader.IsDBNull(5) ? -1 : reader.GetInt32(5);
+                    string gameId = reader.IsDBNull(5) ? null : reader.GetString(5);
                     rankingListList.Add(new Ranking(id, userId, oldElo, newElo, position, timestamp, gameId, serverId));
                     if (latest)
                     {
@@ -134,7 +163,7 @@ namespace kandora.bot.services
             }
             throw (new DbConnectionException());
         }
-        internal static List<Ranking> GetServerRanking(string serverId)
+        internal static List<Ranking> GetServerRankings(string serverId)
         {
             List<Ranking> rankingListList = new List<Ranking>();
             var dbCon = DBConnection.Instance();
@@ -152,11 +181,11 @@ namespace kandora.bot.services
                 {
                     int id = reader.GetInt32(0);
                     string userId = reader.GetString(1);
-                    double oldElo = reader.IsDBNull(2) ? -1 : reader.GetDouble(2);
-                    double newElo = reader.IsDBNull(3) ? -1 : reader.GetDouble(3);
+                    float oldElo = reader.IsDBNull(2) ? -1 : (float)reader.GetDouble(2);
+                    float newElo = reader.IsDBNull(3) ? -1 : (float)reader.GetDouble(3);
                     int position = reader.IsDBNull(4) ? -1 : reader.GetInt32(4);
                     DateTime timestamp = reader.GetDateTime(5);
-                    int gameId = reader.IsDBNull(6) ? -1 : reader.GetInt32(6);
+                    string gameId = reader.IsDBNull(6) ? null : reader.GetString(6);
                     rankingListList.Add(new Ranking(id, userId, oldElo, newElo, position, timestamp, gameId, serverId));
                 }
                 reader.Close();

@@ -1,4 +1,5 @@
 ﻿using kandora.bot.http;
+using kandora.bot.models;
 using kandora.bot.utils;
 using System;
 using System.Collections.Generic;
@@ -43,12 +44,13 @@ namespace kandora.bot.services.http
             if (tenhouRegex.IsMatch(logId))
             {
                 log = await this.GetTenhouLog(logId);
+                return TenhouLogParser.ParseTenhouFormatGame(log, GameType.Tenhou);
             }
             else
             {
                 log = await this.GetMahjsoulLogAsTenhou(logId, lang);
+                return TenhouLogParser.ParseTenhouFormatGame(log, GameType.Mahjsoul);
             }
-            return TenhouLogParser.ParseTenhouFormatGame(log);
         }
 
         private async Task<string> GetTenhouLog(string logId)
@@ -64,7 +66,7 @@ namespace kandora.bot.services.http
 
         private async Task<string> GetMahjsoulLogAsTenhou(string logId, int lang)
         {
-            var url = $"http://chinesecartoons.club/convert/?id={logId}&lang={lang}";
+            var url = $"http://chinesecartoons.club/convert?id={logId}&lang={lang}";
             HttpResponseMessage response = await mahjsoulLogClient.GetAsync(url);
             if (response.IsSuccessStatusCode)
             {

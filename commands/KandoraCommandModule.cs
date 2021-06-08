@@ -2,6 +2,7 @@
 using kandora.bot.exceptions;
 using kandora.bot.models;
 using kandora.bot.services;
+using kandora.bot.services.db;
 using System;
 using System.Threading.Tasks;
 
@@ -9,12 +10,12 @@ namespace kandora.bot.commands
 {
     public class KandoraCommandModule: BaseCommandModule
     {
-        protected static async Task executeCommand(CommandContext ctx, Func<Task> command, bool userMustBeRegistered = true, bool mustBeInChannel = true, bool serverMustBeRegistered = true)
+        protected static async Task executeCommand(CommandContext ctx, Func<Task> command, bool userMustBeRegistered = true, bool userMustBeInChannel = true, bool serverMustBeRegistered = true)
         {
             var commandStr = "command";
             try
             {
-                if (mustBeInChannel && (ctx.Channel == null || ctx.Guild == null))
+                if (userMustBeInChannel && (ctx.Channel == null || ctx.Guild == null))
                 {
                     throw (new NotInChannelException());
                 }
@@ -22,21 +23,21 @@ namespace kandora.bot.commands
                 string channelId = (ctx.Channel.Id.ToString());
                 string userId = (ctx.User.Id.ToString());
                 Server server = null;
-                if (serverMustBeRegistered || mustBeInChannel)
+                if (serverMustBeRegistered || userMustBeInChannel)
                 {
-                    server = ServerDb.GetServer(serverId);
+                    server = ServerDbService.GetServer(serverId);
                 }
-                if (mustBeInChannel && (server == null || server.TargetChannelId != channelId))
+                if (userMustBeInChannel && (server == null || server.TargetChannelId != channelId))
                 {
                     throw new SilentException();
                 }
-                if (userMustBeRegistered && !ServerDb.isUserOnServer(userId, serverId))
+                if (userMustBeRegistered && !ServerDbService.isUserOnServer(userId, serverId))
                 {
                     throw new Exception($"<@{userId}> is not registered yet, use !register to enter the league.");
                 }
-                GlobalDb.Begin(commandStr);
+                DbService.Begin(commandStr);
                 await command.Invoke();
-                GlobalDb.Commit(commandStr);
+                DbService.Commit(commandStr);
             }
             catch (Exception e)
             {
@@ -44,7 +45,38 @@ namespace kandora.bot.commands
                 {
                     await ctx.RespondAsync(e.Message);
                 }
-                GlobalDb.Rollback(commandStr);
+                DbService.Rollback(commandStr);
+            }
+        }
+
+        protected static async Task executeMpCommand(CommandContext ctx, Func<Task> command, bool userMustBeInMP = true)
+        {
+            var commandStr = "command";
+            try
+            {
+                if (userMustBeInMP && ctx.Member!= null)
+                {
+                    throw new SilentException();
+                }
+                DbService.Begin(commandStr);
+                await command.Invoke();
+                DbService.Commit(commandStr);
+            }
+            catch (Exception e)
+            {
+                if (!(e is SilentException))
+                {
+                    if(ctx.Member != null)
+                    {
+                        var dmChannel = await ctx.Member.CreateDmChannelAsync();
+                        await dmChannel.SendMessageAsync(e.Message);
+                    }
+                    else
+                    {
+                        await ctx.RespondAsync(e.Message);
+                    }
+                }
+                DbService.Rollback(commandStr);
             }
         }
     }

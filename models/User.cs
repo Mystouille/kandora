@@ -5,20 +5,15 @@ namespace kandora.bot.models
 {
     public partial class User
     {
-        public User()
+        public User(string id)
         {
-        }
-        public User(string id, string displayName, string mahjsoulId, string tenhouId) : this()
-        {
-            this.Id = id;
-            this.DisplayName = displayName;
-            this.MahjsoulId = mahjsoulId;
-            this.TenhouId = tenhouId;
+            Id = id;
         }
 
-        public string Id { get; set; }
-        public string DisplayName { get; set; }
-        public string MahjsoulId { get; set; }
-        public string TenhouId { get; set; }
+        public string Id { get; }
+        public string MahjsoulFriendId { get; set; }
+        public string MahjsoulUserId { get; set; }
+        public string MahjsoulName { get; set; }
+        public string TenhouName { get; set; }
     }
 }

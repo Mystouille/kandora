@@ -5,6 +5,8 @@ using DSharpPlus.CommandsNext;
 using Microsoft.Extensions.Logging;
 using kandora.bot.commands;
 using kandora.bot.services.http;
+using DSharpPlus.Interactivity.Extensions;
+using DSharpPlus.Interactivity;
 
 namespace kandora.bot
 {
@@ -26,6 +28,7 @@ namespace kandora.bot
                 TokenType = TokenType.Bot,
                 MinimumLogLevel = LogLevel.Debug
             });
+            client.UseInteractivity(new InteractivityConfiguration());
 
 
             commands = client.UseCommandsNext(new CommandsNextConfiguration

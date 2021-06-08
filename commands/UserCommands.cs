@@ -4,6 +4,8 @@ using DSharpPlus.Entities;
 using kandora.bot.exceptions;
 using kandora.bot.services;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,35 +13,14 @@ namespace kandora.bot.commands
 {
     public class UserCommands : KandoraCommandModule
     {
-        [Command("setTargetChannel"), Description("Set bot to listen to the current channel")]
-        public async Task SetTargetChannel(CommandContext ctx)
-        {
-            await executeCommand(
-                ctx,
-                getSetTargetChannelAction(ctx),
-                mustBeInChannel: false,
-                userMustBeRegistered: false
-            );
-        }
-
-        private Func<Task> getSetTargetChannelAction(CommandContext ctx)
-        {
-            return new Func<Task>(async () =>
-            {
-                var serverDiscordId = ctx.Guild.Id.ToString();
-                ServerDb.SetTargetChannel(serverDiscordId, ctx.Channel.Id.ToString());
-                await ctx.RespondAsync($"<#{ctx.Channel.Id}> has been registered as scoring channel");
-            });
-        }
-
         [Command("activateLeague"), Description("register the current server as a league host")]
-        public async Task RegisterServer(CommandContext ctx, [Description("A new user role name to ping people who are in the league")] string userRoleName)
+        public async Task RegisterServer(CommandContext ctx, [Description("The league name (will create a new role)")] string userRoleName)
         {
             await executeCommand(
                 ctx,
                 getRegisterServerAction(ctx, userRoleName),
                 serverMustBeRegistered: false,
-                mustBeInChannel: false,
+                userMustBeInChannel: false,
                 userMustBeRegistered: false
             );
         }
@@ -51,34 +32,54 @@ namespace kandora.bot.commands
                 var discordId = ctx.User.Id.ToString();
                 var serverDiscordId = ctx.Guild.Id.ToString();
                 var role = await ctx.Guild.CreateRoleAsync(name: userRoleName, mentionable: true);
-                ServerDb.AddServer(serverDiscordId, ctx.Guild.Name, role.Id.ToString());
+                ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name, role.Id.ToString(), userRoleName);
                 await ctx.RespondAsync($"A Riichi league has started on {ctx.Guild.Name}!! \n The role {userRoleName} has also been created.");
             });
         }
 
-        [Command("register"), Description("Register yourself in the kandora riichi league")]
-        public async Task RegisterUser(CommandContext ctx, [Description("Your mahjsoul ID")] string mahjsoulId = "", [Description("Your tenhou ID")] string tenhouId = "")
+        [Command("setTargetChannel"), Description("Set bot to listen to the current channel")]
+        public async Task SetTargetChannel(CommandContext ctx)
         {
             await executeCommand(
                 ctx,
-                getRegisterUserAction(ctx, mahjsoulId, tenhouId),
+                getSetTargetChannelAction(ctx),
+                userMustBeInChannel: false,
                 userMustBeRegistered: false
             );
         }
 
-        private Func<Task> getRegisterUserAction(CommandContext ctx, string mahjsoulId, string tenhouId)
+        private Func<Task> getSetTargetChannelAction(CommandContext ctx)
         {
             return new Func<Task>(async () =>
             {
-                var displayName = ctx.User.Username;
+                var serverDiscordId = ctx.Guild.Id.ToString();
+                ServerDbService.SetTargetChannel(serverDiscordId, ctx.Channel.Id.ToString());
+                await ctx.RespondAsync($"<#{ctx.Channel.Id}> has been registered as scoring channel");
+            });
+        }
+
+        [Command("register"), Description("Register yourself in the local riichi league")]
+        public async Task RegisterUser(CommandContext ctx)
+        {
+            await executeCommand(
+                ctx,
+                getRegisterUserAction(ctx),
+                userMustBeRegistered: false
+            );
+        }
+
+        private Func<Task> getRegisterUserAction(CommandContext ctx)
+        {
+            return new Func<Task>(async () =>
+            {
                 var discordId = ctx.User.Id.ToString();
                 var serverDiscordId = ctx.Guild.Id.ToString();
-                if (!UserDb.IsUserInDb(discordId))
+                if (!UserDbService.IsUserInDb(discordId))
                 {
-                    UserDb.CreateUser(displayName, discordId, serverDiscordId, mahjsoulId, tenhouId);
+                    UserDbService.CreateUser(discordId, serverDiscordId);
                 }
-                var server = ServerDb.GetServer(serverDiscordId);
-                ServerDb.AddUserToServer(discordId, serverDiscordId, false, false);
+                var server = ServerDbService.GetServer(serverDiscordId);
+                ServerDbService.AddUserToServer(discordId, serverDiscordId, false, false);
                 ulong roleId = Convert.ToUInt64(server.LeagueRoleId);
                 if (!ctx.Guild.Roles.ContainsKey(roleId)) {
                     throw new Exception("Error: League role not found");
@@ -86,17 +87,6 @@ namespace kandora.bot.commands
                 await ctx.Member.GrantRoleAsync(ctx.Guild.Roles[roleId], "registering for riichi league");
                 await ctx.RespondAsync($"<@{ctx.User.Id}> has been registered");
             });
-        }
-
-        [Command("ping"), Description("test")]
-        public async Task Ping(CommandContext ctx)
-        {
-            var bla = ctx.Member.Mention;
-            var blu = $"<@{ctx.User.Id}>";
-            await ctx.Channel.SendMessageAsync(bla);
-            await ctx.Channel.SendMessageAsync(blu);
-            await ctx.RespondAsync(bla);
-            await ctx.RespondAsync(blu);
         }
 
         [Command("unregister"), Description("Remove yourself in the kandora riichi league")]
@@ -115,14 +105,14 @@ namespace kandora.bot.commands
                 var displayName = ctx.User.Username;
                 var discordId = ctx.User.Id.ToString();
                 var serverDiscordId = ctx.Guild.Id.ToString();
-                var users = UserDb.GetUsers();
-                var servers = ServerDb.GetServers(users);
+                var users = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(users);
                 if (!servers.ContainsKey(serverDiscordId))
                 {
                     throw new UserNotRegisteredException();
                 }
                 var server = servers[serverDiscordId];
-                ServerDb.RemoveUserFromServer(discordId, serverDiscordId);
+                ServerDbService.RemoveUserFromServer(discordId, serverDiscordId);
                 ulong roleId = Convert.ToUInt64(server.LeagueRoleId);
                 if (!ctx.Guild.Roles.ContainsKey(roleId))
                 {
@@ -133,22 +123,132 @@ namespace kandora.bot.commands
             });
         }
 
-        [Command("rename"), Description("Change your display name")]
-        public async Task Rename(CommandContext ctx, [Description("Your new display name")] string displayName)
+        private enum UserProperty
         {
-            await executeCommand(
+            MahjsoulName,
+            MahjsoulFriendId,
+            TenhouName,
+            Unknown,
+        }
+
+
+        [Command("displayMe"), Description("Display your info")]
+        public async Task DisplayMe(CommandContext ctx)
+        {
+            await executeMpCommand(
                 ctx,
-                getRenameAction(ctx, displayName)
+                getDisplayMeAction(ctx),
+                userMustBeInMP: false
             );
         }
 
-        private Func<Task> getRenameAction(CommandContext ctx, string displayName)
+
+        private Func<Task> getDisplayMeAction(CommandContext ctx)
         {
             return new Func<Task>(async () =>
             {
                 var userId = ctx.User.Id.ToString();
-                UserDb.SetDiplayName(userId, displayName);
-                await ctx.RespondAsync($"<@{ctx.User.Id}>'s name has been changed to {displayName}.");
+                var allUsers = UserDbService.GetUsers();
+                if (!allUsers.ContainsKey(userId))
+                {
+                    throw new Exception("You not registered in any server");
+                }
+                var user = allUsers[userId];
+                var allServers = ServerDbService.GetServers(allUsers);
+                var servers = allServers.Values.Where(x => x.Users.Contains(user));
+                var sb = new StringBuilder();
+
+                sb.AppendLine("Mahjsoul info:");
+                sb.AppendLine($"\t{UserProperty.MahjsoulName}: {(user.MahjsoulName == null ? "N/A" : user.MahjsoulName)} (can be changed)");
+                sb.AppendLine($"\t{UserProperty.MahjsoulFriendId}: {(user.MahjsoulFriendId == null ? "N/A" : user.MahjsoulFriendId)} (can be changed)");
+                sb.AppendLine($"\tMahjsoulInternalUserId: {(user.MahjsoulUserId == null ? "N/A" : user.MahjsoulUserId)}");
+                sb.AppendLine($"\tLast known rank: N/A"); // TODO
+                sb.AppendLine("Tenhou info:");
+                sb.AppendLine($"\t{UserProperty.TenhouName}: {(user.TenhouName == null ? "N/A" : user.TenhouName)} (can be changed)");
+                sb.AppendLine($"\tLast known rank: N/A"); // TODO
+                sb.AppendLine($"DiscordId: {user.Id}");
+                sb.AppendLine($"Leagues you are registered in:");
+                foreach(var server in servers)
+                {
+                    var rankings = RankingDbService.GetServerRankings(server.Id);
+                    var playersRank = new Dictionary<string, float>();
+                    var playersTime = new Dictionary<string, DateTime>();
+                    //Get the last ranking for each player by iterating through the whole list
+                    foreach(var ranking in rankings)
+                    {
+                        var playerId = ranking.UserId;
+                        float rank;
+                        DateTime time;
+                        if (!playersRank.TryGetValue(playerId, out rank) || !playersTime.TryGetValue(playerId, out time))
+                        {
+                            playersRank.Add(playerId, ranking.NewElo);
+                            playersTime.Add(playerId, ranking.Timestamp);
+                        }
+                        else
+                        {
+                            if (ranking.Timestamp.CompareTo(time)> 0)
+                            {
+                                playersRank[playerId] = ranking.NewElo;
+                                playersTime[playerId] = ranking.Timestamp;
+                            }
+                        }
+                    }
+
+                    //Sort the list and compute the user's rank and ELO
+                    List<KeyValuePair<string, float>> flatRanksSorted = playersRank.ToList();
+                    flatRanksSorted.Sort((pair1, pair2) => pair2.Value.CompareTo(pair1.Value));
+                    var nbPlayers = server.Users.Count;
+                    var userRank = 1;
+                    float userElo = -1;
+                    foreach (var rank in flatRanksSorted)
+                    {
+                        if( rank.Key == userId)
+                        {
+                            userElo = rank.Value;
+                            break;
+                        }
+                        else
+                        {
+                            userRank++;
+                        }
+                    }
+                    sb.AppendLine($"\t{server.LeagueName}({server.DisplayName}): {userRank}/{nbPlayers} (R{userElo})");
+                }
+                await ctx.RespondAsync(sb.ToString());
+            });
+        }
+
+        [Command("changeme"), Description("Change your info")]
+        public async Task ChangeMe(CommandContext ctx, [Description("What to change")] string property, [Description("The new name/id you want")] string value)
+        {
+            await executeMpCommand(
+                ctx,
+                getChangeMeAction(ctx, property, value),
+                userMustBeInMP: false
+            );
+        }
+
+
+        private Func<Task> getChangeMeAction(CommandContext ctx, string propertyStr, string value)
+        {
+            return new Func<Task>(async () =>
+            {
+                var userId = ctx.User.Id.ToString();
+                UserProperty property = UserProperty.Unknown;
+                try
+                {
+                    property = (UserProperty)Enum.Parse(typeof(UserProperty), propertyStr);
+                } catch {
+                    throw new Exception("This is not an existing property");
+                }
+                switch (property)
+                {
+                    case UserProperty.MahjsoulName: UserDbService.SetMahjsoulName(userId, value); break;
+                    case UserProperty.MahjsoulFriendId: UserDbService.SetMahjsoulFriendId(userId, value); break;
+                    case UserProperty.TenhouName: UserDbService.SetTenhouName(userId, value); break;
+                    default: throw new Exception($"You can't change your {propertyStr}");
+                }
+                await ctx.RespondAsync($"<@{ctx.User.Id}>'s {property} has been changed to {value}.");
             });
         }
 
@@ -159,7 +259,7 @@ namespace kandora.bot.commands
                 ctx,
                 getListAction(ctx),
                 userMustBeRegistered: false,
-                mustBeInChannel: true
+                userMustBeInChannel: true
             );
         }
 
@@ -167,8 +267,8 @@ namespace kandora.bot.commands
         {
             return new Func<Task>(async () =>
             {
-                var users = UserDb.GetUsers();
-                var servers = ServerDb.GetServers(users);
+                var users = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(users);
                 var discordId = ctx.User.Id.ToString();
                 var serverDiscordId = ctx.Guild.Id.ToString();
 
@@ -177,7 +277,7 @@ namespace kandora.bot.commands
                 sb.Append("User list:\n");
                 foreach (var user in servers[serverDiscordId].Users)
                 {
-                    sb.Append($"{i}: <@{user.Id}> ({user.DisplayName}) mjslId:{user.MahjsoulId} {(user.Id == discordId ? " <<< you" : "")}\n");
+                    sb.Append($"{i}: <@{user.Id}> majsoulName: {user.MahjsoulName} {(user.Id == discordId ? " <<< you" : "")}\n");
                     i++;
                 }
                 if (ctx != null && ctx.Member == null)

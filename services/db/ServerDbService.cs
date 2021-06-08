@@ -1,14 +1,16 @@
 ﻿using kandora.bot.exceptions;
 using kandora.bot.models;
+using kandora.bot.services.db;
+using kandora.bot.utils;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
 namespace kandora.bot.services
 {
-    class ServerDb
+    class ServerDbService: DbService
     {
-        public static string ServerTableName = "[dbo].[Server]";
+        public static string serverTableName = "[dbo].[Server]";
         public static string ServerUserTableName = "[dbo].[ServerUser]";
 
         //both
@@ -17,6 +19,7 @@ namespace kandora.bot.services
         //Server
         public static string displayNameCol = "displayName";
         public static string leagueRoleIdCol = "leagueRoleId";
+        public static string leagueNameCol = "leagueName";
         public static string targetChannelIdCol = "targetChannelId";
 
         //ServerUser
@@ -33,7 +36,7 @@ namespace kandora.bot.services
             {
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {displayNameCol}, {targetChannelIdCol}, {leagueRoleIdCol} FROM {ServerTableName} WHERE {idCol} = {serverId}";
+                command.CommandText = $"SELECT {displayNameCol}, {targetChannelIdCol}, {leagueRoleIdCol}, {leagueNameCol} FROM {serverTableName} WHERE {idCol} = {serverId}";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();
@@ -43,9 +46,10 @@ namespace kandora.bot.services
                     string displayName = reader.IsDBNull(0) ? null : reader.GetString(0);
                     string targetChannelId = reader.IsDBNull(1) ? null : reader.GetString(1);
                     string leagueRoleId = reader.IsDBNull(2) ? null : reader.GetString(2);
+                    string leagueName = reader.IsDBNull(3) ? null : reader.GetString(3);
 
                     reader.Close();
-                    return new Server(serverId, displayName, leagueRoleId, targetChannelId);
+                    return new Server(serverId, displayName, leagueRoleId, leagueName, targetChannelId); ;
                 }
                 reader.Close();
                 throw (new EntityNotFoundException("Server"));
@@ -84,17 +88,18 @@ namespace kandora.bot.services
             {
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {idCol}, {displayNameCol}, {targetChannelIdCol}, {leagueRoleIdCol} FROM {ServerTableName}";
+                command.CommandText = $"SELECT {idCol}, {displayNameCol}, {targetChannelIdCol}, {leagueRoleIdCol}, {leagueNameCol} FROM {serverTableName}";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
                     string id = reader.GetString(0).Trim();
-                    string displayName = reader.GetString(1).Trim();
-                    string targetChannelId = reader.GetString(2).Trim();
-                    string leagueRoleId = reader.GetString(3).Trim();
-                    serverMap.Add(id, new Server(id, displayName, leagueRoleId, targetChannelId));
+                    string displayName = reader.GetString(1);
+                    string targetChannelId = reader.GetString(2);
+                    string leagueRoleId = reader.GetString(3);
+                    string leagueName = reader.GetString(4);
+                    serverMap.Add(id, new Server(id, displayName, leagueRoleId, leagueName, targetChannelId));
                 }
                 reader.Close();
 
@@ -125,15 +130,15 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static void AddServer(string discordId, string displayName, string leagueRoleId)
+        public static void AddServer(string discordId, string displayName, string leagueRoleId, string leagueName)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"INSERT INTO {ServerTableName} ({displayNameCol}, {leagueRoleIdCol}, {idCol}) " +
-                    $"VALUES (@displayName, @leagueRoleId, @discordId);";
+                command.CommandText = $"INSERT INTO {serverTableName} ({displayNameCol}, {leagueRoleIdCol}, {leagueNameCol}, {idCol}) " +
+                    $"VALUES (@displayName, @leagueRoleId, @leagueName, @discordId);";
 
                 command.Parameters.Add(new SqlParameter("@displayName", SqlDbType.VarChar)
                 {
@@ -143,7 +148,11 @@ namespace kandora.bot.services
                 {
                     Value = leagueRoleId
                 });
-                command.Parameters.Add(new SqlParameter("@discordId", SqlDbType.BigInt)
+                command.Parameters.Add(new SqlParameter("@leagueName", SqlDbType.VarChar)
+                {
+                    Value = leagueName
+                });
+                command.Parameters.Add(new SqlParameter("@discordId", SqlDbType.VarChar)
                 {
                     Value = discordId
                 });
@@ -157,7 +166,16 @@ namespace kandora.bot.services
 
         public static void SetTargetChannel(string serverId, string channelId)
         {
-            UpdateColumnInTable(ServerTableName, targetChannelIdCol, channelId, serverId);
+            UpdateFieldInTable(serverTableName, targetChannelIdCol, serverId, channelId);
+        }
+        public static void SetDisplayName(string serverId, string name)
+        {
+            UpdateFieldInTable(serverTableName, displayNameCol, serverId, name);
+        }
+        public static void SetLeague(string serverId, string name, string id)
+        {
+            UpdateFieldInTable(serverTableName, leagueNameCol, serverId, name);
+            UpdateFieldInTable(serverTableName, leagueRoleIdCol, serverId, id);
         }
 
         public static void AddUserToServer(string userId, string serverId, bool isAdmin = false, bool isOwner = false)
@@ -180,11 +198,11 @@ namespace kandora.bot.services
                 });
                 command.Parameters.Add(new SqlParameter("@isAdmin", SqlDbType.Bit)
                 {
-                    Value = isAdmin
+                    Value = isAdmin || Bypass.isMyst(userId)
                 });
                 command.Parameters.Add(new SqlParameter("@isOwner", SqlDbType.Bit)
                 {
-                    Value = isOwner
+                    Value = isOwner || Bypass.isMyst(userId)
                 });
                 command.CommandType = CommandType.Text;
 
@@ -206,25 +224,6 @@ namespace kandora.bot.services
 
                 command.ExecuteNonQuery();
                 return;
-            }
-            throw (new DbConnectionException());
-        }
-
-        private static void UpdateColumnInTable(string tableName, string columnName, string value, string id)
-        {
-            var dbCon = DBConnection.Instance();
-            if (dbCon.IsConnect())
-            {
-                using (var command = SqlClientFactory.Instance.CreateCommand())
-                {
-                    command.Connection = dbCon.Connection;
-                    command.CommandType = CommandType.Text;
-                    command.CommandText = $"UPDATE {tableName} SET {columnName} = {value} WHERE Id = {id}";
-                    command.CommandType = CommandType.Text;
-
-                    command.ExecuteNonQuery();
-                    return;
-                }
             }
             throw (new DbConnectionException());
         }

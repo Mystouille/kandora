@@ -5,7 +5,7 @@
     [newElo]    FLOAT NOT NULL,
 	[position]	INT		   NULL,
     [timestamp] DATETIME   NOT NULL DEFAULT SYSDATETIME(),
-    [gameId]    INT        NULL,
+    [gameId]    NVARCHAR(100)   NULL,
     [serverId]  NVARCHAR(20) NOT NULL,
     FOREIGN KEY ([userId]) REFERENCES [dbo].[User] ([Id]),
     FOREIGN KEY ([gameId]) REFERENCES [dbo].[Game] ([Id]),

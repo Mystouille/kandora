@@ -1,4 +1,5 @@
-﻿using System;
+﻿using kandora.bot.models;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,6 +7,7 @@ namespace kandora.bot.http
 {
     public class RiichiGame
     {
+        public GameType GameType { get; set; }
         public string Ver { get; set; }
         public string Ref { get; set; }
         public List<Round> Rounds { get; set; }
@@ -17,8 +19,10 @@ namespace kandora.bot.http
         public string[] Sx { get; set; }
         public int[] FinalScores { get; set; }
         public float[] FinalRankDeltas { get; set; }
-        public string[] Name { get; set; }
+        public string[] Names { get; set; }
+        public string[] UserIds { get; set; }
         public string[] Title { get; set; }
+        public string FullLog { get; set; }
         public int MahjsoulRoomId
         {
             get
@@ -44,13 +48,13 @@ namespace kandora.bot.http
             }
             sb.Append($"Scores: \n");
             var maxLen = 0;
-            for (int i = 0; i < Name.Length; i++)
+            for (int i = 0; i < Names.Length; i++)
             {
-                maxLen = Name[i].Length > maxLen ? Name[i].Length : maxLen;
+                maxLen = Names[i].Length > maxLen ? Names[i].Length : maxLen;
             }
-            for (int i = 0; i<Name.Length; i++)
+            for (int i = 0; i<Names.Length; i++)
             {
-                var name = Name[i].PadRight(maxLen);
+                var name = Names[i].PadRight(maxLen);
                 sb.Append($"{name}:\t{FinalScores[i]}\t({FinalRankDeltas[i]})\n");
             }
             var bestPayment = 0;
@@ -75,7 +79,7 @@ namespace kandora.bot.http
                     }
                 }
             }
-            sb.Append($"Best hand: {this.Name[player]} (round {bestRound.RoundNumber}) with {bestResult.HandScore} for {bestPayment} total \n");
+            sb.Append($"Best hand: {this.Names[player]} (round {bestRound.RoundNumber}) with {bestResult.HandScore} for {bestPayment} total \n");
             return sb.ToString();
         }
 

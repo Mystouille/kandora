@@ -8,7 +8,7 @@ namespace kandora.bot.utils
     {
         public static bool isMyst(string userId)
         {
-            return userId == "";
+            return userId == "159371527115112448";
         }
     }
 }

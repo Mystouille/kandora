@@ -1,4 +1,5 @@
 ﻿using kandora.bot.http;
+using kandora.bot.models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace kandora.bot.utils
 {
     class TenhouLogParser
     {
-        public static RiichiGame ParseTenhouFormatGame(string payload)
+        public static RiichiGame ParseTenhouFormatGame(string payload, GameType gameType)
         {
             JsonTextReader reader = new JsonTextReader(new StringReader(payload));
             reader.Read();
@@ -19,31 +20,32 @@ namespace kandora.bot.utils
             {
                 throw new System.Exception();
             }
-            var tenhouGame = new RiichiGame();
+            var game = new RiichiGame();
+            game.FullLog = payload;
             reader.Read();
-
-            tenhouGame.Ver = ParseStrProp("ver", reader);
-            tenhouGame.Ref = ParseStrProp("ref", reader);
-            tenhouGame.Rounds = ParseLog(reader);
-            tenhouGame.Ratingc = ParseStrProp("ratingc", reader);
-            tenhouGame.Rule = ParseRule(reader);
-            tenhouGame.Lobby = ParseIntProp("lobby", reader);
-            tenhouGame.Dan = ParseStrArray(reader, "dan");
-            tenhouGame.Rate = ParseFloatArray(reader, "rate");
-            tenhouGame.Sx = ParseStrArray(reader, "sx");
+            game.GameType = gameType;
+            game.Ver = ParseStrProp("ver", reader);
+            game.Ref = ParseStrProp("ref", reader);
+            game.Rounds = ParseLog(reader);
+            game.Ratingc = ParseStrProp("ratingc", reader);
+            game.Rule = ParseRule(reader);
+            game.Lobby = ParseIntProp("lobby", reader);
+            game.Dan = ParseStrArray(reader, "dan");
+            game.Rate = ParseFloatArray(reader, "rate");
+            game.Sx = ParseStrArray(reader, "sx");
             var sc = ParseStrArray(reader, "sc");
-            tenhouGame.FinalScores = GetScores(sc);
-            tenhouGame.FinalRankDeltas = GetRanks(sc);
-            tenhouGame.Name = ParseStrArray(reader, "name");
+            game.FinalScores = GetScores(sc);
+            game.FinalRankDeltas = GetRanks(sc);
+            game.Names = ParseStrArray(reader, "name");
             try
             {
-                tenhouGame.Title = ParseStrArray(reader, "title");
+                game.Title = ParseStrArray(reader, "title");
             }
             catch
             {
                 //do nothing
             }
-            return tenhouGame;
+            return game;
         }
 
         private static int[] GetScores(string[] sc)
@@ -237,7 +239,7 @@ namespace kandora.bot.utils
             reader.Read();
             while (reader.TokenType != JsonToken.EndArray)
             {
-                list.Add((float)(double)reader.Value);
+                list.Add(float.Parse(reader.Value.ToString()));
                 reader.Read();
             }
             reader.Read();
