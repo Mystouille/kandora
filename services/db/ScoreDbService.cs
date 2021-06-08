@@ -1,6 +1,7 @@
 ﻿using kandora.bot.exceptions;
 using kandora.bot.http;
 using kandora.bot.models;
+using kandora.bot.services.db;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -10,9 +11,8 @@ using System.Linq;
 
 namespace kandora.bot.services
 {
-    class ScoreDbService
+    class ScoreDbService : DbService
     {
-        public static DbDataReader Reader = null;
         private const string GameTableName = "[dbo].[Game]";
 
         //Game
@@ -69,7 +69,8 @@ namespace kandora.bot.services
                 command.ExecuteNonQuery();
 
                 var game = GetGameFromLogId(logId, server);
-                var rankings = RankingDbService.UpdateRankings(game);
+                var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+                var rankings = RankingDbService.UpdateRankings(game, config);
 
                 return (game, rankings);
             }
@@ -182,41 +183,26 @@ namespace kandora.bot.services
                 {
                     UserDbService.SetMahjsoulUserId(sortedPlayerIds[idx], sortedMjIds[idx]);
                 }
-
+                var config = LeagueConfigDbService.GetLeagueConfig(serverWithUsers.LeagueConfigId);
                 var game = GetGameFromLogId(logId, serverWithUsers);
-                var rankings = RankingDbService.UpdateRankings(game);
+                var rankings = RankingDbService.UpdateRankings(game, config);
 
                 return (game, rankings);
             }
             throw (new DbConnectionException());
         }
 
-        private static int GetMaxId()
-        {
-            var dbCon = DBConnection.Instance();
-            if (dbCon.IsConnect())
-            {
-                using var command = SqlClientFactory.Instance.CreateCommand();
-                command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {IdCol} FROM {GameTableName}";
-                command.CommandType = CommandType.Text;
-                Reader = command.ExecuteReader();
-                int nb = 0;
-                while (Reader.Read())
-                {
-                    nb++;
-                }
-                Reader.Close();
-                return nb;
-            }
-            throw (new DbConnectionException());
-        }
 
         private static string GetIRLLogId()
         {
             string maxId = $"{GetMaxId()}".PadLeft(4,'0');
             maxId = maxId.Substring(maxId.Length - 3);
             return DateTime.Now.ToString($"yyyyMMdd-HHmm-"+maxId);
+        }
+
+        private static int GetMaxId()
+        {
+            return GetMaxValueFromCol(GameTableName, IdCol);
         }
 
         public static Game GetLastRecordedGame(Server server)

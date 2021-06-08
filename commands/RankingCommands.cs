@@ -34,7 +34,8 @@ namespace kandora.bot.commands
                 var log = await LogService.Instance.GetLog(gameId, 2);
 
                 var users = await GetUsersFromLog(log, serverUsers, ctx);
-                var gameMsg = await ctx.RespondAsync($"I need all players to :o: or :x: please \n"+log.Pretty(ctx.Client,users));
+                var gameResult = PrintGameResult(log, ctx.Client, users);
+                var gameMsg = await ctx.RespondAsync($"I need all players to :o: or :x: to record or cancel this game\n{gameResult}");
                 await context.AddPendingGame(ctx, gameMsg, new PendingGame(users, server, log));
 
                 DbService.Commit("scorematch");
@@ -114,7 +115,8 @@ namespace kandora.bot.commands
             try
             {
                 var log = await LogService.Instance.GetLog(gameId, 2);
-                await ctx.RespondAsync(log.Pretty(ctx.Client));
+                var gameResult = PrintGameResult(log, ctx.Client);
+                await ctx.RespondAsync(gameResult);
             }
             catch (Exception e)
             {
@@ -198,13 +200,25 @@ namespace kandora.bot.commands
                 DbService.Begin("ranking");
                 var users = UserDbService.GetUsers();
                 List<Ranking> rankingList = RankingDbService.GetServerRankings(serverDiscordId);
+                var latestUserRankings = new Dictionary<string, Ranking>();
+                foreach (var rank in rankingList)
+                {
+                    var userId = rank.UserId;
+                    if (!latestUserRankings.ContainsKey(userId))
+                    {
+                        latestUserRankings.Add(rank.UserId, rank);
+                    }
+                }
+
+                List<Ranking> sortedRanks = latestUserRankings.Values.ToList();
+                sortedRanks.Sort((val1, val2) => val2.NewRank.CompareTo(val1.NewRank));
 
                 StringBuilder sb = new StringBuilder();
                 sb.Append("Leaderboard:\n");
                 int i = 1;
-                foreach (var rank in rankingList)
+                foreach (var rank in sortedRanks)
                 {
-                    sb.Append($"{i}: <@{rank.UserId}> ({rank.NewElo}) {(rank.UserId== userDiscordId ? "<<< You are here": "")}\n");
+                    sb.Append($"{i}: <@{rank.UserId}> ({rank.NewRank}) {(rank.UserId== userDiscordId ? "<<< You are here": "")}\n");
                     i++;
                 }
                 await ctx.RespondAsync(sb.ToString());

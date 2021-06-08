@@ -39,8 +39,9 @@ namespace kandora.bot
             });
 
             commands.RegisterCommands<MahjongCommands>();
-            commands.RegisterCommands<RankingCommands>();
+            commands.RegisterCommands<RankingCommands>(); 
             commands.RegisterCommands<UserCommands>();
+            commands.RegisterCommands<LeagueConfigCommands>();
 
             client.MessageReactionAdded += Listeners.OnReactionAdded;
             client.MessageReactionRemoved += Listeners.OnReactionRemoved;

@@ -6,6 +6,7 @@ namespace kandora.bot.models
 {
     public partial class Ranking
     {
+        /**
         // === Values related to Riichi rules ===
 
         // Payers start with thes points
@@ -37,75 +38,78 @@ namespace kandora.bot.models
         //Number of games after which the player will always have the same ELO change ratio
         public static readonly int  TRIAL_PERIOD_DURATION = 80;
 
-
+        */
         public int Id { get; set; }
         public string UserId { get; set; }
-        public float? OldElo { get; set; }
-        public float NewElo { get; set; }
+        public float? OldRank { get; set; }
+        public float NewRank { get; set; }
         public int? Position { get; set; }
         public DateTime Timestamp { get; set; }
         public string GameId { get; set; }
         public string ServerId { get; set; }
 
-        public Ranking(int id, string userId, float oldElo, float newElo, int position, DateTime timestamp, string gameId, string serverId)
+        public Ranking(int id, string userId, float oldRank, float newRank, int position, DateTime timestamp, string gameId, string serverId)
         {
             Id = id;
             UserId = userId;
-            OldElo = oldElo;
-            NewElo = newElo;
+            OldRank = oldRank;
+            NewRank = newRank;
             Position = position;
             Timestamp = timestamp;
             GameId = gameId;
             ServerId = serverId;
         }
 
-        public Ranking(string userId, List<Ranking> userOldRks, Ranking oldRk2, Ranking oldRk3, Ranking oldRk4, int position, string gameId, string serverId)
+        public Ranking(string userId, List<Ranking> userOldRks, Ranking oldRk2, Ranking oldRk3, Ranking oldRk4, int position, string gameId, string serverId, LeagueConfig config)
         {
             UserId = userId;
             Position = position;
             GameId = gameId;
             ServerId = serverId;
-            OldElo = userOldRks.LastOrDefault().NewElo;
-            NewElo = getNewElo(userOldRks, position, new Ranking[] { oldRk2, oldRk3, oldRk4 });
+            OldRank = userOldRks.LastOrDefault().NewRank;
+            NewRank = getNewElo(userOldRks, position, new Ranking[] { oldRk2, oldRk3, oldRk4 }, config);
         }
 
-        private float getNewElo(List<Ranking> ownRankingHistory, int ownPosition, Ranking[] otherPlayerRankings, float ownScore = (float)0)
+        private float getNewElo(List<Ranking> ownRankingHistory, int ownPosition, Ranking[] otherPlayerRankings, LeagueConfig cf, float ownScore = (float)0)
         {
-            float oldElo = OldElo.HasValue ? INITIAL_ELO : OldElo.Value;
+
+            float oldRank = OldRank.HasValue ? cf.InitialElo : OldRank.Value;
             int nbOpponents = otherPlayerRankings.Length;
             int nbTotalGames = ownRankingHistory.Count;
-            float avgOpponentRk = (otherPlayerRankings.Sum(x=>x.NewElo)) / nbOpponents;
-            float[] UMA = nbOpponents == 3 ? UMA4 : UMA3;
+            float avgOpponentRk = (otherPlayerRankings.Sum(x=>x.NewRank)) / nbOpponents;
+            float[] UMA = nbOpponents == 3
+                ? new float[] { cf.Uma4p1, cf.Uma4p2, cf.Uma4p3, cf.Uma4p4 }
+                : new float[] { cf.Uma3p1, cf.Uma3p2, cf.Uma3p3 };
 
-            //ELO affected by score
+            //Rank affected by score
             float basePts=
-                (ownScore - STARTING_PTS) //SCORE
-                + UMA[ownPosition - 1] //UMA
-                + (ownPosition == 1 ? OKA * nbOpponents : -OKA) //OKA
-                - (ownPosition == nbOpponents+1 ? PENALTY_LAST : 0); //PENALTY
+                UMA[ownPosition - 1] //UMA
+                + (ownPosition == 1 ? cf.Oka * nbOpponents : -cf.Oka) //OKA
+                - (ownPosition == nbOpponents+1 ? cf.PenaltyLast : 0); //PENALTY
+            basePts += cf.CountPoints ? (ownScore - cf.StartingPoints) : 0; //SCORE
 
             float rankChange = basePts;
             //ELO bonus/penalty depending on opponents average ELO
-            if (USE_ELO_SYSTEM)
+            if (cf.UseEloSystem)
             {
-                float baseEloChange = avgOpponentRk - oldElo;
-                float dampenedEloChange = (baseEloChange / BASE_ELO_CHANGE_DAMPENING); //Moderating the bonus
-                float finalEloChange = Math.Max(dampenedEloChange, -1 * (UMA[0] + 3 * OKA)); //First player cannot lose more than his UMA+OK
-                finalEloChange = Math.Min(finalEloChange, -1 * (UMA[nbOpponents] - PENALTY_LAST)); //Last player cannot win more than his UMA+PENALTY
+                float baseEloChange = avgOpponentRk - oldRank;
+                float dampenedEloChange = (baseEloChange / cf.BaseEloChangeDampening); //Moderating the bonus
+                float finalEloChange = Math.Max(dampenedEloChange, -1 * (UMA[0] + 3 * cf.Oka)); //First player cannot lose more than his UMA+OK
+                finalEloChange = Math.Min(finalEloChange, -1 * (UMA[nbOpponents] - cf.PenaltyLast)); //Last player cannot win more than his UMA+PENALTY
                 rankChange += finalEloChange;
             }
 
             //Moderating the whole rank change
-            float currentDeltaRatio = ELO_CHANGE_START_RATIO + (ELO_CHANGE_END_RATIO - ELO_CHANGE_START_RATIO) * (Math.Max(nbTotalGames, TRIAL_PERIOD_DURATION) / TRIAL_PERIOD_DURATION);
+            float currentDeltaRatio = cf.EloChangeStartRatio + (cf.EloChangeEndRatio - cf.EloChangeStartRatio) * (Math.Max(nbTotalGames, cf.TrialPeriodDuration) / cf.TrialPeriodDuration);
             float finalRankChange = rankChange * currentDeltaRatio;
 
-            var newElo = oldElo + finalRankChange;
+            var newRank = oldRank + finalRankChange;
 
-            if (USE_ELO_SYSTEM)
+            if (cf.UseEloSystem)
             {
-                newElo = Math.Max(MIN_ELO, newElo);
+                newRank = Math.Max(cf.MinElo, newRank);
             }
-            return newElo;
+            return newRank;
         }
 
         public virtual Game Game { get; set; }

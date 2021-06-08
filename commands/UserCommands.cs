@@ -13,27 +13,34 @@ namespace kandora.bot.commands
 {
     public class UserCommands : KandoraCommandModule
     {
-        [Command("activateLeague"), Description("register the current server as a league host")]
-        public async Task RegisterServer(CommandContext ctx, [Description("The league name (will create a new role)")] string userRoleName)
+        [Command("activateLeague"), Description("register the current server as a league host and creat the KandoraLeague role")]
+        public async Task RegisterServer(CommandContext ctx)
         {
             await executeCommand(
                 ctx,
-                getRegisterServerAction(ctx, userRoleName),
+                getRegisterServerAction(ctx),
                 serverMustBeRegistered: false,
                 userMustBeInChannel: false,
                 userMustBeRegistered: false
             );
         }
-        private Func<Task> getRegisterServerAction(CommandContext ctx, string userRoleName)
+        private Func<Task> getRegisterServerAction(CommandContext ctx)
         {
             return new Func<Task>(async () =>
             {
                 var displayName = ctx.User.Username;
                 var discordId = ctx.User.Id.ToString();
                 var serverDiscordId = ctx.Guild.Id.ToString();
-                var role = await ctx.Guild.CreateRoleAsync(name: userRoleName, mentionable: true);
-                ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name, role.Id.ToString(), userRoleName);
-                await ctx.RespondAsync($"A Riichi league has started on {ctx.Guild.Name}!! \n The role {userRoleName} has also been created.");
+                var leagueConfigId = LeagueConfigDbService.CreateLeague();
+                var roleName = "KandoraLeague";
+                ulong roleId = ctx.Guild.Roles.Where(x => x.Value.Name == roleName).Select(x => x.Key).FirstOrDefault();
+                if (roleId == 0)
+                {
+                    var role = await ctx.Guild.CreateRoleAsync(name: roleName, mentionable: true);
+                    roleId = role.Id;
+                }
+                ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name, roleId.ToString(), roleName, leagueConfigId);
+                await ctx.RespondAsync($"A Riichi league has started on {ctx.Guild.Name}!! \n");
             });
         }
 
@@ -74,11 +81,9 @@ namespace kandora.bot.commands
             {
                 var discordId = ctx.User.Id.ToString();
                 var serverDiscordId = ctx.Guild.Id.ToString();
-                if (!UserDbService.IsUserInDb(discordId))
-                {
-                    UserDbService.CreateUser(discordId, serverDiscordId);
-                }
                 var server = ServerDbService.GetServer(serverDiscordId);
+                var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+                UserDbService.CreateUser(discordId, serverDiscordId, config);
                 ServerDbService.AddUserToServer(discordId, serverDiscordId, false, false);
                 ulong roleId = Convert.ToUInt64(server.LeagueRoleId);
                 if (!ctx.Guild.Roles.ContainsKey(roleId)) {
@@ -86,6 +91,39 @@ namespace kandora.bot.commands
                 }
                 await ctx.Member.GrantRoleAsync(ctx.Guild.Roles[roleId], "registering for riichi league");
                 await ctx.RespondAsync($"<@{ctx.User.Id}> has been registered");
+            });
+        }
+
+        [Command("registerdummy"), Description("Register dummy people")]
+        public async Task RegisterDummy(CommandContext ctx)
+        {
+            await executeCommand(
+                ctx,
+                getRegisterDummyAction(ctx),
+                userMustBeRegistered: false
+            );
+        }
+
+        private Func<Task> getRegisterDummyAction(CommandContext ctx)
+        {
+            return new Func<Task>(async () =>
+            {
+                var discordId = ctx.User.Id.ToString();
+                var serverDiscordId = ctx.Guild.Id.ToString();
+                var server = ServerDbService.GetServer(serverDiscordId);
+                var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+                var heatiro = "323096688904634377";
+                var clubapero = "198974501709414401";
+                var Neral = "273192430172372993";
+                UserDbService.CreateUser(heatiro, serverDiscordId, config);
+                UserDbService.CreateUser(clubapero, serverDiscordId, config);
+                UserDbService.CreateUser(Neral, serverDiscordId, config);
+                ServerDbService.AddUserToServer(heatiro, serverDiscordId, false, false); //Heatiro
+                ServerDbService.AddUserToServer(clubapero, serverDiscordId, false, false); //clubapero
+                ServerDbService.AddUserToServer(Neral, serverDiscordId, false, false); //Neral
+                UserDbService.SetMahjsoulName(heatiro, "heairo");
+                UserDbService.SetMahjsoulName(Neral, "Neral");
+                UserDbService.SetMahjsoulName(clubapero, "clubapero");
             });
         }
 
@@ -151,7 +189,7 @@ namespace kandora.bot.commands
                 var allUsers = UserDbService.GetUsers();
                 if (!allUsers.ContainsKey(userId))
                 {
-                    throw new Exception("You not registered in any server");
+                    throw new Exception("You are not registered in any server");
                 }
                 var user = allUsers[userId];
                 var allServers = ServerDbService.GetServers(allUsers);
@@ -181,14 +219,14 @@ namespace kandora.bot.commands
                         DateTime time;
                         if (!playersRank.TryGetValue(playerId, out rank) || !playersTime.TryGetValue(playerId, out time))
                         {
-                            playersRank.Add(playerId, ranking.NewElo);
+                            playersRank.Add(playerId, ranking.NewRank);
                             playersTime.Add(playerId, ranking.Timestamp);
                         }
                         else
                         {
                             if (ranking.Timestamp.CompareTo(time)> 0)
                             {
-                                playersRank[playerId] = ranking.NewElo;
+                                playersRank[playerId] = ranking.NewRank;
                                 playersTime[playerId] = ranking.Timestamp;
                             }
                         }
@@ -239,7 +277,7 @@ namespace kandora.bot.commands
                 {
                     property = (UserProperty)Enum.Parse(typeof(UserProperty), propertyStr);
                 } catch {
-                    throw new Exception("This is not an existing property");
+                    throw new Exception("This is not an existing or editable property");
                 }
                 switch (property)
                 {
@@ -277,7 +315,7 @@ namespace kandora.bot.commands
                 sb.Append("User list:\n");
                 foreach (var user in servers[serverDiscordId].Users)
                 {
-                    sb.Append($"{i}: <@{user.Id}> majsoulName: {user.MahjsoulName} {(user.Id == discordId ? " <<< you" : "")}\n");
+                    sb.Append($"<@{user.Id}> majsoulName: {user.MahjsoulName} {(user.Id == discordId ? " <<< you" : "")}\n");
                     i++;
                 }
                 if (ctx != null && ctx.Member == null)

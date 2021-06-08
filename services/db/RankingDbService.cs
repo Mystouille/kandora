@@ -20,7 +20,7 @@ namespace kandora.bot.services
         private const string timeStampCol = "timeStamp";
         private const string gameIdCol = "gameId";
 
-        internal static List<Ranking> UpdateRankings(Game game)
+        internal static List<Ranking> UpdateRankings(Game game, LeagueConfig config)
         {
             List<Ranking> rkList1 = GetUserRankingHistory(game.User1Id, game.Server.Id);
             List<Ranking> rkList2 = GetUserRankingHistory(game.User2Id, game.Server.Id);
@@ -34,10 +34,10 @@ namespace kandora.bot.services
 
             List<Ranking> newRkList = new List<Ranking>
             {
-                new Ranking(game.User1Id, rkList1, rkList2.Last(), rkList3.Last(), rkList4.Last(), 1, game.Id, game.Server.Id),
-                new Ranking(game.User2Id, rkList2, rkList1.Last(), rkList3.Last(), rkList4.Last(), 2, game.Id, game.Server.Id),
-                new Ranking(game.User3Id, rkList3, rkList2.Last(), rkList1.Last(), rkList4.Last(), 3, game.Id, game.Server.Id),
-                new Ranking(game.User4Id, rkList4, rkList2.Last(), rkList3.Last(), rkList1.Last(), 4, game.Id, game.Server.Id)
+                new Ranking(game.User1Id, rkList1, rkList2.Last(), rkList3.Last(), rkList4.Last(), 1, game.Id, game.Server.Id, config),
+                new Ranking(game.User2Id, rkList2, rkList1.Last(), rkList3.Last(), rkList4.Last(), 2, game.Id, game.Server.Id, config),
+                new Ranking(game.User3Id, rkList3, rkList2.Last(), rkList1.Last(), rkList4.Last(), 3, game.Id, game.Server.Id, config),
+                new Ranking(game.User4Id, rkList4, rkList2.Last(), rkList3.Last(), rkList1.Last(), 4, game.Id, game.Server.Id, config)
             };
 
             foreach (var ranking in newRkList)
@@ -75,11 +75,11 @@ namespace kandora.bot.services
                 });
                 command.Parameters.Add(new SqlParameter("@oldElo", SqlDbType.Float)
                 {
-                    Value = rk.OldElo
+                    Value = rk.OldRank
                 });
                 command.Parameters.Add(new SqlParameter("@newElo", SqlDbType.Float)
                 {
-                    Value = rk.NewElo
+                    Value = rk.NewRank
                 });
                 command.CommandType = CommandType.Text;
                 return command.ExecuteNonQuery() > 0;
@@ -87,7 +87,7 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        internal static void InitUserRanking(string userId, string serverId)
+        internal static void InitUserRanking(string userId, string serverId, LeagueConfig leagueConfig)
         {
             List<Ranking> userRankings = GetUserRankingHistory(userId, serverId, latest: true);
             if (userRankings.Any())
@@ -113,7 +113,7 @@ namespace kandora.bot.services
                 });
                 command.Parameters.Add(new SqlParameter("@rank", SqlDbType.Float)
                 {
-                    Value = Ranking.INITIAL_ELO
+                    Value = leagueConfig.InitialElo
                 });
                 command.CommandType = CommandType.Text;
                 command.ExecuteNonQuery();
@@ -173,7 +173,7 @@ namespace kandora.bot.services
                 command.Connection = dbCon.Connection;
                 command.CommandText = $"SELECT {idCol}, {userIdCol}, {oldEloCol}, {newEloCol}, {positionCol}, {timeStampCol} , {gameIdCol} FROM {tableName} " +
                     $"WHERE {serverIdCol} = {serverId} " +
-                    $"ORDER BY {newEloCol} DESC";
+                    $"ORDER BY {idCol} DESC";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();

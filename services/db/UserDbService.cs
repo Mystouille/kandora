@@ -71,7 +71,7 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static void CreateUser(string userDiscordId, string serverId)
+        public static void CreateUser(string userDiscordId, string serverId, LeagueConfig leagueConfig)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -88,7 +88,7 @@ namespace kandora.bot.services
                 command.CommandType = CommandType.Text;
 
                 command.ExecuteNonQuery();
-                RankingDbService.InitUserRanking(userDiscordId, serverId);
+                RankingDbService.InitUserRanking(userDiscordId, serverId, leagueConfig);
 
                 return;
             }

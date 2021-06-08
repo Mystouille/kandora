@@ -70,8 +70,7 @@ namespace kandora.bot.commands
                 {
                     if(ctx.Member != null)
                     {
-                        var dmChannel = await ctx.Member.CreateDmChannelAsync();
-                        await dmChannel.SendMessageAsync(e.Message);
+                        await ctx.Member.SendMessageAsync(e.Message);
                     }
                     else
                     {
