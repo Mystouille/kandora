@@ -1,4 +1,5 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using DSharpPlus;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity.Extensions;
@@ -8,6 +9,7 @@ using kandora.bot.models;
 using kandora.bot.services;
 using kandora.bot.services.db;
 using kandora.bot.services.http;
+using kandora.bot.utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -213,6 +215,74 @@ namespace kandora.bot.commands
                 await ctx.RespondAsync(e.Message);
                 DbService.Rollback("ranking");
             }
+        }
+
+
+        private static string PrintGameResult(RiichiGame game, DiscordClient client, List<User> users = null)
+        {
+            StringBuilder sb = new StringBuilder();
+            if (game.Title != null)
+            {
+                sb.Append($"Title: {game.Title[0]}\n");
+                sb.Append($"Time: {game.Title[1]}\n");
+            }
+            sb.Append($"Scores: \n");
+            var names = game.Names;
+            var discordIds = new string[names.Length];
+            for (int i = 0; i < names.Length; i++)
+            {
+                var name = names[i];
+                //Also get the discord user's mention
+                if (users != null)
+                {
+                    User user = null;
+                    if (game.GameType == GameType.Tenhou)
+                    {
+                        user = users.Find(x => x.TenhouName == name);
+                    }
+                    else if (game.GameType == GameType.Mahjsoul)
+                    {
+                        user = users.Find(x => x.MahjsoulName == name);
+                        if (user == null)
+                        {
+                            user = users.Find(x => x.MahjsoulUserId != null && x.MahjsoulUserId == game.UserIds[i]);
+                        }
+                    }
+                    if (user != null)
+                    {
+                        discordIds[i] = $"<@{user.Id}>";
+                    }
+                    else
+                    {
+                        throw new Exception($"Couldn't find Discord user with game name: {name}");
+                    }
+                }
+                sb.Append($"{discordIds[i]}({name}):\t{game.FinalScores[i]}\t({game.FinalRankDeltas[i]})\n");
+            }
+            var bestPayment = 0;
+            RoundResult bestResult = null;
+            Round bestRound = null;
+            var player = -1;
+            foreach (var log in game.Rounds)
+            {
+                foreach (var res in log.Result)
+                {
+                    var i = 0;
+                    foreach (var delta in res.Payments)
+                    {
+                        if (delta > bestPayment)
+                        {
+                            bestPayment = delta;
+                            bestResult = res;
+                            bestRound = log;
+                            player = i;
+                        }
+                        i++;
+                    }
+                }
+            }
+            sb.Append($"Best hand: {discordIds[player]}({game.Names[player]}) (round {bestRound.RoundNumber}) with {bestResult.HandScore} for {bestPayment} total {DiscordEmoji.FromName(client, Reactions.WOW)} \n");
+            return sb.ToString();
         }
     }
 }
