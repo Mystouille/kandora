@@ -76,7 +76,7 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static (Game, List<Ranking>) RecordOnlineGame(RiichiGame gameLog, Server server, List<User> userList)
+        public static (Game, List<Ranking>) RecordOnlineGame(RiichiGame gameLog, Server serverWithUsers)
         {
             var dbCon = DBConnection.Instance();
 
@@ -86,6 +86,8 @@ namespace kandora.bot.services
             var playerNames = gameLog.Names;
             var playerMjIds = gameLog.UserIds; //mahjongsoul internal Ids
             var scores = gameLog.FinalScores;
+            var userList = serverWithUsers.Users;
+            var platform = gameLog.GameType;
 
             // TODO feed timestamp from game data
             if (playerNames.Length < 4)
@@ -137,9 +139,8 @@ namespace kandora.bot.services
             {
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SET IDENTITY_INSERT {GameTableName} ON \n" +
-                    $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {IdCol}, {FullLogIdCol}) " +
-                    $"VALUES (@playerId1, @playerId2, @playerId3, @playerId4, {sortedScores[0]}, {sortedScores[1]}, {sortedScores[2]}, {sortedScores[3]}, @logId, @fullLog);";
+                command.CommandText = $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {IdCol}, {FullLogIdCol}, {PlatformCol}, {ServerIdCol}) " +
+                    $"VALUES (@playerId1, @playerId2, @playerId3, @playerId4, {sortedScores[0]}, {sortedScores[1]}, {sortedScores[2]}, {sortedScores[3]}, @logId, @fullLog, @platform, @serverId);";
                 command.CommandType = CommandType.Text;
 
                 command.Parameters.Add(new SqlParameter("@playerId1", SqlDbType.NVarChar)
@@ -166,15 +167,23 @@ namespace kandora.bot.services
                 {
                     Value = logId
                 });
+                command.Parameters.Add(new SqlParameter("@platform", SqlDbType.NVarChar)
+                {
+                    Value = platform
+                });
+                command.Parameters.Add(new SqlParameter("@serverId", SqlDbType.NVarChar)
+                {
+                    Value = serverWithUsers.Id
+                });
                 command.ExecuteNonQuery();
 
                 //Add the majsouldID to the new users:
                 foreach(var idx in toRecordMjId)
                 {
-                    UserDbService.SetMahjsoulUserId(sortedMjIds[idx], sortedPlayerIds[idx]);
+                    UserDbService.SetMahjsoulUserId(sortedPlayerIds[idx], sortedMjIds[idx]);
                 }
 
-                var game = GetGameFromLogId(logId, server);
+                var game = GetGameFromLogId(logId, serverWithUsers);
                 var rankings = RankingDbService.UpdateRankings(game);
 
                 return (game, rankings);
@@ -264,7 +273,7 @@ namespace kandora.bot.services
             {
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {ServerIdCol}, {PlatformCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {TimestampCol}" +
+                command.CommandText = $"SELECT {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {ServerIdCol}, {PlatformCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {TimestampCol}, {FullLogIdCol}" +
                     $" FROM {GameTableName}" +
                     $" WHERE {IdCol} = @logId";
 
@@ -288,13 +297,21 @@ namespace kandora.bot.services
                     int user3Score = Reader.IsDBNull(8) ? 0 : Reader.GetInt32(8);
                     int user4Score = Reader.IsDBNull(9) ? 0 : Reader.GetInt32(9);
                     DateTime timestamp = Reader.GetDateTime(10);
-                    Reader.Close();
+                    string fullLog = Reader.IsDBNull(11) ? null : Reader.GetString(11);
 
-                    if(serverId != server.Id)
+                    Reader.Close();
+                    if (serverId != server.Id)
                     {
                         throw new GetGameException($"Game with logId:{logId} has been recorded on another server");
                     }
-                    return new Game(logId, server, user1Id, user2Id, user3Id, user4Id, platform, timestamp);
+                    var game = new Game(logId, server, user1Id, user2Id, user3Id, user4Id, platform, timestamp);
+                    game.User1Score = user1Score;
+                    game.User2Score = user2Score;
+                    game.User3Score = user3Score;
+                    game.User4Score = user4Score;
+                    game.FullLog = fullLog;
+                    return game;
+
                 }
                 throw (new GetGameException($"Game with logId:{logId} was not found"));
             }

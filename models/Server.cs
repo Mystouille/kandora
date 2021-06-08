@@ -14,9 +14,9 @@ namespace kandora.bot.models
             LeagueRoleId = leagueRoleId;
             LeagueName = leagueName;
             TargetChannelId = targetChannelId;
-            Users = new Collection<User>();
-            Admins = new Collection<User>();
-            Owners = new Collection<User>();
+            Users = new List<User>();
+            Admins = new List<User>();
+            Owners = new List<User>();
         }
         public string Id { get; set; }
         public string DisplayName { get; set; }
@@ -24,8 +24,8 @@ namespace kandora.bot.models
         public string LeagueName { get; set; }
         public string TargetChannelId { get; set; }
 
-        public virtual ICollection<User> Users { get; set; }
-        public virtual ICollection<User> Admins { get; set; }
-        public virtual ICollection<User> Owners { get; set; }
+        public virtual List<User> Users { get; set; }
+        public virtual List<User> Admins { get; set; }
+        public virtual List<User> Owners { get; set; }
     }
 }

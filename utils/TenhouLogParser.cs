@@ -37,6 +37,8 @@ namespace kandora.bot.utils
             game.FinalScores = GetScores(sc);
             game.FinalRankDeltas = GetRanks(sc);
             game.Names = ParseStrArray(reader, "name");
+            game.UserIds = ParseStrArray(reader, "mjsoulId");
+
             try
             {
                 game.Title = ParseStrArray(reader, "title");

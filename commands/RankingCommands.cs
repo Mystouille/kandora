@@ -1,6 +1,7 @@
 ﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity.Extensions;
 using kandora.bot.exceptions;
 using kandora.bot.models;
 using kandora.bot.services;
@@ -21,12 +22,32 @@ namespace kandora.bot.commands
         {
             try
             {
+                DbService.Begin("scorematch");
+                var serverId = ctx.Guild.Id.ToString();
+                var users = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(users);
+                var server = servers[serverId];
                 var log = await LogService.Instance.GetLog(gameId, 2);
-                await ctx.RespondAsync(log.Pretty());
+                var gameMsg = await ctx.RespondAsync(log.Pretty());
+                var oEmoji = DiscordEmoji.FromName(ctx.Client, ":o:");
+                var xEmoji = DiscordEmoji.FromName(ctx.Client, ":x:");
+                await gameMsg.CreateReactionAsync(oEmoji);
+                await gameMsg.CreateReactionAsync(xEmoji);
+                //ctx.Client.MessageReactionAdded
+                gameMsg.WaitForReactionAsync(ctx.User, xEmoji).ContinueWith(
+                    prev =>
+                    {
+                        ScoreDbService.RecordOnlineGame(log, server);
+                        ctx.Channel.SendMessageAsync("Game recorded!");
+                    }
+                );
+
+                DbService.Commit("scorematch");
             }
             catch (Exception e)
             {
                 await ctx.RespondAsync(e.Message);
+                DbService.Rollback("scorematch");
             }
         }
 
