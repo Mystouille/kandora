@@ -29,7 +29,7 @@ namespace kandora.bot.services
 
             if (!rkList1.Any() || !rkList2.Any() || !rkList3.Any() || !rkList4.Any())
             {
-                throw (new UserRankingMissingException());
+                throw new Exception("Missing one of the player's rank to compute new rank");
             }
 
             List<Ranking> newRkList = new List<Ranking>
@@ -92,7 +92,7 @@ namespace kandora.bot.services
             List<Ranking> userRankings = GetUserRankingHistory(userId, serverId, latest: true);
             if (userRankings.Any())
             {
-                throw (new UserAlreadyRankedException());
+                throw new Exception("User is already ranked on that server");
             }
 
             var dbCon = DBConnection.Instance();

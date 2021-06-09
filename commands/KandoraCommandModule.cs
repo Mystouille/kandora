@@ -19,7 +19,7 @@ namespace kandora.bot.commands
             {
                 if (userMustBeInChannel && (ctx.Channel == null || ctx.Guild == null))
                 {
-                    throw (new NotInChannelException());
+                    throw new Exception("You must be in a text channel for that command.");
                 }
                 string serverId = (ctx.Guild.Id.ToString());
                 string channelId = (ctx.Channel.Id.ToString());

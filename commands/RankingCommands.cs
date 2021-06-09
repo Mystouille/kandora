@@ -246,22 +246,26 @@ namespace kandora.bot.commands
         [Command("getrank"), Description("Ask Kandora your current league ranking"), Aliases("rank")]
         public async Task GetRank(CommandContext ctx)
         {
-            var userDiscordId = ctx.User.Id.ToString();
-            var serverDiscordId = ctx.Guild.Id.ToString();
-            try
+            await executeMpCommand(
+                ctx,
+                GetGetRankAction(ctx),
+                userMustBeInMP: false                
+            );
+        }
+
+        private Func<Task> GetGetRankAction(CommandContext ctx)
+        {
+            return new Func<Task>(async () =>
             {
-                if (ctx.Channel == null)
-                {
-                    throw (new NotInChannelException());
-                }
-                DbService.Begin("ranking");
+                var userId = ctx.User.Id.ToString();
+                var serverId = ctx.Guild.Id.ToString();
                 var users = UserDbService.GetUsers();
-                List<Ranking> rankingList = RankingDbService.GetServerRankings(serverDiscordId);
+                List<Ranking> rankingList = RankingDbService.GetServerRankings(serverId);
                 var latestUserRankings = new Dictionary<string, Ranking>();
                 foreach (var rank in rankingList)
                 {
-                    var userId = rank.UserId;
-                    if (!latestUserRankings.ContainsKey(userId))
+                    var id = rank.UserId;
+                    if (!latestUserRankings.ContainsKey(id))
                     {
                         latestUserRankings.Add(rank.UserId, rank);
                     }
@@ -275,17 +279,11 @@ namespace kandora.bot.commands
                 int i = 1;
                 foreach (var rank in sortedRanks)
                 {
-                    sb.Append($"{i}: <@{rank.UserId}> ({rank.NewRank}) {(rank.UserId== userDiscordId ? "<<< You are here": "")}\n");
+                    sb.Append($"{i}: <@{rank.UserId}> ({rank.NewRank}) {(rank.UserId == userId ? "<<< You are here" : "")}\n");
                     i++;
                 }
                 await ctx.RespondAsync(sb.ToString());
-                DbService.Commit("ranking");
-            }
-            catch (Exception e)
-            {
-                await ctx.RespondAsync(e.Message);
-                DbService.Rollback("ranking");
-            }
+            });
         }
 
         private static string PrintGameResult(DiscordClient client, string[] userIds, float[] scores = null)

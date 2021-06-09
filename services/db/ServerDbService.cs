@@ -54,7 +54,7 @@ namespace kandora.bot.services
                     return new Server(serverId, displayName, leagueRoleId, leagueName, targetChannelId, leagueConfigId); ;
                 }
                 reader.Close();
-                throw (new EntityNotFoundException("Server"));
+                throw (new EntityNotFoundException("Server", serverId));
             }
             throw (new DbConnectionException());
         }

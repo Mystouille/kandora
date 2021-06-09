@@ -298,7 +298,7 @@ namespace kandora.bot.services
                     Reader.Close();
                     if (serverId != server.Id)
                     {
-                        throw new GetGameException($"Game with logId:{logId} has been recorded on another server");
+                        throw new Exception($"Game with logId:{logId} has been recorded on another server");
                     }
                     var game = new Game(logId, server, user1Id, user2Id, user3Id, user4Id, platform, timestamp);
                     game.User1Score = user1Score;
@@ -309,7 +309,7 @@ namespace kandora.bot.services
                     return game;
 
                 }
-                throw (new GetGameException($"Game with logId:{logId} was not found"));
+                throw (new Exception($"Game with logId:{logId} was not found"));
             }
             throw (new DbConnectionException());
         }

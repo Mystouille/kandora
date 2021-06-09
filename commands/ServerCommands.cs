@@ -178,10 +178,6 @@ namespace kandora.bot.commands
                 var serverDiscordId = ctx.Guild.Id.ToString();
                 var users = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(users);
-                if (!servers.ContainsKey(serverDiscordId))
-                {
-                    throw new UserNotRegisteredException();
-                }
                 var server = servers[serverDiscordId];
                 ServerDbService.RemoveUserFromServer(discordId, serverDiscordId);
                 ulong roleId = Convert.ToUInt64(server.LeagueRoleId);
