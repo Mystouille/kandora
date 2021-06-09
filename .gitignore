@@ -7,4 +7,5 @@ Properties/PublishProfiles/Kandora - Web Deploy.pubxml.user
 .vs/
 bin/
 obj/
+Properties/
 
