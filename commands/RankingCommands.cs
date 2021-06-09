@@ -23,9 +23,16 @@ namespace kandora.bot.commands
         [Command("submitLog"), Description("Submit a mahjsoul or tenhou log to be counted in the league")]
         public async Task SubmitLog(CommandContext ctx, [Description("The game id")] string gameId)
         {
-            try
+            await executeCommand(
+                ctx,
+                GetSubmitLogAction(ctx, gameId)
+            );
+        }
+
+        private Func<Task> GetSubmitLogAction(CommandContext ctx, string gameId)
+        {
+            return new Func<Task>(async () =>
             {
-                DbService.Begin("scorematch");
                 var serverId = ctx.Guild.Id.ToString();
                 var allUsers = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(allUsers);
@@ -36,15 +43,8 @@ namespace kandora.bot.commands
                 var users = await GetUsersFromLog(log, serverUsers, ctx);
                 var gameResult = PrintGameResult(log, ctx.Client, users);
                 var gameMsg = await ctx.RespondAsync($"I need all players to :o: or :x: to record or cancel this game\n{gameResult}");
-                await context.AddPendingGame(ctx, gameMsg, new PendingGame(users, server, log));
-
-                DbService.Commit("scorematch");
-            }
-            catch (Exception e)
-            {
-                await ctx.RespondAsync(e.Message);
-                DbService.Rollback("scorematch");
-            }
+                await context.AddPendingGame(ctx, gameMsg, new PendingGame(users.Select(x=>x.Id.ToString()).ToArray(), server, log));
+            });
         }
 
         //Checks if a log is compatible with a player base
@@ -109,84 +109,133 @@ namespace kandora.bot.commands
             return foundUsers;
         }
 
-        [Command("getloginfo"), Description("Returns various info about a mahjsoul or tenhou game")]
+        [Command("getlog"), Description("Returns various info about a mahjsoul or tenhou game")]
         public async Task GetLogInfo(CommandContext ctx, [Description("The game id")] string gameId)
         {
-            try
+            await executeCommand(
+                ctx,
+                GetLogInfoAction(ctx, gameId)
+            );
+        }
+
+        private Func<Task> GetLogInfoAction(CommandContext ctx, string gameId)
+        {
+            return new Func<Task>(async () =>
             {
                 var log = await LogService.Instance.GetLog(gameId, 2);
                 var gameResult = PrintGameResult(log, ctx.Client);
                 await ctx.RespondAsync(gameResult);
-            }
-            catch (Exception e)
-            {
-                await ctx.RespondAsync(e.Message);
-            }
+            });
         }
 
-        [Command("scorematchid"), Description("Record a game with discord ids"), Aliases("scoreid")]
-        public async Task ScoreMatchId(CommandContext ctx, [Description("The players, from winner to last place")] params string[] discordUserList)
+        [Command("submitIrlTxt"), Description("Submit a game with without scores and with discord IDs only")]
+        public async Task SubmitIrlTxt(CommandContext ctx, [Description("The players discord ID, from winner to last place")] params string[] discordUserList)
         {
             await scoreMatchWithIds(ctx, discordUserList);
         }
 
-        [Command("scorematch"), Description("Record a game"), Aliases("score", "score_match", "s")]
-        public async Task ScoreMatch(CommandContext ctx, [Description("The players, from winner to last place")] params DiscordMember[] discordUserList)
+        [Command("submitIrlScoreTxt"), Description("Submit a game with with scores and with discord IDs only")]
+        public async Task SubmitIrlScoreTxt(CommandContext ctx, [Description("The players discord IDs with their score (ie. 0012354 58000 00178995 2000 00265897 50000 00156698 10000)")] params string[] input)
+        {
+            var usersScores = new List<(string, string)>();
+            for (int i = 0; i < input.Length-1; i = i + 2)
+            {
+                usersScores.Add((input[i], input[i+1]));
+            }
+            usersScores.Sort((tuple1, tuple2) => tuple2.Item2.CompareTo(tuple1.Item2));
+
+            var usersIds = usersScores.Select(x => x.Item1).ToArray();
+            var scores = usersScores.Select(x => x.Item2).ToArray();
+            await scoreMatchWithIds(ctx, usersIds, scores);
+        }
+
+        [Command("submitIrl"), Description("Submit a game with without scores")]
+        public async Task SubmitIrl(CommandContext ctx, [Description("The players (@ mentions), from winner to last place")] params DiscordMember[] discordUserList)
         {
             var usersIds = discordUserList.Select(x => x.Id.ToString()).ToArray();
             await scoreMatchWithIds(ctx, usersIds);
         }
 
-        private async Task scoreMatchWithIds(CommandContext ctx, string[] usersIds)
+        [Command("submitIrlScore4"), Description("Submit a 4 players game with scores")]
+        public async Task SubmitIrl4(CommandContext ctx, [Description("The players (@ mentions) with their score (ie. @Nyaa 58000 @Asapin 2000 @Rumi 50000 @Aki 10000)")] 
+            DiscordMember list, string score1,
+            DiscordMember user2, string score2,
+            DiscordMember user3, string score3,
+            DiscordMember user4, string score4)
         {
-            var userDiscordId = ctx.User.Id.ToString();
-            var serverDiscordId = ctx.Guild.Id.ToString();
-            try
-            {
-                if (ctx.Channel == null)
-                {
-                    throw (new NotInChannelException());
-                }
-                var channelDiscordId = ctx.Channel.Id.ToString();
-                DbService.Begin("scorematch");
-                var users = UserDbService.GetUsers();
-                var servers = ServerDbService.GetServers(users);
-                if (!servers.ContainsKey(serverDiscordId))
-                {
-                    throw (new ServerNotRegisteredException());
-                }
-                var activeServer = servers[serverDiscordId];
-                var activeUser = users[userDiscordId];
-                if (activeServer.TargetChannelId != channelDiscordId)
-                {
-                    throw (new SilentException());
-                }
-                if (!users.ContainsKey(userDiscordId))
-                {
-                    throw (new UserNotRegisteredException(ctx.User.Id.ToString()));
-                }
+            var usersScores = new (DiscordMember,string)[] { (list, score1), (user2, score2), (user3, score3), (user4, score4) };
+            var sortedScores = usersScores.ToList();
+            sortedScores.Sort((tuple1, tuple2) => tuple2.Item2.CompareTo(tuple1.Item2));
 
-                var (game, rankings) = ScoreDbService.RecordIRLGame(usersIds, activeServer);
-                var message = $"{ctx.User.Username} tries to register a game (id= {game.Id}): \n" +
-                            $"1rst: <@{usersIds[0]}>\n" +
-                            $"2nd: <@{usersIds[1]}>\n" +
-                            $"3rd: <@{usersIds[2]}>\n" +
-                            $"4th: <@{usersIds[3]}>\n";
-                await ctx.Channel.SendMessageAsync(message);
-
-                DbService.Commit("scorematch");
-            }
-            catch (Exception e)
-            {
-                if (!(e is SilentException))
-                {
-                    await ctx.RespondAsync(e.Message);
-                }
-                DbService.Rollback("scorematch");
-            }
+            var usersIds = sortedScores.Select(x => x.Item1.Id.ToString()).ToArray();
+            var scores = sortedScores.Select(x => x.Item2).ToArray();
+            await scoreMatchWithIds(ctx, usersIds, scores);
         }
 
-        [Command("ranking"), Description("Ask Kandora your current league ranking"), Aliases("rank", "leaderboard")]
+        [Command("submitIrlScore3"), Description("Submit a 3 player game with scores")]
+        public async Task SubmitIrl3(CommandContext ctx, [Description("The players (@ mentions) with their score (ie. @Nyaa 58000 @Asapin 2000 @Rumi 30000)")]
+            DiscordMember list, string score1,
+            DiscordMember user2, string score2,
+            DiscordMember user3, string score3)
+        {
+            var usersScores = new (DiscordMember, string)[] { (list, score1), (user2, score2), (user3, score3)};
+            var sortedScores = usersScores.ToList();
+            sortedScores.Sort((tuple1, tuple2) => tuple2.Item2.CompareTo(tuple1.Item2));
+
+            var usersIds = sortedScores.Select(x => x.Item1.Id.ToString()).ToArray();
+            var scores = sortedScores.Select(x => x.Item2).ToArray();
+            await scoreMatchWithIds(ctx, usersIds, scores);
+        }
+
+        private async Task scoreMatchWithIds(CommandContext ctx, string[] usersIds, string[] scoresStr = null)
+        {
+            float[] scores = null;
+            if(scoresStr != null)
+            {
+                scores = scoresStr.Select(x => float.Parse(x)).ToArray();
+            }
+            await executeCommand(
+                ctx,
+                GetScoreMatchWithIdsAction(ctx, usersIds, scores)
+            );
+        }
+
+        private Func<Task> GetScoreMatchWithIdsAction(CommandContext ctx, string[] userIds, float[] scores)
+        {
+            return new Func<Task>(async () =>
+            {
+                var serverId = ctx.Guild.Id.ToString();
+                var userId = ctx.Member.Id.ToString();
+                var channelDiscordId = ctx.Channel.Id.ToString();
+                var allUsers = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(allUsers);
+                var server = servers[serverId];
+                foreach(var id in userIds)
+                {
+                    if (server.Users.Where(x => x.Id == id).Count() == 0)
+                    {
+                        throw new Exception($"User <@{id}> is not register in this server league");
+                    }
+                }
+                var leagueConfig = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+                if (leagueConfig.CountPoints && scores == null)
+                {
+                    throw new Exception("The current league configuration requires scores");
+                }
+                var distinctUsers = userIds.Distinct();
+                if (distinctUsers.Count() < userIds.Length)
+                {
+                    var userListStr = string.Join(", ", distinctUsers.Select(x => $"<@{x}>"));
+                    throw new Exception($"I only received {userListStr}, a user might be mentioned twice?");
+                }
+
+                var gameResult = PrintGameResult(ctx.Client, userIds, scores);
+                var gameMsg = await ctx.RespondAsync($"I need all players to :o: or :x: to record or cancel this game\n{gameResult}");
+                await context.AddPendingGame(ctx, gameMsg, new PendingGame(userIds, scores, server));
+            });
+        }
+
+        [Command("getrank"), Description("Ask Kandora your current league ranking"), Aliases("rank")]
         public async Task MyRanking(CommandContext ctx)
         {
             var userDiscordId = ctx.User.Id.ToString();
@@ -231,6 +280,16 @@ namespace kandora.bot.commands
             }
         }
 
+        private static string PrintGameResult(DiscordClient client, string[] userIds, float[] scores = null)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("IRL Game:");
+            for(int i = 0; i < userIds.Length; i++)
+            {
+                sb.AppendLine($"{i+1}: <@{userIds[i]}>: {scores[i]}");
+            }
+            return sb.ToString();
+        }
 
         private static string PrintGameResult(RiichiGame game, DiscordClient client, List<User> users = null)
         {

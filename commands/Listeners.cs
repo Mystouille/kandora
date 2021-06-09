@@ -1,7 +1,10 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using kandora.bot.services;
+using kandora.bot.services.db;
 using kandora.bot.utils;
+using System;
 using System.Threading.Tasks;
 
 namespace kandora.bot.commands
@@ -42,9 +45,47 @@ namespace kandora.bot.commands
             {
                 result = game.TryChangeUserNo(userId, isAdd: added);
             }
-            if (!result && sender.CurrentUser.Id != user.Id)
+            if (!result && added)
             {
                 await msg.DeleteReactionAsync(emoji, user);
+            }
+            if (game.IsCancelled)
+            {
+                await msg.ModifyAsync($"All players have voted {noEmoji}, this log won't be recorded");
+                kanContext.PendingGames.Remove(msgId);
+            }
+            if (game.IsValidated)
+            {
+
+                DbService.Begin("recordgame");
+                try
+                {
+                    var serverId = msg.Channel.GuildId.ToString();
+                    var users = UserDbService.GetUsers();
+                    var servers = ServerDbService.GetServers(users);
+                    var server = servers[serverId];
+                    var leagueConfig = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+
+                    if (game.Log == null)
+                    {
+                        ScoreDbService.RecordIRLGame(game.UserIds, game.Scores, server, leagueConfig);
+                    }
+                    else
+                    {
+                        ScoreDbService.RecordOnlineGame(game.Log, server);
+                    }
+                    kanContext.PendingGames.Remove(msgId);
+                    await msg.RespondAsync($"All players have voted {okEmoji}, this log has been recorded!");
+                    await msg.DeleteReactionsEmojiAsync(okEmoji);
+                    await msg.DeleteReactionsEmojiAsync(noEmoji);
+
+                    DbService.Commit("recordgame");
+                }
+                catch (Exception e)
+                {
+                    DbService.Rollback("recordgame");
+                    await msg.RespondAsync(e.Message);
+                }
             }
         }
     }

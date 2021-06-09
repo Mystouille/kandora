@@ -115,7 +115,6 @@ namespace kandora.bot.commands
             );
         }
 
-
         private Func<Task> getChangeLeagueConfigAction(CommandContext ctx, string serverId, string paramName, string value)
         {
             return new Func<Task>(async () =>

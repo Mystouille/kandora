@@ -32,16 +32,9 @@ namespace kandora.bot.services
         private const string TimestampCol = "timestamp";
         
 
-        public static (Game, List<Ranking>) RecordIRLGame(string[] members, Server server)
+        public static (Game, List<Ranking>) RecordIRLGame(string[] members, float[] scores, Server server, LeagueConfig leagueConfig)
         {
             var dbCon = DBConnection.Instance();
-
-            if (members[0] == members[1] || members[0] == members[2] || members[0] == members[3]
-                || members[1] == members[2] || members[1] == members[3]
-                || members[2] == members[3])
-            {
-                throw (new NotEnoughUsersException());
-            }
 
             string logId = GetIRLLogId();
 
@@ -49,8 +42,17 @@ namespace kandora.bot.services
             {
                 using var command = SqlClientFactory.Instance.CreateCommand();
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {IdCol}, {PlatformCol}, {ServerIdCol}) " +
-                    $"VALUES ({members[0]}, {members[1]}, {members[2]}, {members[3]}, @logId, @gameType, @serverId);";
+
+                var scoreColumns = scores == null
+                    ? ""
+                    : $"{User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}{(scores.Length > 3 ? $", {User3ScoreCol}" : "")}";
+
+                var scoreValues = scores == null
+                    ? ""
+                    : $", @score1, @score2, @score3{(scores.Length > 3 ? $", @score4" : "")}";
+
+                command.CommandText = $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {IdCol}, {PlatformCol}, {ServerIdCol}{scoreColumns}) " +
+                    $"VALUES ({members[0]}, {members[1]}, {members[2]}, {members[3]}, @logId, @gameType, @serverId{scoreValues});";
                 command.CommandType = CommandType.Text;
 
                 command.Parameters.Add(new SqlParameter("@logId", SqlDbType.NVarChar)
@@ -65,12 +67,20 @@ namespace kandora.bot.services
                 {
                     Value = server.Id
                 });
-
+                if (scores != null)
+                {
+                    for (int i = 0; i < scores.Length && i < 4; i++)
+                    {
+                        command.Parameters.Add(new SqlParameter($"@score{i + 1}", SqlDbType.Float)
+                        {
+                            Value = scores[i]
+                        });
+                    }
+                }
                 command.ExecuteNonQuery();
 
                 var game = GetGameFromLogId(logId, server);
-                var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
-                var rankings = RankingDbService.UpdateRankings(game, config);
+                var rankings = RankingDbService.UpdateRankings(game, leagueConfig);
 
                 return (game, rankings);
             }

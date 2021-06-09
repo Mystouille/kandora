@@ -25,31 +25,6 @@ namespace kandora.bot.commands
             return toReturn;
         }
 
-        [Command("test"), Description("test me"), Aliases("t")]
-        public async Task Test(CommandContext ctx)
-        {
-            var inter = ctx.Client.GetInteractivity();
-            var reactionResult = await inter.CollectReactionsAsync(ctx.Message, TimeSpan.FromSeconds(4)).ConfigureAwait(false);
-            string bla = "";
-            foreach(var result in reactionResult)
-            {
-                bla += result.Emoji.Name;
-            }
-            var message = await ctx.RespondAsync("react to me");
-            var emoji = DiscordEmoji.FromName(ctx.Client, ":ok_hand:");
-            await message.CreateReactionAsync(emoji);
-            message.WaitForReactionAsync(ctx.Member, emoji).ContinueWith(
-                ante =>
-                {
-                    message.RespondAsync("thanks!");
-                }    
-            );
-            await message.RespondAsync("waiting for it...");
-
-
-
-        }
-
 
         [Command("hand"), Description("Displays a specified mahjong hand with emojis"), Aliases("h")]
         public async Task Hand(

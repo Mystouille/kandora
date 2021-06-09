@@ -22,7 +22,7 @@ namespace kandora.bot.commands
         }
 
 
-        [Command("displayMe"), Description("Display your info")]
+        [Command("getMe"), Description("Display your info")]
         public async Task DisplayMe(CommandContext ctx)
         {
             await executeMpCommand(
@@ -104,11 +104,18 @@ namespace kandora.bot.commands
                     }
                     sb.AppendLine($"\t{server.LeagueName}({server.DisplayName}): {userRank}/{nbPlayers} (R{userElo})");
                 }
-                await ctx.RespondAsync(sb.ToString());
+                if (ctx != null && ctx.Member == null)
+                {
+                    await ctx.RespondAsync(sb.ToString());
+                }
+                else
+                {
+                    await ctx.Member.SendMessageAsync(sb.ToString());
+                }
             });
         }
 
-        [Command("changeme"), Description("Change your info")]
+        [Command("changeMe"), Description("Change your info")]
         public async Task ChangeMe(CommandContext ctx, [Description("What to change")] string property, [Description("The new name/id you want")] string value)
         {
             await executeMpCommand(
@@ -124,6 +131,11 @@ namespace kandora.bot.commands
             return new Func<Task>(async () =>
             {
                 var userId = ctx.User.Id.ToString();
+                var allUsers = UserDbService.GetUsers();
+                if (!allUsers.ContainsKey(userId))
+                {
+                    throw new Exception("You are not registered in any server");
+                }
                 UserProperty property = UserProperty.Unknown;
                 try
                 {
@@ -142,7 +154,7 @@ namespace kandora.bot.commands
             });
         }
 
-        [Command("listusers"), Description("List the users in Kandora league"), Aliases("l")]
+        [Command("getList"), Description("List the users in Kandora league"), Aliases("l")]
         public async Task List(CommandContext ctx)
         {
             await executeCommand(
@@ -164,7 +176,7 @@ namespace kandora.bot.commands
 
                 int i = 1;
                 StringBuilder sb = new StringBuilder();
-                sb.Append("User list:\n");
+                sb.Append($"Users registered in {ctx.Guild.Name}:\n");
                 foreach (var user in servers[serverDiscordId].Users)
                 {
                     sb.Append($"<@{user.Id}> majsoulName: {user.MahjsoulName} {(user.Id == discordId ? " <<< you" : "")}\n");

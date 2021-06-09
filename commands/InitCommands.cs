@@ -80,11 +80,22 @@ namespace kandora.bot.commands
             return new Func<Task>(async () =>
             {
                 var discordId = ctx.User.Id.ToString();
-                var serverDiscordId = ctx.Guild.Id.ToString();
-                var server = ServerDbService.GetServer(serverDiscordId);
+                var serverId = ctx.Guild.Id.ToString();
+                var users = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(users);
+                var server = servers[serverId];
                 var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
-                UserDbService.CreateUser(discordId, serverDiscordId, config);
-                ServerDbService.AddUserToServer(discordId, serverDiscordId, false, false);
+                if (!users.ContainsKey(discordId))
+                {
+                    UserDbService.CreateUser(discordId, serverId, config);
+                }
+                if (!server.Users.Select(x => x.Id).Contains(discordId)){
+                    ServerDbService.AddUserToServer(discordId, serverId, false, false);
+                }
+                else
+                {
+                    throw new Exception("You are already registered in this server");
+                }
                 ulong roleId = Convert.ToUInt64(server.LeagueRoleId);
                 if (!ctx.Guild.Roles.ContainsKey(roleId)) {
                     throw new Exception("Error: League role not found");

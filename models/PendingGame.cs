@@ -9,21 +9,27 @@ namespace kandora.bot.models
 {
     public class PendingGame
     {
-        public PendingGame(List<User> users, Server server, RiichiGame log)
+        public PendingGame(string[] userIds, Server server, RiichiGame log)
         {
-            Users = new Dictionary<string, User>();
-            foreach (var user in users)
-            {
-                Users.Add(user.Id, user);
-            }
+            UserIds = userIds;
             Log = log;
             Server = server;
             usersOk = new HashSet<string>();
             usersNo = new HashSet<string>();
         }
-        ISet<string> usersOk;
-        ISet<string> usersNo;
-        public Dictionary<string, User> Users { get; }
+        public PendingGame(string[] userIds, float[] scores, Server server)
+        {
+            UserIds = userIds;
+            Scores = scores;
+            Server = server;
+            usersOk = new HashSet<string>();
+            usersNo = new HashSet<string>();
+        }
+
+        private ISet<string> usersOk;
+        private ISet<string> usersNo;
+        public string[] UserIds { get; }
+        public float[] Scores { get; }
         public RiichiGame Log { get; }
         public Server Server { get; }
         public bool TryChangeUserOk(string userId, bool isAdd)
@@ -37,19 +43,19 @@ namespace kandora.bot.models
         public bool IsCancelled
         {
             get {
-                return usersNo.Count == Users.Count;
+                return usersNo.Count == UserIds.Count();
             }
         }
         public bool IsValidated
         {
             get
             {
-                return usersOk.Count == Users.Count;
+                return usersOk.Count == UserIds.Count();
             }
         }
         private bool TryChangeSet(ISet<string> set, string userId, bool isAdd)
         {
-            if (Users.ContainsKey(userId))
+            if (UserIds.Contains(userId))
             {
                 if (isAdd)
                 {
