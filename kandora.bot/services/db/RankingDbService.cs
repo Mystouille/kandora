@@ -1,5 +1,6 @@
 ﻿using kandora.bot.exceptions;
 using kandora.bot.models;
+using kandora.bot.services.db;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,7 +9,7 @@ using System.Linq;
 
 namespace kandora.bot.services
 {
-    internal class RankingDbService
+    internal class RankingDbService: DbService
     {
         private const string tableName = "[dbo].[Ranking]";
         private const string idCol = "Id";

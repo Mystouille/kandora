@@ -8,4 +8,5 @@ Properties/PublishProfiles/Kandora - Web Deploy.pubxml.user
 */bin/
 */obj/
 */Properties/
+*.csproj.user
 
