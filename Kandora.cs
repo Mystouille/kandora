@@ -42,6 +42,7 @@ namespace kandora.bot
             commands.RegisterCommands<RankingCommands>(); 
             commands.RegisterCommands<UserCommands>();
             commands.RegisterCommands<LeagueConfigCommands>();
+            commands.RegisterCommands<InitCommands>();
 
             client.MessageReactionAdded += Listeners.OnReactionAdded;
             client.MessageReactionRemoved += Listeners.OnReactionRemoved;

@@ -188,6 +188,46 @@ namespace kandora.bot.services
         {
             UpdateFieldInTable(serverTableName, leagueConfigIdCol, serverId, id);
         }
+        public static void SetIsAdmin(string serverId, string userId, bool isAdmin)
+        {
+            SetServerUserRole(serverId, userId, isAdminCol, isAdmin);
+        }
+        public static void SetIsOwner(string serverId, string userId, bool isAdmin)
+        {
+            SetServerUserRole(serverId, userId, isOwnerCol, isAdmin);
+        }
+
+        private static void SetServerUserRole(string serverId, string userId, string column, bool roleBool)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using (var command = SqlClientFactory.Instance.CreateCommand())
+                {
+                    command.Connection = dbCon.Connection;
+                    command.CommandType = CommandType.Text;
+                    command.CommandText = $"UPDATE {ServerUserTableName} SET {column} = @isAdmin, WHERE {serverIdCol} = @serverId AND {userIdCol} = @userId";
+
+                    command.Parameters.Add(new SqlParameter("@isAdmin", SqlDbType.Bit)
+                    {
+                        Value = roleBool
+                    });
+                    command.Parameters.Add(new SqlParameter("@serverId", SqlDbType.NVarChar)
+                    {
+                        Value = serverId
+                    });
+                    command.Parameters.Add(new SqlParameter("@userId", SqlDbType.NVarChar)
+                    {
+                        Value = userId
+                    });
+                    command.CommandType = CommandType.Text;
+
+                    command.ExecuteNonQuery();
+                    return;
+                }
+            }
+            throw (new DbConnectionException());
+        }
 
         public static void AddUserToServer(string userId, string serverId, bool isAdmin = false, bool isOwner = false)
         {
