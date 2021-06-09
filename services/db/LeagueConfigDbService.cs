@@ -13,6 +13,7 @@ namespace kandora.bot.services
         public static string idCol = "Id";
         public static string countPointsCol = "countPoints";
         public static string startingPointsCol = "startingPoints";
+        public static string allowSanmaCol = "allowSanma";
         public static string uma3p1Col = "uma3p1";
         public static string uma3p2Col = "uma3p2";
         public static string uma3p3Col = "uma3p3";
@@ -40,7 +41,7 @@ namespace kandora.bot.services
                 command.CommandText = $"SELECT {idCol}, {countPointsCol}, {startingPointsCol}, " //0-2
                     + $"{uma3p1Col}, {uma3p2Col}, {uma3p3Col}, {uma4p1Col}, {uma4p2Col}, {uma4p3Col}, {uma4p4Col}, " // 3-9
                     + $"{okaCol}, {penaltyLastCol}, {useEloSystemCol}, {initialEloCol}, {minEloCol}, {baseEloChangeDampeningCol}, " //10-15
-                    + $"{eloChangeStartRatioCol}, {eloChangeEndRatioCol}, {trialPeriodDurationCol} " //16-18
+                    + $"{eloChangeStartRatioCol}, {eloChangeEndRatioCol}, {trialPeriodDurationCol}, {allowSanmaCol} " //16-19
                     + $"FROM {tableName} "
                     + $"WHERE {idCol} = @leagueId";
                 command.CommandType = CommandType.Text;
@@ -77,6 +78,7 @@ namespace kandora.bot.services
                     league.EloChangeStartRatio = reader.IsDBNull(16) ? -9999 : (float)reader.GetDouble(16);
                     league.EloChangeEndRatio = reader.IsDBNull(17) ? -9999 : (float)reader.GetDouble(17);
                     league.TrialPeriodDuration = reader.IsDBNull(18) ? -9999 : reader.GetInt32(18);
+                    league.AllowSanma = reader.GetBoolean(19);
 
                     reader.Close();
                     return league;
@@ -91,6 +93,7 @@ namespace kandora.bot.services
         {
             var leagueId = CreateLeague(countPoints: false, useEloSystem: true);
             SetConfigValue(startingPointsCol, leagueId, 0);
+            SetConfigValue(allowSanmaCol, leagueId, false);
             SetConfigValue(uma3p1Col, leagueId, (float)20);
             SetConfigValue(uma3p2Col, leagueId, (float)0);
             SetConfigValue(uma3p3Col, leagueId, (float)(-20));

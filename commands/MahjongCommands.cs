@@ -38,7 +38,14 @@ namespace kandora.bot.commands
                 var optionsEmoji = options == "all" 
                     ? handEmoji
                     : HandParser.GetHandEmojiCodes(options, ctx.Client);
-                await ctx.Message.DeleteAsync();
+                try
+                {
+                    await ctx.Message.DeleteAsync();
+                }
+                catch
+                {
+                    // do nothing
+                }
                 var message = await ctx.Channel.SendMessageAsync($"<@!{ctx.User.Id}>: {GetHandMessage(handEmoji)}");
                 {
                     foreach (var emoji in optionsEmoji)

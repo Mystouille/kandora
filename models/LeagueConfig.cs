@@ -16,6 +16,7 @@ namespace kandora.bot.models
         public int Id { get; set; }
         public bool CountPoints { get; set; }
         public float StartingPoints { get; set; }
+        public bool AllowSanma { get; set; }
         public float Uma3p1 { get; set; }
         public float Uma3p2 { get; set; }
         public float Uma3p3 { get; set; }

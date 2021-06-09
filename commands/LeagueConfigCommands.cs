@@ -50,6 +50,7 @@ namespace kandora.bot.commands
                 var sb = new StringBuilder();
                 sb.AppendLine($"countPoints: {(config.CountPoints ? "Yes" : "No")}");
                 sb.AppendLine($"startingPoints: {config.StartingPoints}");
+                sb.AppendLine($"allowSanma: {(config.AllowSanma ? "Yes" : "No")}");
                 sb.AppendLine($"uma3p1: {config.Uma3p1}");
                 sb.AppendLine($"uma3p2: {config.Uma3p2}");
                 sb.AppendLine($"uma3p3: {config.Uma3p3}");
@@ -84,6 +85,7 @@ namespace kandora.bot.commands
             server,
             name,
             description,
+            allowSanma,
             countPoints,
             startingPoints,
             uma3p1,
@@ -144,7 +146,8 @@ namespace kandora.bot.commands
                 {
                     case CfgPrm.name: LeagueConfigDbService.SetConfigValue(paramName, configId, value); break;
                     case CfgPrm.description: LeagueConfigDbService.SetConfigValue(paramName, configId, value); break;
-                    case CfgPrm.countPoints: LeagueConfigDbService.SetConfigValue(paramName, configId, value.ToLower() ==  "yes"); break;
+                    case CfgPrm.countPoints: LeagueConfigDbService.SetConfigValue(paramName, configId, value.ToLower() == "yes"); break;
+                    case CfgPrm.allowSanma: LeagueConfigDbService.SetConfigValue(paramName, configId, value.ToLower() == "yes"); break;
                     case CfgPrm.startingPoints: LeagueConfigDbService.SetConfigValue(paramName, configId, float.Parse(value)); break;
                     case CfgPrm.uma3p1: LeagueConfigDbService.SetConfigValue(paramName, configId, float.Parse(value)); break;
                     case CfgPrm.uma3p2: LeagueConfigDbService.SetConfigValue(paramName, configId, float.Parse(value)); break;

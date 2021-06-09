@@ -1,6 +1,7 @@
 ﻿CREATE TABLE [dbo].[LeagueConfig] (
     [Id] INT IDENTITY(1,1) PRIMARY KEY,
     [countPoints] BIT NOT NULL,
+    [allowSanma] BIT DEFAULT 0 NOT NULL,
     [startingPoints] FLOAT,
     [uma3p1] FLOAT,
     [uma3p2] FLOAT,
