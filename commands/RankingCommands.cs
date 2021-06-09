@@ -131,7 +131,7 @@ namespace kandora.bot.commands
         [Command("submitIrlTxt"), Description("Submit a game with without scores and with discord IDs only")]
         public async Task SubmitIrlTxt(CommandContext ctx, [Description("The players discord ID, from winner to last place")] params string[] discordUserList)
         {
-            await scoreMatchWithIds(ctx, discordUserList);
+            await scoreIrlMatch(ctx, discordUserList);
         }
 
         [Command("submitIrlScoreTxt"), Description("Submit a game with with scores and with discord IDs only")]
@@ -146,14 +146,14 @@ namespace kandora.bot.commands
 
             var usersIds = usersScores.Select(x => x.Item1).ToArray();
             var scores = usersScores.Select(x => x.Item2).ToArray();
-            await scoreMatchWithIds(ctx, usersIds, scores);
+            await scoreIrlMatch(ctx, usersIds, scores);
         }
 
         [Command("submitIrl"), Description("Submit a game with without scores")]
         public async Task SubmitIrl(CommandContext ctx, [Description("The players (@ mentions), from winner to last place")] params DiscordMember[] discordUserList)
         {
             var usersIds = discordUserList.Select(x => x.Id.ToString()).ToArray();
-            await scoreMatchWithIds(ctx, usersIds);
+            await scoreIrlMatch(ctx, usersIds);
         }
 
         [Command("submitIrlScore4"), Description("Submit a 4 players game with scores")]
@@ -169,7 +169,7 @@ namespace kandora.bot.commands
 
             var usersIds = sortedScores.Select(x => x.Item1.Id.ToString()).ToArray();
             var scores = sortedScores.Select(x => x.Item2).ToArray();
-            await scoreMatchWithIds(ctx, usersIds, scores);
+            await scoreIrlMatch(ctx, usersIds, scores);
         }
 
         [Command("submitIrlScore3"), Description("Submit a 3 player game with scores")]
@@ -184,10 +184,10 @@ namespace kandora.bot.commands
 
             var usersIds = sortedScores.Select(x => x.Item1.Id.ToString()).ToArray();
             var scores = sortedScores.Select(x => x.Item2).ToArray();
-            await scoreMatchWithIds(ctx, usersIds, scores);
+            await scoreIrlMatch(ctx, usersIds, scores);
         }
 
-        private async Task scoreMatchWithIds(CommandContext ctx, string[] usersIds, string[] scoresStr = null)
+        private async Task scoreIrlMatch(CommandContext ctx, string[] usersIds, string[] scoresStr = null)
         {
             float[] scores = null;
             if(scoresStr != null)
@@ -196,11 +196,11 @@ namespace kandora.bot.commands
             }
             await executeCommand(
                 ctx,
-                GetScoreMatchWithIdsAction(ctx, usersIds, scores)
+                GetScoreIrlMatchAction(ctx, usersIds, scores)
             );
         }
 
-        private Func<Task> GetScoreMatchWithIdsAction(CommandContext ctx, string[] userIds, float[] scores)
+        private Func<Task> GetScoreIrlMatchAction(CommandContext ctx, string[] userIds, float[] scores)
         {
             return new Func<Task>(async () =>
             {
@@ -222,6 +222,14 @@ namespace kandora.bot.commands
                 {
                     throw new Exception("The current league configuration requires scores");
                 }
+                if (!leagueConfig.AllowSanma && userIds.Length == 3)
+                {
+                    throw new Exception("The current league configuration does not accept sanma games (cheh)");
+                }
+                if (userIds.Length < 3 || userIds.Length > 4)
+                {
+                    throw new Exception($"The current league configuration does not support {userIds.Length} player games (what were you thinking?)");
+                }
                 var distinctUsers = userIds.Distinct();
                 if (distinctUsers.Count() < userIds.Length)
                 {
@@ -236,7 +244,7 @@ namespace kandora.bot.commands
         }
 
         [Command("getrank"), Description("Ask Kandora your current league ranking"), Aliases("rank")]
-        public async Task MyRanking(CommandContext ctx)
+        public async Task GetRank(CommandContext ctx)
         {
             var userDiscordId = ctx.User.Id.ToString();
             var serverDiscordId = ctx.Guild.Id.ToString();
