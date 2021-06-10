@@ -34,11 +34,11 @@ namespace kandora.bot.mahjong
         //         Example of output with print_aka_dora=False: 1244579m3p57z
         //         Example of output with print_aka_dora=True:  1244079m3p57z
         //         
-        public static string to_one_line_string(List<int> tiles, bool print_aka_dora = false)
+        public static string to_one_line_string(List<int> tiles, bool print_aka_dora = false, string suitOrder= null)
         {
             tiles = tiles.OrderBy(_p_1 => _p_1).ToList();
             var man = (from t in tiles
-                        where 0 < t && t < 36
+                        where 0 <= t && t < 36
                         select t).ToList();
             var pin = (from t in tiles
                         where 36 <= t && t < 72
@@ -60,7 +60,36 @@ namespace kandora.bot.mahjong
             var pin2 = words(pin, C.FIVE_RED_PIN - 36, "p", print_aka_dora);
             var man2 = words(man, C.FIVE_RED_MAN, "m", print_aka_dora);
             var honors2 = words(honors, -1 - 108, "z", print_aka_dora);
-            return sou2 + pin2 + man2 + honors2;
+
+            if(suitOrder == null)
+            {
+                return sou2 + pin2 + man2 + honors2;
+            }
+            var result = "";
+            foreach(var chr in suitOrder)
+            {
+                switch (chr)
+                {
+                    case 'm':
+                        result += man2;
+                        break;
+                    case 'p':
+                        result += pin2;
+                        break;
+                    case 's':
+                        result += sou2;
+                        break;
+                    case 'z':
+                        result += honors2;
+                        honors2 = "";
+                        break;
+                    case 'h':
+                        result += honors2;
+                        honors2 = "";
+                        break;
+                }
+            }
+            return result;
         }
         private static string words(List<int> suits, int red_five, string suffix, bool print_aka_dora)
         {
@@ -296,5 +325,70 @@ namespace kandora.bot.mahjong
             results = to_34_array(results);
             return results;
         }
+
+
+        public static string from_34_indices_to_one_line_string(List<List<int>> hand)
+        {
+            var array = from_34_indices_to_136_array(hand);
+            return to_one_line_string(array);
+        }
+
+        private static List<int> from_34_indices_to_136_array(List<List<int>> hand)
+        {
+            List<int> array136 = new List<int>();
+            var fullArray34 = new int[34];
+            foreach (var set in hand)
+            {
+                var array34 = new int[34];
+                foreach (var tile in set)
+                {
+                    array34[tile]++;
+                }
+                for (int idx = 0; idx < array34.Length; idx++)
+                {
+                    int nbT = fullArray34[idx];
+                    for (int i = nbT; i < array34[idx]; i++)
+                    {
+                        array136.Add(idx * 4 + i);
+                    }
+                    fullArray34[idx] += nbT;
+                }
+            }
+            return array136;
+        }
+
+        public static List<List<int>> from_34_indices_to_136_arrays(List<List<int>> hand)
+        {
+            List<List<int>> arrays136 = new List<List<int>>();
+            var fullArray34 = new int[34];
+            foreach (var set in hand)
+            {
+                var array34 = new int[34];
+                List<int> array136 = new List<int>();
+                foreach (var tile in set)
+                {
+                    array34[tile]++;
+                }
+                for (int idx = 0; idx < array34.Length; idx++)
+                {
+                    int nbT = fullArray34[idx];
+                    for (int i = nbT; i < array34[idx]; i++)
+                    {
+                        array136.Add(idx * 4 + i);
+                    }
+                    fullArray34[idx] += nbT;
+                }
+                arrays136.Add(array136);
+
+            }
+            arrays136 = arrays136.OrderBy(x => {
+                float sum = x.Aggregate((x, y) => x + y);
+                return sum/x.Count();
+            }).ToList();
+            return arrays136;
+        }
+
+
+
     }
 }

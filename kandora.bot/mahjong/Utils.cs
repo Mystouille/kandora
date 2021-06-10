@@ -92,39 +92,39 @@
         }
 
         // 
-        //     :param item: array of tile 34 indices
+        //     :param item: list of tile 34 indices
         //     :return: boolean
         //     
-        public static bool is_chi(List<int> item)
+        public static bool is_chi(List<int> list)
         {
-            if (item.Count != 3)
+            if (list.Count != 3)
             {
                 return false;
             }
-            return item[0] == item[1] - 1 && item[0] == item[2] - 2;
+            return list[0] == list[1] - 1 && list[0] == list[2] - 2;
         }
 
         // 
-        //     :param item: array of tile 34 indices
+        //     :param item: list of tile 34 indices
         //     :return: boolean
         //     
-        public static bool is_pon(List<int> item)
+        public static bool is_pon(List<int> list)
         {
-            if (item.Count != 3)
+            if (list.Count != 3)
             {
                 return false;
             }
-            return item[0] == item[1] && item[0] == item[2];
+            return list[0] == list[1] && list[0] == list[2];
         }
 
-        public static bool is_kan(List<int> item)
+        public static bool is_kan(List<int> list)
         {
-            return item.Count == 4;
+            return list.Count == 4;
         }
 
-        public static bool is_pon_or_kan(List<int> item)
+        public static bool is_pon_or_kan(List<int> list)
         {
-            return is_pon(item) || is_kan(item);
+            return is_pon(list) || is_kan(list);
         }
 
         // 
@@ -345,7 +345,7 @@
         //     :param tiles_34: array of tiles to count
         //     :return: dict
         //     
-        public static object count_tiles_by_suits(List<int> tiles_34)
+        public static Dictionary<string, int> count_tiles_by_suits(List<int> tiles_34)
         {
             var suits = new Dictionary<string, int>();
             suits.Add("sou", 0);
@@ -367,5 +367,22 @@
             }
             return suits;
         }
+
+        // Extract the suit order
+        public static string getSuitOrder(string str)
+        {
+            string order = "";
+            var addedChar = new HashSet<char>();
+            foreach (var chr in str)
+            {
+                if ((chr == 'm' || chr == 'p' || chr == 's' || chr == 'z' || chr == 'h') && !addedChar.Contains(chr))
+                {
+                    order += chr;
+                    addedChar.Add(chr);
+                }
+            }
+            return order;
+        }
+
     }
 }

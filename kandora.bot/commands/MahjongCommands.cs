@@ -2,11 +2,15 @@
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using kandora.bot.mahjong;
+using kandora.bot.mahjong.handcalc;
 using kandora.bot.utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using U = kandora.bot.mahjong.Utils;
+using C = kandora.bot.mahjong.TilesConverter;
 #pragma warning disable CS4014
 
 namespace kandora.bot.commands
@@ -14,28 +18,65 @@ namespace kandora.bot.commands
     public class MahjongCommands: BaseCommandModule
     {
         public object Tiles { get; private set; }
+        public object Divider { get; private set; }
 
-        [Command("test"), Description("calls Python and do things"), Aliases()]
+        [Command("test"), Description(""), Aliases("t")]
         public async Task Test(
-            CommandContext ctx
-        )
+            CommandContext ctx,
+            [Description("The hand to display. Circles: [0-9]p, Chars: [0-9]m, Bamboo: [0-9]s, Honnors: [1-7]z, Dragons: [R,W,G]d, Winds: [ESWN]w")] string hand,
+            [Description("The options people can vote for, can be empty, \"all\", or be another hand format")] string options = ""
+            )
         {
             try
             {
-                var list = new List<int>(34);
-                list.Add(0);
-                list.Add(1);
-                list.Add(2);
-                list.Add(3);
-                list.Add(4);
-                while (list.Count != 34)
+                var basicHand = HandParser.GetSimpleHand(hand);
+                var handEmoji = HandParser.GetHandEmojiCodes(hand, ctx.Client);
+                var optionsEmoji = options == "all"
+                    ? handEmoji
+                    : HandParser.GetHandEmojiCodes(options, ctx.Client);
+                try
                 {
-                    list.Add(0);
+                    await ctx.Message.DeleteAsync();
                 }
-                var hand = TilesConverter.one_line_string_to_34_array("66m233345p223s77z", false);
-                var shanten = new ShantenCalculator();
-                var result = shanten.Calculate_shanten(hand);
-                await ctx.RespondAsync(string.Join(",", result));
+                catch
+                {
+                    // do nothing
+                }
+
+                var hand34 = C.one_line_string_to_34_array(basicHand);
+                string suitOrder = U.getSuitOrder(basicHand);
+                var shantenCalc = new ShantenCalculator();
+                int shanten = -2;
+                var nbTiles = hand34.Sum();
+                if (nbTiles == 13 || nbTiles == 14)
+                {
+                    shanten = shantenCalc.Calculate_shanten(hand34);
+                }
+                StringBuilder sb = new();
+                sb.AppendLine($"<@!{ctx.User.Id}>: {GetHandMessage(handEmoji)}  {getShanten(shanten)}");
+                var divider = new HandDivider();
+                var results = divider.divide_hand(hand34);
+
+                int i = 1;
+                foreach (var result in results)
+                {
+                    var hand136 = C.from_34_indices_to_136_arrays(result);
+                    var setsStr = hand136.Select(set => C.to_one_line_string(set));
+                    IEnumerable<string> orderedSetStr = new List<string>();
+                    foreach (var chr in suitOrder)
+                    {
+                        orderedSetStr = orderedSetStr.Concat(setsStr.Where(x => x.Contains(chr)));
+                    }
+                    sb.AppendLine($"{i}:{string.Join(",",orderedSetStr.Select(x=>$"{GetHandMessage(HandParser.GetHandEmojiCodes(x, ctx.Client))}"))}");
+                    i++;
+                }
+                var message = await ctx.Channel.SendMessageAsync(sb.ToString());
+                {
+                    foreach (var emoji in optionsEmoji)
+                    {
+                        await message.CreateReactionAsync(emoji);
+                    }
+                }
             }
             catch (Exception e)
             {
@@ -43,7 +84,23 @@ namespace kandora.bot.commands
             }
         }
 
-            [Command("hand"), Description("Displays a specified mahjong hand with emojis"), Aliases("h")]
+        private string getShanten(int shanten) {
+            if (shanten < -1)
+            {
+                return "";
+            }
+            if (shanten == -1)
+            {
+                return "agari!";
+            }
+            if (shanten == 0)
+            {
+                return "tenpai";
+            }
+            return $"{shanten}-shanten";
+        }
+
+        [Command("hand"), Description("Displays a specified mahjong hand with emojis"), Aliases("h")]
         public async Task Hand(
             CommandContext ctx, 
             [Description("The hand to display. Circles: [0-9]p, Chars: [0-9]m, Bamboo: [0-9]s, Honnors: [1-7]z, Dragons: [R,W,G]d, Winds: [ESWN]w")] string hand,
@@ -67,13 +124,13 @@ namespace kandora.bot.commands
 
                 var hand34 = TilesConverter.one_line_string_to_34_array(basicHand);
                 var shantenCalc = new ShantenCalculator();
-                string shanten = null;
+                int shanten = -2;
                 var nbTiles = hand34.Sum();
                 if (nbTiles == 13 || nbTiles == 14)
                 {
-                    shanten = shantenCalc.Calculate_shanten(hand34).ToString();
+                    shanten = shantenCalc.Calculate_shanten(hand34);
                 }
-                var message = await ctx.Channel.SendMessageAsync($"<@!{ctx.User.Id}>: {GetHandMessage(handEmoji)}  {(shanten == null ? "" : $"{shanten}-shanten")}");
+                var message = await ctx.Channel.SendMessageAsync($"<@!{ctx.User.Id}>: {GetHandMessage(handEmoji)}  {getShanten(shanten)}");
                 {
                     foreach (var emoji in optionsEmoji)
                     {
@@ -95,7 +152,7 @@ namespace kandora.bot.commands
                 toReturn += lastEmoji;
                 lastEmoji = emoji;
             }
-            toReturn += " " + lastEmoji;
+            toReturn += (emojis.Count()>12 ? " ":"") + lastEmoji;
             return toReturn;
         }
 
