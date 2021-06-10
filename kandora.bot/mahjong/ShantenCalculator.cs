@@ -6,55 +6,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using C = kandora.bot.mahjong.Constants;
 
 namespace kandora.bot.mahjong
 {
     public class ShantenCalculator
     {
 
-        List<int> TERMINAL_INDICES = new List<int> {
-            0,
-            8,
-            9,
-            17,
-            18,
-            26
-        };
-
-        const int EAST = 27;
-
-        const int SOUTH = 28;
-
-        const int WEST = 29;
-
-        const int NORTH = 30;
-
-        const int HAKU = 31;
-
-        const int HATSU = 32;
-
-        const int CHUN = 33;
-
-        List<int> WINDS = new List<int> {
-            EAST,
-            SOUTH,
-            WEST,
-            NORTH
-        };
-
-        List<int> HONOR_INDICES = new List<int> {
-            EAST,
-            SOUTH,
-            WEST,
-            NORTH,
-            HAKU,
-            HATSU,
-            CHUN
-        };
-
-        int AGARI_STATE = -1;
-
-        List<int> tiles = new List<int>();
+        int[] tiles = new int[34];
 
         int number_melds = 0;
 
@@ -74,7 +33,7 @@ namespace kandora.bot.mahjong
         //         Return the minimum shanten for provided hand,
         //         it will consider chiitoitsu and kokushi options if possible.
         //         
-         public int Calculate_shanten(List<int> tiles_34, bool use_chiitoitsu = true, bool use_kokushi = true)
+        public int Calculate_shanten(int[] tiles_34, bool use_chiitoitsu = true, bool use_kokushi = true)
         {
             var shanten_results = new List<int> {
                 this.calculate_shanten_for_regular_hand(tiles_34)
@@ -93,14 +52,14 @@ namespace kandora.bot.mahjong
         // 
         //         Calculate the number of shanten for chiitoitsu hand
         //         
-        private int calculate_shanten_for_chiitoitsu_hand(List<int> tiles_34)
+        private int calculate_shanten_for_chiitoitsu_hand(int[] tiles_34)
         {
             var pairs = (from x in tiles_34
                             where x >= 2
-                            select x).ToList().Count;
+                            select x).Count();
             if (pairs == 7)
             {
-                return AGARI_STATE;
+                return C.AGARI_STATE;
             }
             return 6 - pairs;
         }
@@ -108,9 +67,9 @@ namespace kandora.bot.mahjong
         // 
         //         Calculate the number of shanten for kokushi musou hand
         //         
-        private int calculate_shanten_for_kokushi_hand(List<int> tiles_34)
+        private int calculate_shanten_for_kokushi_hand(int[] tiles_34)
         {
-            var indices = TERMINAL_INDICES.Concat(HONOR_INDICES);
+            var indices = C.TERMINAL_INDICES.Concat(C.HONOR_INDICES);
             var completed_terminals = 0;
             foreach (var i in indices)
             {
@@ -127,10 +86,11 @@ namespace kandora.bot.mahjong
         // 
         //         Calculate the number of shanten for regular hand
         //         
-        private int calculate_shanten_for_regular_hand(List<int> input)
+        private int calculate_shanten_for_regular_hand(int[] input)
         {
             // we will modify tiles array later, so we need to use a copy
-            var tiles_34 = input.ToArray().ToList();
+            var tiles_34 = new int[34];
+            input.CopyTo(tiles_34, 0);
             this._init(tiles_34);
             var count_of_tiles = tiles_34.Sum();
             if(count_of_tiles > 14)
@@ -143,7 +103,7 @@ namespace kandora.bot.mahjong
             return this.min_shanten;
         }
 
-        private void _init(List<int> tiles)
+        private void _init(int[] tiles)
         {
             this.tiles = tiles;
             this.number_melds = 0;
@@ -168,7 +128,7 @@ namespace kandora.bot.mahjong
 
         private void _run(int depth)
         {
-            if (this.min_shanten == AGARI_STATE)
+            if (this.min_shanten == C.AGARI_STATE)
             {
                 return;
             }
@@ -343,7 +303,7 @@ namespace kandora.bot.mahjong
             {
                 ret_shanten += n_mentsu_kouho - 4;
             }
-            if (ret_shanten != AGARI_STATE && ret_shanten < this.number_jidahai)
+            if (ret_shanten != C.AGARI_STATE && ret_shanten < this.number_jidahai)
             {
                 ret_shanten = this.number_jidahai;
             }
@@ -437,7 +397,7 @@ namespace kandora.bot.mahjong
         {
             int ret_shanten;
             var shanten = this.min_shanten;
-            var indices = new List<int> {
+            var indices = new int[] {
                 0,
                 8,
                 9,
@@ -462,7 +422,7 @@ namespace kandora.bot.mahjong
             {
                 terminals += (this.tiles[i] != 0) ? 1 : 0;
             }
-            indices = new List<int> {
+            indices = new int[] {
                 1,
                 2,
                 3,

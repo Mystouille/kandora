@@ -7,6 +7,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using C = kandora.bot.mahjong.Constants;
+
 namespace kandora.bot.mahjong
 {
 
@@ -26,9 +28,6 @@ namespace kandora.bot.mahjong
 
     public class TilesConverter
     {
-        public const int FIVE_RED_MAN = 16;
-        public const int FIVE_RED_PIN = 52;
-        public const int FIVE_RED_SOU = 88;
 
         // 
         //         Convert 136 tiles array to the one line string
@@ -57,9 +56,9 @@ namespace kandora.bot.mahjong
             honors = (from t in honors
                         select (t - 108)).ToList();
 
-            var sou2 = words(sou, FIVE_RED_SOU - 72, "s", print_aka_dora);
-            var pin2 = words(pin, FIVE_RED_PIN - 36, "p", print_aka_dora);
-            var man2 = words(man, FIVE_RED_MAN, "m", print_aka_dora);
+            var sou2 = words(sou, C.FIVE_RED_SOU - 72, "s", print_aka_dora);
+            var pin2 = words(pin, C.FIVE_RED_PIN - 36, "p", print_aka_dora);
+            var man2 = words(man, C.FIVE_RED_MAN, "m", print_aka_dora);
             var honors2 = words(honors, -1 - 108, "z", print_aka_dora);
             return sou2 + pin2 + man2 + honors2;
         }
@@ -77,10 +76,9 @@ namespace kandora.bot.mahjong
         // 
         //         Convert 136 array to the 34 tiles array
         //         
-        public static List<int> to_34_array(List<int> tiles)
+        public static int[] to_34_array(int[] tiles)
         {
-            List<int> results = new List<int>(34);
-            results.AddRange(Enumerable.Repeat(0, 34));
+            int[] results = new int[34];
             foreach (var tile in tiles)
             {   
                 if(tile >= 0)
@@ -128,13 +126,13 @@ namespace kandora.bot.mahjong
             return results;
         }
 
-        private static List<int> _split_string (string str, int offset, bool has_aka_dora, int red = -1) 
+        private static int[] _split_string (string str, int offset, bool has_aka_dora, int red = -1) 
             {
             var data = new List<int>();
             var temp = new List<int>();
             if (str == null)
             {
-                return new List<int>();
+                return new int[] { };
             }
             foreach (var i in str)
             {
@@ -171,7 +169,7 @@ namespace kandora.bot.mahjong
                     }
                 }
             }
-            return data;
+            return data.ToArray();
         }
 
         // 
@@ -181,7 +179,7 @@ namespace kandora.bot.mahjong
         //         has_aka_dora has to be True for this to do that.
         //         We need it to increase readability of our tests
         //         
-        public static List<int> string_to_136_array(
+        public static int[] string_to_136_array(
             string sou = null,
             string pin = null,
             string man = null,
@@ -189,21 +187,21 @@ namespace kandora.bot.mahjong
             bool has_aka_dora = false)
         {
                 
-            IEnumerable<int> results = _split_string(man, 0, has_aka_dora, FIVE_RED_MAN);
-            results = results.Concat(_split_string(pin, 36, has_aka_dora, FIVE_RED_PIN));
-            results = results.Concat(_split_string(sou, 72, has_aka_dora, FIVE_RED_SOU));
+            IEnumerable<int> results = _split_string(man, 0, has_aka_dora, C.FIVE_RED_MAN);
+            results = results.Concat(_split_string(pin, 36, has_aka_dora, C.FIVE_RED_PIN));
+            results = results.Concat(_split_string(sou, 72, has_aka_dora, C.FIVE_RED_SOU));
             results = results.Concat(_split_string(honors, 108, has_aka_dora));
-            return results.ToList();
+            return results.ToArray();
         }
 
         // 
         //         Method to convert one line string tiles format to the 34 array
         //         We need it to increase readability of our tests
         //         
-        public static List<int> string_to_34_array(string sou = null, string pin = null, string man = null, string honors = null)
+        public static int[] string_to_34_array(string sou = null, string pin = null, string man = null, string honors = null)
         {
-            var results = TilesConverter.string_to_136_array(sou, pin, man, honors);
-            return TilesConverter.to_34_array(results);
+            var results = string_to_136_array(sou, pin, man, honors);
+            return to_34_array(results);
         }
 
         // 
@@ -247,7 +245,7 @@ namespace kandora.bot.mahjong
         //         that suit. To prevent old usage without red,
         //         has_aka_dora has to be True for this to do that.
         //         
-        public static List<int> one_line_string_to_136_array(string str, bool has_aka_dora = false)
+        public static int[] one_line_string_to_136_array(string str, bool has_aka_dora = false)
         {
             var sou = "";
             var pin = "";
@@ -292,10 +290,10 @@ namespace kandora.bot.mahjong
         //         that suit. To prevent old usage without red,
         //         has_aka_dora has to be True for this to do that.
         //         
-        public static List<int> one_line_string_to_34_array(string str, bool has_aka_dora = false)
+        public static int[] one_line_string_to_34_array(string str, bool has_aka_dora = false)
         {
-            var results = TilesConverter.one_line_string_to_136_array(str, has_aka_dora);
-            results = TilesConverter.to_34_array(results);
+            var results = one_line_string_to_136_array(str, has_aka_dora);
+            results = to_34_array(results);
             return results;
         }
     }
