@@ -8,4 +8,6 @@ Properties/PublishProfiles/Kandora - Web Deploy.pubxml.user
 */bin/
 */obj/
 */Properties/
+*/env/
+*/kandora.crunch/
 

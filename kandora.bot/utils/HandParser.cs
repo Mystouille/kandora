@@ -21,9 +21,9 @@ namespace kandora.bot.utils
             {"2w","2z"},
             {"3w","3z"},
             {"4w","4z"},
-            {"Rd","5z"},
-            {"Wd","6z"},
-            {"Gd","7z"},
+            {"Wd","5z"},
+            {"Gd","6z"},
+            {"Rd","7z"},
             {"1d","5z"},
             {"2d","6z"},
             {"3d","7z"}
@@ -48,13 +48,20 @@ namespace kandora.bot.utils
         public static IEnumerable<DiscordEmoji> GetHandEmojiCodes(string hand, DiscordClient client)
         {
             StringBuilder sb = new StringBuilder();
-            var tileList = ParseHand(hand);
+            var tileList = SplitTiles(hand);
             return tileList.Select(x => GetEmojiCode(x, client));
+        }
+
+        //input: RRRg output: 777z
+        public static string GetSimpleHand(string hand)
+        {
+            var tileList = string.Join("",SimpleTiles(hand));
+            return tileList;
         }
 
 
         //Recursively builds the hand
-        private static List<string> ParseHand(string hand)
+        private static List<string> SplitTiles(string hand)
         {
             var tileNames = new List<string>();
             int i = 0;
@@ -78,10 +85,51 @@ namespace kandora.bot.utils
                 return tileNames;
             }
             var restHand = hand.Substring(i + 1);
-            tileNames.AddRange(ParseHand(restHand));
+            tileNames.AddRange(SplitTiles(restHand));
 
             return tileNames;
         }
+
+        //Recursively change the tiles to their universal notation
+        private static List<string> SimpleTiles(string hand)
+        {
+            var tileNames = new List<string>();
+            int i = 0;
+            while (i < hand.Length)
+            {
+                if (SUIT_NAMES.Contains(hand[i])) break;
+                i++;
+            }
+            if (i == hand.Length)
+            {
+                return tileNames;
+            }
+            var suit = hand[i];
+            var newSuit = suit;
+            var subHandValues = hand.Substring(0, i);
+            foreach (char c in subHandValues)
+            {
+                if (c == ' ') continue;
+                var tile = $"{c}{suit}";
+                if (ALTERNATIVE_IDS.ContainsKey(tile))
+                {
+                    tile = ALTERNATIVE_IDS[tile];
+                    newSuit = tile[1];
+                    tile = tile[0].ToString();
+                }
+                tileNames.Add(tile);
+            }
+            tileNames.Add(newSuit.ToString());
+            if (i == hand.Length - 1)
+            {
+                return tileNames;
+            }
+            var restHand = hand.Substring(i + 1);
+            tileNames.AddRange(SimpleTiles(restHand));
+
+            return tileNames;
+        }
+
 
     }
 
