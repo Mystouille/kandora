@@ -10,4 +10,6 @@ Properties/PublishProfiles/Kandora - Web Deploy.pubxml.user
 */Properties/
 */env/
 */kandora.crunch/
+*.py
+*.pyproj
 
