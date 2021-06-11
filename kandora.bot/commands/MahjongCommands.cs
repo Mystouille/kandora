@@ -53,7 +53,7 @@ namespace kandora.bot.commands
                     shanten = shantenCalc.Calculate_shanten(hand34);
                 }
                 StringBuilder sb = new();
-                sb.AppendLine($"<@!{ctx.User.Id}>: {GetHandMessage(handEmoji)}  {getShanten(shanten)}");
+                sb.AppendLine($"<@!{ctx.User.Id}>: {GetHandMessage(handEmoji)}  {getShanten(shanten)}\n");
                 var divider = new HandDivider();
                 var results = divider.divide_hand(hand34);
 
@@ -67,7 +67,7 @@ namespace kandora.bot.commands
                     {
                         orderedSetStr = orderedSetStr.Concat(setsStr.Where(x => x.Contains(chr)));
                     }
-                    sb.AppendLine($"{i}:{string.Join(",",orderedSetStr.Select(x=>$"{GetHandMessage(HandParser.GetHandEmojiCodes(x, ctx.Client))}"))}");
+                    sb.AppendLine($"{i}:{string.Join(",",orderedSetStr.Select(x=>$"{GetHandMessage(HandParser.GetHandEmojiCodes(x, ctx.Client))}"))}\n");
                     i++;
                 }
                 var message = await ctx.Channel.SendMessageAsync(sb.ToString());
