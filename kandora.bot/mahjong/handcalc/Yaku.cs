@@ -7,15 +7,17 @@ namespace kandora.bot.mahjong.handcalc
 
         public int yaku_id;
         public int tenhou_id;
-        public string name;
+        public virtual string name { get; set; }
         public int han_open;
         public int han_closed;
         public bool is_yakuman;
 
-        public Yaku(int yaku_id = 0)
+        public Yaku(int yaku_id)
         {
-            this.tenhou_id = 0;
+            this.tenhou_id = -1;
             this.yaku_id = yaku_id;
+            this.han_closed = 0;
+            this.han_open = 0;
             this.set_attributes();
         }
 

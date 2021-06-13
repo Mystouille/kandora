@@ -31,7 +31,7 @@
         // 
         //     Calculate the number of dora for the tile
         //     
-        public static object plus_dora(int tile_136, List<int> dora_indicators_136, bool add_aka_dora = false)
+        public static int plus_dora(int tile_136, List<int> dora_indicators_136, bool add_aka_dora = false)
         {
             var tile_index = tile_136 / 4;
             var dora_count = 0;
@@ -382,6 +382,18 @@
                 }
             }
             return order;
+        }
+
+        public static bool are_tiles_in_indices(List<int> set, IEnumerable<int> indices)
+        {
+            foreach (var tile in set)
+            {
+                if (!indices.Contains(tile))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
     }

@@ -13,9 +13,9 @@
     public class HandDivider
     {
 
-        public Dictionary<string, List<List<List<int>>>> divider_cache = null;
+        Dictionary<string, List<List<List<int>>>> divider_cache = null;
 
-        public string cache_key = null;
+        string cache_key = null;
 
         public HandDivider()
         {
@@ -28,11 +28,11 @@
         //         :param melds: list of Meld objects
         //         :return:
         //         
-        public virtual List<List<List<int>>> divide_hand(int[] tiles_34, Meld[] melds = null, bool use_cache = false)
+        public virtual List<List<List<int>>> divide_hand(int[] tiles_34, List<Meld> melds = null, bool use_cache = false)
         {
             if (melds == null)
             {
-                melds = Array.Empty<Meld>();
+                melds = new List<Meld>();
             }
             if (use_cache)
             {
@@ -49,7 +49,7 @@
             IEnumerable<IEnumerable<int>> open_tile_indices_list = (from x in melds
                                           select x.tiles_34).ToList();
             IEnumerable<int> open_tile_indices = new List<int>();
-            if (melds.Length != 0)
+            if (melds.Count != 0)
             {
                 open_tile_indices = open_tile_indices_list.Aggregate((x, y) => (x.Concat(y)));
             }
@@ -98,10 +98,7 @@
                     from h in honor
                     select p.Concat(m).Concat(s).Concat(h).Concat(melds.Select(x=>x.tiles)).Append(pair).ToList();
                 hands = hands.Concat(tempHands.Where(x => x.Count == 5).OrderBy(x => x[0]));
-                var tempHands2 = tempHands.ToList();
-                var bla = hands.Count();
             }
-
             // small optimization, let's remove hand duplicates
             var unique_hands = new List<List<List<int>>>();
             foreach (var hand in hands)
@@ -248,9 +245,37 @@
             return results;
         }
 
+        private static List<List<int>> GetPossibleSetsFromIndices2(List<int> list)
+        {
+            var results = new List<List<int>>();
+            for (int t1 = 0; t1 < list.Count; t1++)
+            {
+                for (int t2 = t1; t2 < list.Count; t2++)
+                {
+                    if (t2 == t1)
+                    {
+                        continue;
+                    }
+                    for (int t3 = t2; t3 < list.Count; t3++)
+                    {
+                        if (t3 == t2 || t3 == t1)
+                        {
+                            continue;
+                        }
+                        var result = new List<int> { list[t1], list[t2], list[t3] };
+                        if (U.is_chi(result) || U.is_pon(result))
+                        {
+                            results.Add(result);
+                        }
+                    }
+                }
+            }
+            return results;
+        }
+
         //Same strategy as GetPossibleSetsFromIndices
         // input: list: the list of possible sets, indexCount: indexCount[i] is the number of tiles with index i in the hand
-        private static List<List<List<int>>> GetPossibleHandsFromSets(List<List<int>> list, int[] indexCount, int maxNbSets)
+        static List<List<List<int>>> GetPossibleHandsFromSets(List<List<int>> list, int[] indexCount, int maxNbSets)
         {
             var array = list.ToArray();
             int count = (int)Math.Pow(2, list.Count);
@@ -300,7 +325,7 @@
         //         :param hand_not_completed: in that mode we can return just possible shi or pon sets
         //         :return: list of valid combinations
         //         
-        public virtual List<List<List<int>>> find_valid_combinations(int[] tiles_34, int first_index, int second_index, bool hand_not_completed = false)
+        List<List<List<int>>> find_valid_combinations(int[] tiles_34, int first_index, int second_index, bool hand_not_completed = false)
         {
             int count_of_sets;
             var indices = new List<int>();
@@ -413,7 +438,7 @@
             cache_key = null;
         }
 
-        private string _build_divider_cache_key(int[] tiles_34, Meld[] melds)
+        private string _build_divider_cache_key(int[] tiles_34, List<Meld> melds)
         {
             var array = tiles_34.ToList();
             array.Add(-1);

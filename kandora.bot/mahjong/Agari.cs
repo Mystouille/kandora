@@ -11,14 +11,14 @@
         //         :param open_sets_34: array of array of 34 tiles format
         //         :return: boolean
         //         
-        public static bool IsAgari(int[] tiles_34, int[][] open_sets_34 = null)
+        public static bool IsAgari(int[] tiles_34, List<List<int>> open_sets_34 = null)
         {
             // we will modify them later, so we need to use a copy
             var tiles = new int[34];
             tiles_34.CopyTo(tiles,0);
             // With open hand we need to remove open sets from hand and replace them with isolated pon sets
             // it will allow to determine agari state correctly
-            if (open_sets_34 != null && open_sets_34.Length > 0)
+            if (open_sets_34 != null && open_sets_34.Count > 0)
             {
                 var isolated_tiles = new Stack<int>(Utils.find_isolated_tile_indices(tiles));
                 foreach (var meld in open_sets_34)
@@ -32,7 +32,7 @@
                     tiles[meld[1]] -= 1;
                     tiles[meld[2]] -= 1;
                     // kan
-                    if (meld.Length > 3)
+                    if (meld.Count > 3)
                     {
                         tiles[meld[3]] -= 1;
                     }

@@ -63,7 +63,7 @@ namespace kandora.bot.mahjong.handcalc
         //          'kyoutaku_bonus': 0, 'total': 13500}
         // 
         //         
-        public static Dictionary<string, int> calculate_scores(int han, int fu, HandConfig config, bool is_yakuman = false)
+        public virtual Dictionary<string, int> calculate_scores(int han, int fu, HandConfig config, bool is_yakuman = false)
         {
             int additional;
             int additional_bonus;
@@ -260,12 +260,16 @@ namespace kandora.bot.mahjong.handcalc
             };
             return ret_dict;
         }
+        public static void aotenjou_filter_yaku(List<Yaku> hand_yaku, HandConfig config)
+        {
+            // do nothing
+        }
     }
 
     public class Aotenjou : ScoresCalculator
     {
 
-        public new static Dictionary<string,int> calculate_scores(int han, int fu, HandConfig config, bool is_yakuman = false)
+        public override Dictionary<string,int> calculate_scores(int han, int fu, HandConfig config, bool is_yakuman = false)
         {
             int base_points = fu * (int)Math.Pow(2, 2 + han);
             int rounded = (base_points + 99) / 100 * 100;
@@ -294,7 +298,7 @@ namespace kandora.bot.mahjong.handcalc
             }
         }
 
-        public static void aotenjou_filter_yaku(List<Yaku> hand_yaku, HandConfig config)
+        public new static void aotenjou_filter_yaku(List<Yaku> hand_yaku, HandConfig config)
         {
             // in aotenjou yakumans are normal yaku
             // but we need to filter lower yaku that are precursors to yakumans

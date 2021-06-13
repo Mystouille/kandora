@@ -4,20 +4,18 @@ using System.Collections.Generic;
 namespace kandora.bot.mahjong.handcalc.yaku.yakuman
 {
     // 
-    //      Tsumo as dealer the first turn
+    //      
     //     
-    public class Tenhou : Yaku
+    public class Sashikomi : Yaku
     {
 
-        public Tenhou(int yaku_id) : base(yaku_id)
+        public Sashikomi(int id) : base(id)
         {
         }
 
         public override void set_attributes()
         {
-            this.tenhou_id = 37;
-            this.name = "Tenhou";
-            this.han_open = 0;
+            this.name = "Sashikomi";
             this.han_closed = 13;
             this.is_yakuman = true;
         }

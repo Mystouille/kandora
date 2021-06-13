@@ -1,0 +1,105 @@
+﻿
+using System.Collections.Generic;
+using System.Linq;
+using U = kandora.bot.mahjong.Utils;
+
+namespace kandora.bot.mahjong.handcalc.yaku.yakuman
+{
+    // 
+    //      Tsumo as dealer the first turn
+    //     
+    public class Daisharin : Yaku
+    {
+        private int count;
+
+        public Daisharin(int yaku_id) : base(yaku_id)
+        {
+        }
+
+        public override void set_attributes()
+        {
+            this.tenhou_id = 37;
+            this.name = "Daisharin";
+            this.han_open = 0;
+            this.han_closed = 13;
+            this.is_yakuman = true;
+        }
+
+        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        {
+            int sou = 0;
+            int pin = 0;
+            int man = 0;
+            int honor = 0;
+            if (U.is_sou(hand[0][0]))
+            {
+                sou++;
+            }
+            else if (U.is_pin(hand[0][0]))
+            {
+                pin++;
+            }
+            else if (U.is_man(hand[0][0]))
+            {
+                man++;
+            }
+            else
+            {
+                honor++;
+            }
+            bool allowOtherSets = (bool)args[0];
+            bool onlyOneSuit = sou + pin + man + honor == 1;
+            if (!onlyOneSuit || honor > 0)
+            {
+                return false;
+            }
+
+            if(!allowOtherSets && pin == 0)
+            {
+                //if we are not allowing other sets than pins
+                return false;
+            }
+            var indicesCount = new int[9];
+            foreach(var set in hand)
+            {
+                foreach(var tile in set)
+                {
+                    indicesCount[U.simplify(tile)]++;
+                }
+            }
+            foreach(var count in indicesCount)
+            {
+                if(count != 2)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public void set_paarenchan_count(int count)
+        {
+            this.han_open = 13 * count;
+            this.han_closed = 13 * count;
+            this.count = count;
+        }
+
+        public void rename(List<List<int>> hand)
+        {
+            if (U.is_sou(hand[0][0]))
+            {
+                this.name = "Daichikurin";
+            }
+            else if (U.is_pin(hand[0][0]))
+            {
+                this.name = "Daisharin";
+            }
+            else if (U.is_man(hand[0][0]))
+            {
+                this.name = "Daisuurin";
+            }
+        }
+    }
+    
+}

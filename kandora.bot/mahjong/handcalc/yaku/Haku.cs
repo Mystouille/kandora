@@ -1,30 +1,28 @@
 ﻿
 using System.Collections.Generic;
+using System.Linq;
 
 namespace kandora.bot.mahjong.handcalc.yaku.yakuman
 {
     // 
-    //      Tsumo as dealer the first turn
+    //    koustu of red dragon  
     //     
-    public class Tenhou : Yaku
+    public class Haku : Yakuhai
     {
 
-        public Tenhou(int yaku_id) : base(yaku_id)
+        public Haku(int id) : base(id, "Haku")
         {
         }
 
         public override void set_attributes()
         {
-            this.tenhou_id = 37;
-            this.name = "Tenhou";
-            this.han_open = 0;
-            this.han_closed = 13;
-            this.is_yakuman = true;
+            base.set_attributes();
+            this.tenhou_id = 18;
         }
 
         public override bool is_condition_met(List<List<int>> hand, params object[] args)
         {
-            return true;
+            return hand.Exists(x => checkKoutsu(x, Constants.HAKU));
         }
     }
     

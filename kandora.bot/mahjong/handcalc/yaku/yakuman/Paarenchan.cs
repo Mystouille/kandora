@@ -6,10 +6,11 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
     // 
     //      Tsumo as dealer the first turn
     //     
-    public class Tenhou : Yaku
+    public class Paarenchan : Yaku
     {
+        private int count;
 
-        public Tenhou(int yaku_id) : base(yaku_id)
+        public Paarenchan(int yaku_id) : base(yaku_id)
         {
         }
 
@@ -25,6 +26,13 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         public override bool is_condition_met(List<List<int>> hand, params object[] args)
         {
             return true;
+        }
+
+        public void set_paarenchan_count(int count)
+        {
+            this.han_open = 13 * count;
+            this.han_closed = 13 * count;
+            this.count = count;
         }
     }
     
