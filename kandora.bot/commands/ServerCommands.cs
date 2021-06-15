@@ -41,7 +41,7 @@ namespace kandora.bot.commands
                 var targetId = targetDiscordUser.Id.ToString();
 
                 ServerDbService.SetIsAdmin(serverId, targetId, flag);
-
+                await Task.FromResult(false);
             });
         }
 
@@ -73,7 +73,7 @@ namespace kandora.bot.commands
                 var targetId = targetDiscordUser.Id.ToString();
 
                 ServerDbService.SetIsOwner(serverId, targetId, flag);
-
+                await Task.FromResult(false);
             });
         }
 
@@ -157,6 +157,7 @@ namespace kandora.bot.commands
                 UserDbService.SetMahjsoulName(heatiro, "heairo");
                 UserDbService.SetMahjsoulName(Neral, "Neral");
                 UserDbService.SetMahjsoulName(clubapero, "clubapero");
+                await Task.FromResult(false);
             });
         }
 

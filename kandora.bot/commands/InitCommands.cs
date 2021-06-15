@@ -135,6 +135,7 @@ namespace kandora.bot.commands
                 UserDbService.SetMahjsoulName(heatiro, "heairo");
                 UserDbService.SetMahjsoulName(Neral, "Neral");
                 UserDbService.SetMahjsoulName(clubapero, "clubapero");
+                await Task.FromResult(false);
             });
         }
 

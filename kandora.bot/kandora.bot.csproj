@@ -19,6 +19,30 @@
     <Optimize>false</Optimize>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="resources\tiles.png" />
+    <None Remove="resources\tiles_hon.png" />
+    <None Remove="resources\tiles_man.png" />
+    <None Remove="resources\tiles_pin.png" />
+    <None Remove="resources\tiles_sou.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="resources\tiles.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="resources\tiles_hon.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="resources\tiles_man.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="resources\tiles_pin.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="resources\tiles_sou.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="DSharpPlus" Version="4.0.1" />
     <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.1" />
     <PackageReference Include="DSharpPlus.Interactivity" Version="4.0.1" />
@@ -46,5 +70,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="http\" />
+    <Folder Include="resources\generated\" />
   </ItemGroup>
 </Project>

@@ -3,6 +3,7 @@ using kandora.bot.exceptions;
 using kandora.bot.models;
 using kandora.bot.services;
 using kandora.bot.services.db;
+using kandora.bot.services.discord;
 using System;
 using System.Threading.Tasks;
 

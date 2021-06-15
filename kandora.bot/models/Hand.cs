@@ -5,10 +5,6 @@ namespace kandora.bot.models
     class Hand
     {
         public void Setup() {
-            char a = 'a';
-            char b = 'b';
-
-
             Dictionary<string, char> stoc = new Dictionary<string, char>();
             stoc.Add("1p", '1');
             stoc.Add("2p", '2');

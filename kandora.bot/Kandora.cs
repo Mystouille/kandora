@@ -4,11 +4,9 @@ using System.Configuration;
 using DSharpPlus.CommandsNext;
 using Microsoft.Extensions.Logging;
 using kandora.bot.commands;
-using kandora.bot.services.http;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Interactivity;
-using DSharpPlus.EventArgs;
-using System;
+using kandora.bot.services.discord;
 
 namespace kandora.bot
 {
@@ -44,8 +42,8 @@ namespace kandora.bot
             commands.RegisterCommands<LeagueConfigCommands>();
             commands.RegisterCommands<InitCommands>();
 
-            client.MessageReactionAdded += Listeners.OnReactionAdded;
-            client.MessageReactionRemoved += Listeners.OnReactionRemoved;
+            client.MessageReactionAdded += ReactionListener.OnReactionAdded;
+            client.MessageReactionRemoved += ReactionListener.OnReactionRemoved;
 
             await client.ConnectAsync();
 

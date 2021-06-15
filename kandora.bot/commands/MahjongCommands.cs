@@ -11,14 +11,58 @@ using System.Text;
 using System.Threading.Tasks;
 using U = kandora.bot.mahjong.Utils;
 using C = kandora.bot.mahjong.TilesConverter;
-#pragma warning disable CS4014
 
 namespace kandora.bot.commands
 {
-    public class MahjongCommands: BaseCommandModule
+    public class MahjongCommands: KandoraCommandModule
     {
         public object Tiles { get; private set; }
         public object Divider { get; private set; }
+
+        [Command("problem"), Description(""), Aliases("p")]
+        public async Task Problem(
+            CommandContext ctx,
+            string suit="s"
+        )
+        {
+            try
+            {
+                var (stream, waits, options) = ChinitsuProblemGenerator.getNewProblem(suit);
+                var mb = new DiscordMessageBuilder();
+                mb.WithFile(stream);
+                var msg = await mb.SendAsync(ctx.Channel);
+                stream.Close();
+                await context.AddOngoingProblem(ctx, msg, waits, options);
+            }
+            catch (Exception e)
+            {
+                await ctx.RespondAsync(e.Message);
+            }
+        }
+
+        [Command("image"), Description(""), Aliases("i")]
+        public async Task Image(
+            CommandContext ctx,
+            string hand
+        )
+        {
+            try
+            {
+                List<string> basicHand = HandParser.SimpleTiles(hand).Where(x => x.Length == 2).ToList();
+                if (basicHand.Count == 0)
+                {
+                    throw new Exception("invalid hand");
+                }
+                var stream = ImageToolbox.GetImageFromTiles(hand);
+                var mb = new DiscordMessageBuilder();
+                mb.WithFile(stream);
+                await mb.SendAsync(ctx.Channel).ContinueWith(precedent => stream.Close());
+            }
+            catch (Exception e)
+            {
+                await ctx.RespondAsync(e.Message);
+            }
+        }
 
         [Command("test"), Description(""), Aliases("t")]
         public async Task Test(
@@ -209,7 +253,7 @@ namespace kandora.bot.commands
                     : HandParser.GetHandEmojiCodes(options, ctx.Client);
                 try
                 {
-                    await ctx.Message.DeleteAsync();
+                    //await ctx.Message.DeleteAsync();
                 }
                 catch
                 {

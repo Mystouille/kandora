@@ -333,7 +333,7 @@ namespace kandora.bot.mahjong
             return to_one_line_string(array);
         }
 
-        private static List<int> from_34_indices_to_136_array(List<List<int>> hand)
+        public static List<int> from_34_indices_to_136_array(List<List<int>> hand)
         {
             List<int> array136 = new List<int>();
             var fullArray34 = new int[34];

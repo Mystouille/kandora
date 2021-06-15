@@ -7,7 +7,7 @@ using kandora.bot.exceptions;
 using kandora.bot.http;
 using kandora.bot.models;
 using kandora.bot.services;
-using kandora.bot.services.db;
+using kandora.bot.services.discord;
 using kandora.bot.services.http;
 using kandora.bot.utils;
 using System;

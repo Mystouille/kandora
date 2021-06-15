@@ -95,7 +95,7 @@ namespace kandora.bot.mahjong
             var count_of_tiles = tiles_34.Sum();
             if(count_of_tiles > 14)
             {
-                throw new Exception("Too many tiles = {count_of_tiles}");
+                throw new Exception($"Too many tiles = {count_of_tiles}");
             }
             this._remove_character_tiles(count_of_tiles);
             var init_mentsu = (int)Math.Floor((decimal)((14 - count_of_tiles) / 3));

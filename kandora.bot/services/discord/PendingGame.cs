@@ -1,43 +1,91 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
-using DSharpPlus.EventArgs;
-using kandora.bot.services;
+using kandora.bot.commands;
+using kandora.bot.http;
+using kandora.bot.models;
 using kandora.bot.services.db;
 using kandora.bot.utils;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
-namespace kandora.bot.commands
+namespace kandora.bot.services.discord
 {
-    public class Listeners
+    public class PendingGame
     {
-        private static KandoraContext kanContext = KandoraContext.Instance;
-        public async static Task OnReactionAdded(DiscordClient sender, MessageReactionAddEventArgs e)
+        public PendingGame(string[] userIds, Server server, RiichiGame log)
         {
-            await OnReaction(sender, e.Message, e.Emoji, e.User, added: true);
+            UserIds = userIds;
+            Log = log;
+            Server = server;
+            usersOk = new HashSet<string>();
+            usersNo = new HashSet<string>();
         }
-        public async static Task OnReactionRemoved(DiscordClient sender, MessageReactionRemoveEventArgs e)
+        public PendingGame(string[] userIds, float[] scores, Server server)
         {
-            await OnReaction(sender, e.Message, e.Emoji, e.User, added:false);
+            UserIds = userIds;
+            Scores = scores;
+            Server = server;
+            usersOk = new HashSet<string>();
+            usersNo = new HashSet<string>();
         }
 
-        public async static Task OnReaction(DiscordClient sender, DiscordMessage msg, DiscordEmoji emoji, DiscordUser user, bool added)
+        private ISet<string> usersOk;
+        private ISet<string> usersNo;
+        public string[] UserIds { get; }
+        public float[] Scores { get; }
+        public RiichiGame Log { get; }
+        public Server Server { get; }
+        public bool TryChangeUserOk(string userId, bool isAdd)
         {
-            if (kanContext.PendingGames.ContainsKey(msg.Id))
-            {
-                await OnPendingGameReaction(sender, msg, emoji, user, added);
+            return TryChangeSet(usersOk, userId, isAdd);
+        }
+        public bool TryChangeUserNo(string userId, bool isAdd)
+        {
+            return TryChangeSet(usersNo, userId, isAdd);
+        }
+        public bool IsCancelled
+        {
+            get {
+                return usersNo.Count == UserIds.Count();
             }
+        }
+        public bool IsValidated
+        {
+            get
+            {
+                return usersOk.Count == UserIds.Count();
+            }
+        }
+        private bool TryChangeSet(ISet<string> set, string userId, bool isAdd)
+        {
+            if (UserIds.Contains(userId))
+            {
+                if (isAdd)
+                {
+                    set.Add(userId);
+                }
+                else
+                {
+                    set.Remove(userId);
+                }
+                return true;
+            }
+            return false;
         }
 
         public async static Task OnPendingGameReaction(DiscordClient sender, DiscordMessage msg, DiscordEmoji emoji, DiscordUser user, bool added)
         {
+            var kanContext = KandoraContext.Instance;
             var msgId = msg.Id;
             var userId = user.Id.ToString();
             var game = kanContext.PendingGames[msgId];
             bool result = false;
             var okEmoji = DiscordEmoji.FromName(sender, Reactions.OK);
             var noEmoji = DiscordEmoji.FromName(sender, Reactions.NO);
-            if(emoji.Id == okEmoji.Id)
+            if (emoji.Id == okEmoji.Id)
             {
                 result = game.TryChangeUserOk(userId, isAdd: added);
             }

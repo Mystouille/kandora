@@ -90,8 +90,8 @@ namespace kandora.bot.utils
             return tileNames;
         }
 
-        //Recursively change the tiles to their universal notation
-        private static List<string> SimpleTiles(string hand)
+        //input: RRRg output: 7z,7z,7z,z
+        public static List<string> SimpleTiles(string hand)
         {
             var tileNames = new List<string>();
             int i = 0;
