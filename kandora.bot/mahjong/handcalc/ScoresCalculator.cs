@@ -63,7 +63,7 @@ namespace kandora.bot.mahjong.handcalc
         //          'kyoutaku_bonus': 0, 'total': 13500}
         // 
         //         
-        public virtual Dictionary<string, int> calculate_scores(int han, int fu, HandConfig config, bool is_yakuman = false)
+        public virtual Dictionary<string, int> CalculateScores(int han, int fu, HandConfig config, bool is_yakuman = false)
         {
             int additional;
             int additional_bonus;
@@ -78,12 +78,12 @@ namespace kandora.bot.mahjong.handcalc
             if (han >= 13 && !is_yakuman)
             {
                 // Hands over 26+ han don't count as double yakuman
-                if (config.options.kazoe_limit == HandConfig.KAZOE_LIMITED)
+                if (config.options.kazoeLimit == HandConfig.KAZOE_LIMITED)
                 {
                     han = 13;
                     yaku_level = (int)YakuLevel.KazoeYakuman;
                 }
-                else if (config.options.kazoe_limit == HandConfig.KAZOE_SANBAIMAN)
+                else if (config.options.kazoeLimit == HandConfig.KAZOE_SANBAIMAN)
                 {
                     // Hands over 13+ is a sanbaiman
                     han = 12;
@@ -95,7 +95,7 @@ namespace kandora.bot.mahjong.handcalc
                 if (han >= 78)
                 {
                     yaku_level = (int)YakuLevel.Yakuman6x;
-                    if (config.options.limit_to_sextuple_yakuman)
+                    if (config.options.limitToSextupleYakuman)
                     {
                         rounded = 48000;
                     }
@@ -198,12 +198,12 @@ namespace kandora.bot.mahjong.handcalc
                     // below mangan
                 }
             }
-            if (config.is_tsumo)
+            if (config.isTsumo)
             {
                 main = double_rounded;
-                main_bonus = 100 * config.tsumi_number;
+                main_bonus = 100 * config.tsumiNumber;
                 additional_bonus = main_bonus;
-                if (config.is_dealer)
+                if (config.isDealer)
                 {
                     additional = main;
                 }
@@ -218,8 +218,8 @@ namespace kandora.bot.mahjong.handcalc
                 // ron
                 additional = 0;
                 additional_bonus = 0;
-                main_bonus = 300 * config.tsumi_number;
-                if (config.is_dealer)
+                main_bonus = 300 * config.tsumiNumber;
+                if (config.isDealer)
                 {
                     main = six_rounded;
                 }
@@ -229,9 +229,9 @@ namespace kandora.bot.mahjong.handcalc
                     main = four_rounded;
                 }
             }
-            var kyoutaku_bonus = 1000 * config.kyoutaku_number;
+            var kyoutaku_bonus = 1000 * config.kyoutakuNumber;
             var total = main + main_bonus + 2 * (additional + additional_bonus) + kyoutaku_bonus;
-            if (config.is_nagashi_mangan)
+            if (config.isNagashiMangan)
             {
                 yaku_level = (int)YakuLevel.NagashiMangan;
             }
@@ -260,7 +260,7 @@ namespace kandora.bot.mahjong.handcalc
             };
             return ret_dict;
         }
-        public static void aotenjou_filter_yaku(List<Yaku> hand_yaku, HandConfig config)
+        public static void aotenjouFilterYaku(List<Yaku> hand_yaku, HandConfig config)
         {
             // do nothing
         }
@@ -269,14 +269,14 @@ namespace kandora.bot.mahjong.handcalc
     public class Aotenjou : ScoresCalculator
     {
 
-        public override Dictionary<string,int> calculate_scores(int han, int fu, HandConfig config, bool is_yakuman = false)
+        public override Dictionary<string,int> CalculateScores(int han, int fu, HandConfig config, bool is_yakuman = false)
         {
             int base_points = fu * (int)Math.Pow(2, 2 + han);
             int rounded = (base_points + 99) / 100 * 100;
             int double_rounded = (2 * base_points + 99) / 100 * 100;
             int four_rounded = (4 * base_points + 99) / 100 * 100;
             int six_rounded = (6 * base_points + 99) / 100 * 100;
-            if (config.is_tsumo)
+            if (config.isTsumo)
             {
                 return new Dictionary<string, int> {
                     {
@@ -284,21 +284,21 @@ namespace kandora.bot.mahjong.handcalc
                         double_rounded},
                     {
                         "additional",
-                        config.is_dealer ? double_rounded : rounded}};
+                        config.isDealer ? double_rounded : rounded}};
             }
             else
             {
                 return new Dictionary<string, int> {
                     {
                         "main",
-                        config.is_dealer ? six_rounded : four_rounded},
+                        config.isDealer ? six_rounded : four_rounded},
                     {
                         "additional",
                         0}};
             }
         }
 
-        public new static void aotenjou_filter_yaku(List<Yaku> hand_yaku, HandConfig config)
+        public static void aotenjou_filter_yaku(List<Yaku> hand_yaku, HandConfig config)
         {
             // in aotenjou yakumans are normal yaku
             // but we need to filter lower yaku that are precursors to yakumans
@@ -325,7 +325,7 @@ namespace kandora.bot.mahjong.handcalc
                 // for daisuushi we need to remove toitoi
                 hand_yaku.Remove(config.yaku.toitoi);
             }
-            if (hand_yaku.Contains(config.yaku.suuankou) || hand_yaku.Contains(config.yaku.suuankou_tanki))
+            if (hand_yaku.Contains(config.yaku.suuankou) || hand_yaku.Contains(config.yaku.suuankouTanki))
             {
                 // for suu ankou we need to remove toitoi and sanankou (sanankou is already removed by default)
                 if (hand_yaku.Contains(config.yaku.toitoi))
@@ -349,7 +349,7 @@ namespace kandora.bot.mahjong.handcalc
                     hand_yaku.Remove(config.yaku.toitoi);
                 }
             }
-            if (hand_yaku.Contains(config.yaku.chuuren_poutou) || hand_yaku.Contains(config.yaku.daburu_chuuren_poutou))
+            if (hand_yaku.Contains(config.yaku.chuurenPoutou) || hand_yaku.Contains(config.yaku.daburuChuurenPoutou))
             {
                 // for chuuren poutou we need to remove chinitsu
                 hand_yaku.Remove(config.yaku.chinitsu);

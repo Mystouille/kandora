@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
+
 namespace kandora.bot.utils
 {
     class ImageToolbox
@@ -58,16 +59,16 @@ namespace kandora.bot.utils
             bool handAlreadyExist = true;
             var nbIter = 0;
             var shantenCalc = new ShantenCalculator();
-            var availableTiles = new List<int>();
-            for(int i = 0; i <= 8; i++)
-            {
-                availableTiles.Add(i);
-                availableTiles.Add(i);
-                availableTiles.Add(i);
-                availableTiles.Add(i);
-            }
             while (shanten != 0 || handAlreadyExist)
             {
+                var availableTiles = new List<int>();
+                for (int i = 0; i <= 8; i++)
+                {
+                    availableTiles.Add(i);
+                    availableTiles.Add(i);
+                    availableTiles.Add(i);
+                    availableTiles.Add(i);
+                }
                 hand = new int[34];
                 for (int i = 1; i <= 13; i++)
                 {
@@ -76,12 +77,12 @@ namespace kandora.bot.utils
                     hand[offset + value]++;
                     availableTiles.RemoveAt(roll);
                 }
-                shanten = shantenCalc.Calculate_shanten(hand);
+                shanten = shantenCalc.GetNbShanten(hand);
                 nbIter++;
-                var hand136 = TilesConverter.to_136_array(hand.ToList());
-                handStr = TilesConverter.to_one_line_string(hand136);
+                var hand136 = TilesConverter.From34countTo136(hand.ToList());
+                handStr = TilesConverter.ToString(hand136);
 
-                var outputFileName = $"{hand}.png";
+                var outputFileName = $"{handStr}.png";
                 var outputFilePath = string.Join(dirChar, new string[] { outputDirPath, outputFileName });
                 handAlreadyExist = File.Exists(outputFilePath);
             }
@@ -97,6 +98,10 @@ namespace kandora.bot.utils
             var outputFilePath = string.Join(dirChar, new string[] { outputDirPath, outputFileName });
             if (!File.Exists(outputFilePath))
             {
+                if (!Directory.Exists(outputDirPath))
+                {
+                    Directory.CreateDirectory(outputDirPath);
+                }
                 CreateSaveImageFromHand(tiles, outputFilePath);
             }
             return new FileStream(outputFilePath, FileMode.Open);

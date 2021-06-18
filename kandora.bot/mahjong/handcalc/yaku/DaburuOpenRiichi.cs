@@ -13,14 +13,14 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
             this.name = "Daburu Riichi (open)";
-            this.han_closed = 3;
-            this.is_yakuman = false;
+            this.nbHanClosed = 3;
+            this.isYakuman = false;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
             return true;
         }

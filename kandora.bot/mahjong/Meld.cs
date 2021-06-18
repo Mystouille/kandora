@@ -22,34 +22,34 @@
 
         public string type;
 
-        public int from_who;
+        public int fromWho;
 
-        public int called_tile;
+        public int calledTile;
 
         public bool opened;
 
         public Meld(
-            string meld_type,
+            string meldType,
             List<int> tiles,
             bool opened,
-            int called_tile,
+            int calledTile,
             int who,
-            int from_who)
+            int fromWho)
         {
-            this.type = meld_type;
+            this.type = meldType;
             this.tiles = tiles != null ? tiles : new List<int>();
             this.opened = opened;
-            this.called_tile = called_tile;
+            this.calledTile = calledTile;
             this.who = who;
-            this.from_who = from_who;
+            this.fromWho = fromWho;
         }
 
         public override string ToString()
         {
-            return $"Type: {this.type}, Tiles: {TilesConverter.to_one_line_string(this.tiles)} {this.tiles}";
+            return $"Type: {this.type}, Tiles: {TilesConverter.ToString(this.tiles)} {this.tiles}";
         }
 
-        public List<int> tiles_34
+        public List<int> Tiles34
         {
             get
             {

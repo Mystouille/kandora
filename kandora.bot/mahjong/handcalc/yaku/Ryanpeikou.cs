@@ -17,17 +17,17 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
             this.name = "Ryanpeikou";
-            this.tenhou_id = 32;
-            this.han_closed = 3;
+            this.tenhouId = 32;
+            this.nbHanClosed = 3;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
             var count = 0;
-            var chis = hand.Where(x => Utils.is_chi(x));
+            var chis = hand.Where(x => Utils.IsShuntsu(x));
             var nbIdenticalChis = new List<int>();
             foreach (var chi1 in chis)
             {

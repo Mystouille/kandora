@@ -9,29 +9,36 @@ namespace kandora.bot.mahjong
     {
         public static (FileStream, ISet<int>, string) getNewProblem(string suit = "s")
         {
-            var (fileStream, handStr) = ImageToolbox.getNewProblem("s");
+            var (fileStream, handStr) = ImageToolbox.getNewProblem(suit);
 
-            return (fileStream, GetWaits(handStr, suit), "123456789"+suit);
+            return (fileStream, GetWaits(handStr), "123456789"+suit);
             
         }
 
-        // output: list of 34-indices
-        public static ISet<int> GetWaits(string hand, string suit)
+        /// <summary>
+        /// Lists all the waits of a tenpai chinitsu hand
+        /// </summary>
+        /// <param name="handStr">The hand in string format(</param>
+        /// <param name="suit">the suit of the hand</param>
+        /// <returns>List of 34idx format waits</returns>
+        public static ISet<int> GetWaits(string handStr)
         {
             var sc = new ShantenCalculator();
 
-            var hand34 = TilesConverter.one_line_string_to_34_array(hand);
-            if(sc.Calculate_shanten(hand34) != 0)
+            var hand34 = TilesConverter.FromStringTo34Count(handStr);
+            if(sc.GetNbShanten(hand34) != 0)
             {
                 return null;
             }
 
+            var suit = handStr[handStr.Length - 1];
+
             var offset = 0;
-            if (suit == "s")
+            if (suit == 's')
             {
                 offset = 18;
             }
-            else if (suit == "p")
+            else if (suit == 'p')
             {
                 offset = 9;
             }
@@ -41,7 +48,7 @@ namespace kandora.bot.mahjong
             {
                 var index34 = offset + i;
                 hand34[index34]++;
-                if(sc.Calculate_shanten(hand34) == Constants.AGARI_STATE)
+                if(sc.GetNbShanten(hand34) == Constants.AGARI_STATE)
                 {
                     result.Add(index34);
                 }

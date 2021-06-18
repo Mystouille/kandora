@@ -14,23 +14,23 @@ namespace kandora.bot.mahjong.handcalc.yaku
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
-            this.tenhou_id = 54;
+            this.tenhouId = 54;
             this.name = "Aka Dora";
-            this.han_open = 1;
-            this.han_closed = 1;
-            this.is_yakuman = false;
+            this.nbHanOpen = 1;
+            this.nbHanClosed = 1;
+            this.isYakuman = false;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
             return true;
         }
 
         public override string ToString()
         {
-            return $"{this.name} {this.han_closed}";
+            return $"{this.name} {this.nbHanClosed}";
         }
     }
     

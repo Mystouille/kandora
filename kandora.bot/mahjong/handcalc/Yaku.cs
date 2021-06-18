@@ -5,20 +5,20 @@ namespace kandora.bot.mahjong.handcalc
     public abstract class Yaku
     {
 
-        public int yaku_id;
-        public int tenhou_id;
+        public int yakuId;
+        public int tenhouId;
         public virtual string name { get; set; }
-        public int han_open;
-        public int han_closed;
-        public bool is_yakuman;
+        public int nbHanOpen;
+        public int nbHanClosed;
+        public bool isYakuman;
 
         public Yaku(int yaku_id)
         {
-            this.tenhou_id = -1;
-            this.yaku_id = yaku_id;
-            this.han_closed = 0;
-            this.han_open = 0;
-            this.set_attributes();
+            this.tenhouId = -1;
+            this.yakuId = yaku_id;
+            this.nbHanClosed = 0;
+            this.nbHanOpen = 0;
+            this.setAttributes();
         }
 
         public override string ToString()
@@ -32,12 +32,12 @@ namespace kandora.bot.mahjong.handcalc
         //         :param: args: some yaku requires additional attributes
         //         :return: boolean
         //         
-        public abstract bool is_condition_met(List<List<int>> hand, params object[] args);
+        public abstract bool isConditionMet(List<List<int>> hand, params object[] args);
 
         // 
         //         Set id, name, han related to the yaku
         //         
-        public abstract void set_attributes();
+        public abstract void setAttributes();
 
     }
     

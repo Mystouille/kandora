@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using U = kandora.bot.mahjong.Utils;
 using C = kandora.bot.mahjong.TilesConverter;
+using System.Timers;
 
 namespace kandora.bot.commands
 {
@@ -36,7 +37,28 @@ namespace kandora.bot.commands
             }
             catch (Exception e)
             {
-                await ctx.RespondAsync(e.Message);
+                await ctx.RespondAsync(e.Message + "\n" + e.StackTrace);
+            }
+        }
+
+        [Command("problem2"), Description(""), Aliases("p2")]
+        public async Task Problems(
+            CommandContext ctx,
+            string suit = "s"
+        )
+        {
+            try
+            {
+                var (stream, waits, options) = ChinitsuProblemGenerator.getNewProblem(suit);
+                var mb = new DiscordMessageBuilder();
+                mb.WithFile(stream);
+                var msg = await mb.SendAsync(ctx.Channel);
+                stream.Close();
+                await context.AddOngoingProblem(ctx, msg, waits, options, 10000);
+            }
+            catch (Exception e)
+            {
+                await ctx.RespondAsync(e.Message + "\n" + e.StackTrace);
             }
         }
 
@@ -104,25 +126,25 @@ namespace kandora.bot.commands
                 // do nothing
             }
 
-            var hand34 = C.one_line_string_to_34_array(basicHand);
-            string suitOrder = U.getSuitOrder(basicHand);
+            var hand34 = C.FromStringTo34Count(basicHand);
+            string suitOrder = U.GetSuitOrder(basicHand);
             var shantenCalc = new ShantenCalculator();
             int shanten = -2;
             var nbTiles = hand34.Sum();
             if (nbTiles == 13 || nbTiles == 14)
             {
-                shanten = shantenCalc.Calculate_shanten(hand34);
+                shanten = shantenCalc.GetNbShanten(hand34);
             }
             StringBuilder sb = new();
             sb.AppendLine($"<@!{ctx.User.Id}>: {GetHandMessage(handEmoji)}  {getShanten(shanten)}\n");
             var divider = new HandDivider();
-            var results = divider.divide_hand(hand34);
+            var results = divider.DivideHand(hand34);
 
             int i = 1;
             foreach (var result in results)
             {
-                var hand136 = C.from_34_indices_to_136_arrays(result);
-                var setsStr = hand136.Select(set => C.to_one_line_string(set));
+                var hand136 = C.From34IdxHandTo136Hand(result);
+                var setsStr = hand136.Select(set => C.ToString(set));
                 IEnumerable<string> orderedSetStr = new List<string>();
                 foreach (var chr in suitOrder)
                 {
@@ -145,10 +167,10 @@ namespace kandora.bot.commands
             var basicHand = HandParser.GetSimpleHand(hand);
             var basicAgari = HandParser.GetSimpleHand(agari);
             var handEmoji = HandParser.GetHandEmojiCodes(hand, ctx.Client);
-            string suitOrder = U.getSuitOrder(basicHand);
+            string suitOrder = U.GetSuitOrder(basicHand);
 
-            var hand136 = C.one_line_string_to_136_array(basicHand);
-            var agari136 = C.one_line_string_to_136_array(basicAgari)[0];
+            var hand136 = C.FromStringTo136(basicHand);
+            var agari136 = C.FromStringTo136(basicAgari)[0];
 
             StringBuilder sb = new();
             sb.AppendLine($"<@!{ctx.User.Id}>: {GetHandMessage(handEmoji)}\n");
@@ -156,11 +178,11 @@ namespace kandora.bot.commands
 
             // TSUMO
 
-            config.is_tsumo = true;
+            config.isTsumo = true;
             var calculator = new HandCalculator();
-            var result = calculator.estimate_hand_value(hand136.ToList(), agari136, config: config);
-            var handShape136 = C.from_34_indices_to_136_arrays(result.hand);
-            var setsStr = handShape136.Select(set => C.to_one_line_string(set));
+            var result = calculator.EstimateHandValue(hand136.ToList(), agari136, config: config);
+            var handShape136 = C.From34IdxHandTo136Hand(result.hand);
+            var setsStr = handShape136.Select(set => C.ToString(set));
             IEnumerable<string> orderedSetStr = new List<string>();
             foreach (var chr in suitOrder)
             {
@@ -188,11 +210,11 @@ namespace kandora.bot.commands
 
             //RON
 
-            config.is_tsumo = false;
+            config.isTsumo = false;
             calculator = new HandCalculator();
-            result = calculator.estimate_hand_value(hand136.ToList(), agari136, config: config);
-            handShape136 = C.from_34_indices_to_136_arrays(result.hand);
-            setsStr = handShape136.Select(set => C.to_one_line_string(set));
+            result = calculator.EstimateHandValue(hand136.ToList(), agari136, config: config);
+            handShape136 = C.From34IdxHandTo136Hand(result.hand);
+            setsStr = handShape136.Select(set => C.ToString(set));
             orderedSetStr = new List<string>();
             foreach (var chr in suitOrder)
             {
@@ -260,13 +282,13 @@ namespace kandora.bot.commands
                     // do nothing
                 }
 
-                var hand34 = TilesConverter.one_line_string_to_34_array(basicHand);
+                var hand34 = TilesConverter.FromStringTo34Count(basicHand);
                 var shantenCalc = new ShantenCalculator();
                 int shanten = -2;
                 var nbTiles = hand34.Sum();
                 if (nbTiles == 13 || nbTiles == 14)
                 {
-                    shanten = shantenCalc.Calculate_shanten(hand34);
+                    shanten = shantenCalc.GetNbShanten(hand34);
                 }
                 var message = await ctx.Channel.SendMessageAsync($"<@!{ctx.User.Id}>: {GetHandMessage(handEmoji)}  {getShanten(shanten)}");
                 {

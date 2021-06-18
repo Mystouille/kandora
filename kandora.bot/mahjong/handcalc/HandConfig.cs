@@ -16,51 +16,51 @@ namespace kandora.bot.mahjong.handcalc
     public class OptionalRules
     {
 
-        public bool has_open_tanyao = false;
-        public bool has_aka_dora = false;
-        public bool has_double_yakuman = true;
-        public int kazoe_limit = HandConstants.KAZOE_LIMITED;
+        public bool hasOpenTanyao = false;
+        public bool hasAkaDora = false;
+        public bool hasDoubleYakuman = true;
+        public int kazoeLimit = HandConstants.KAZOE_LIMITED;
         public bool kiriage = false;
-        public bool fu_for_open_pinfu = true;
-        public bool fu_for_pinfu_tsumo = false;
-        public bool renhou_as_yakuman = false;
-        public bool has_daisharin = false;
-        public bool has_daisharin_other_suits = false;
-        public bool has_daichisei = false;
-        public bool has_sashikomi_yakuman = false;
-        public bool limit_to_sextuple_yakuman = true;
-        public bool paarenchan_needs_yaku = true;
+        public bool fuForOpenPinfu = true;
+        public bool fuForPinfuTsumo = false;
+        public bool renhouAsYakuman = false;
+        public bool hasDaisharin = false;
+        public bool hasDaisharinOtherSuits = false;
+        public bool hasSashikomiYakuman = false;
+        public bool limitToSextupleYakuman = true;
+        public bool paarenchanNeedsYaku = true;
+        public bool hasDaichisei = false;
 
         public OptionalRules(
-            bool has_open_tanyao = false,
-            bool has_aka_dora = false,
-            bool has_double_yakuman = true,
-            int kazoe_limit = HandConstants.KAZOE_LIMITED,
+            bool hasOpenTanyao = false,
+            bool hasAkaDora = false,
+            bool hasDoubleYakuman = true,
+            int kazoeLimit = HandConstants.KAZOE_LIMITED,
             bool kiriage = false,
-            bool fu_for_open_pinfu = true,
-            bool fu_for_pinfu_tsumo = false,
-            bool renhou_as_yakuman = false,
-            bool has_daisharin = false,
-            bool has_daisharin_other_suits = false,
-            bool has_sashikomi_yakuman = false,
-            bool limit_to_sextuple_yakuman = true,
-            bool paarenchan_needs_yaku = true,
-            bool has_daichisei = false)
+            bool fuForOpenPinfu = true,
+            bool fuForPinfuTsumo = false,
+            bool renhouAsYakuman = false,
+            bool hasDaisharin = false,
+            bool hasDaisharinOtherSuits = false,
+            bool hasSashikomiYakuman = false,
+            bool limitToSextupleYakuman = true,
+            bool paarenchanNeedsYaku = true,
+            bool hasDaichisei = false)
         {
-            this.has_open_tanyao = has_open_tanyao;
-            this.has_aka_dora = has_aka_dora;
-            this.has_double_yakuman = has_double_yakuman;
-            this.kazoe_limit = kazoe_limit;
+            this.hasOpenTanyao = hasOpenTanyao;
+            this.hasAkaDora = hasAkaDora;
+            this.hasDoubleYakuman = hasDoubleYakuman;
+            this.kazoeLimit = kazoeLimit;
             this.kiriage = kiriage;
-            this.fu_for_open_pinfu = fu_for_open_pinfu;
-            this.fu_for_pinfu_tsumo = fu_for_pinfu_tsumo;
-            this.renhou_as_yakuman = renhou_as_yakuman;
-            this.has_daisharin = has_daisharin || has_daisharin_other_suits;
-            this.has_daisharin_other_suits = has_daisharin_other_suits;
-            this.has_sashikomi_yakuman = has_sashikomi_yakuman;
-            this.limit_to_sextuple_yakuman = limit_to_sextuple_yakuman;
-            this.has_daichisei = has_daichisei;
-            this.paarenchan_needs_yaku = paarenchan_needs_yaku;
+            this.fuForOpenPinfu = fuForOpenPinfu;
+            this.fuForPinfuTsumo = fuForPinfuTsumo;
+            this.renhouAsYakuman = renhouAsYakuman;
+            this.hasDaisharin = hasDaisharin || hasDaisharinOtherSuits;
+            this.hasDaisharinOtherSuits = hasDaisharinOtherSuits;
+            this.hasSashikomiYakuman = hasSashikomiYakuman;
+            this.limitToSextupleYakuman = limitToSextupleYakuman;
+            this.hasDaichisei = hasDaichisei;
+            this.paarenchanNeedsYaku = paarenchanNeedsYaku;
         }
     }
 
@@ -73,68 +73,68 @@ namespace kandora.bot.mahjong.handcalc
 
         public YakuConfig yaku = null;
         public OptionalRules options = null;
-        public bool is_tsumo = false;
-        public bool is_riichi = false;
-        public bool is_ippatsu = false;
-        public bool is_rinshan = false;
-        public bool is_chankan = false;
-        public bool is_haitei = false;
-        public bool is_houtei = false;
-        public bool is_daburu_riichi = false;
-        public bool is_nagashi_mangan = false;
-        public bool is_tenhou = false;
-        public bool is_renhou = false;
-        public bool is_chiihou = false;
-        public bool is_open_riichi = false;
-        public bool is_dealer = false;
-        public int player_wind = 0;
-        public int round_wind = 0;
+        public bool isTsumo = false;
+        public bool isRiichi = false;
+        public bool isIppatsu = false;
+        public bool isRinshan = false;
+        public bool isChankan = false;
+        public bool isHaitei = false;
+        public bool isHoutei = false;
+        public bool isDaburuRiichi = false;
+        public bool isNagashiMangan = false;
+        public bool isTenhou = false;
+        public bool isRenhou = false;
+        public bool isChiihou = false;
+        public bool isOpenRiichi = false;
+        public bool isDealer = false;
+        public int playerWind = 0;
+        public int roundWind = 0;
+        public int kyoutakuNumber = 0;
+        public int tsumiNumber = 0;
         public int paarenchan = 0;
-        public int kyoutaku_number = 0;
-        public int tsumi_number = 0;
 
         public HandConfig(
-            bool is_tsumo = false,
-            bool is_riichi = false,
-            bool is_ippatsu = false,
-            bool is_rinshan = false,
-            bool is_chankan = false,
-            bool is_haitei = false,
-            bool is_houtei = false,
-            bool is_daburu_riichi = false,
-            bool is_nagashi_mangan = false,
-            bool is_tenhou = false,
-            bool is_renhou = false,
-            bool is_chiihou = false,
-            bool is_open_riichi = false,
-            int player_wind = 0,
-            int round_wind = 0,
-            int kyoutaku_number = 0,
-            int tsumi_number = 0,
+            bool isTsumo = false,
+            bool isRiichi = false,
+            bool isIppatsu = false,
+            bool isRinshan = false,
+            bool isChankan = false,
+            bool isHaitei = false,
+            bool isHoutei = false,
+            bool isDaburuRiichi = false,
+            bool isNagashiMangan = false,
+            bool isTenhou = false,
+            bool isRenhou = false,
+            bool isChiihou = false,
+            bool isOpenRiichi = false,
+            int playerWind = 0,
+            int roundWind = 0,
+            int kyoutakuNumber = 0,
+            int tsumiNumber = 0,
             int paarenchan = 0,
             OptionalRules options = null)
         {
             this.yaku = new YakuConfig();
             this.options = options == null ? new OptionalRules() : options;
-            this.is_tsumo = is_tsumo;
-            this.is_riichi = is_riichi;
-            this.is_ippatsu = is_ippatsu;
-            this.is_rinshan = is_rinshan;
-            this.is_chankan = is_chankan;
-            this.is_haitei = is_haitei;
-            this.is_houtei = is_houtei;
-            this.is_daburu_riichi = is_daburu_riichi;
-            this.is_nagashi_mangan = is_nagashi_mangan;
-            this.is_tenhou = is_tenhou;
-            this.is_renhou = is_renhou;
-            this.is_chiihou = is_chiihou;
-            this.is_open_riichi = is_open_riichi;
-            this.player_wind = player_wind;
-            this.round_wind = round_wind;
-            this.is_dealer = player_wind == C.EAST;
+            this.isTsumo = isTsumo;
+            this.isRiichi = isRiichi;
+            this.isIppatsu = isIppatsu;
+            this.isRinshan = isRinshan;
+            this.isChankan = isChankan;
+            this.isHaitei = isHaitei;
+            this.isHoutei = isHoutei;
+            this.isDaburuRiichi = isDaburuRiichi;
+            this.isNagashiMangan = isNagashiMangan;
+            this.isTenhou = isTenhou;
+            this.isRenhou = isRenhou;
+            this.isChiihou = isChiihou;
+            this.isOpenRiichi = isOpenRiichi;
+            this.playerWind = playerWind;
+            this.roundWind = roundWind;
+            this.isDealer = playerWind == C.EAST;
             this.paarenchan = paarenchan;
-            this.kyoutaku_number = kyoutaku_number;
-            this.tsumi_number = tsumi_number;
+            this.kyoutakuNumber = kyoutakuNumber;
+            this.tsumiNumber = tsumiNumber;
         }
     }
     

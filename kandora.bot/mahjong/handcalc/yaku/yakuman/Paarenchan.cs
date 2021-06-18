@@ -14,24 +14,24 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
-            this.tenhou_id = 37;
+            this.tenhouId = 37;
             this.name = "Tenhou";
-            this.han_open = 0;
-            this.han_closed = 13;
-            this.is_yakuman = true;
+            this.nbHanOpen = 0;
+            this.nbHanClosed = 13;
+            this.isYakuman = true;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
             return true;
         }
 
-        public void set_paarenchan_count(int count)
+        public void setPaarenchanCount(int count)
         {
-            this.han_open = 13 * count;
-            this.han_closed = 13 * count;
+            this.nbHanOpen = 13 * count;
+            this.nbHanClosed = 13 * count;
             this.count = count;
         }
     }

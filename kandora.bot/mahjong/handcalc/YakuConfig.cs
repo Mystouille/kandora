@@ -7,15 +7,15 @@ namespace kandora.bot.mahjong.handcalc
     {
         public Tsumo tsumo;
         public Riichi riichi;
-        public OpenRiichi open_riichi;
+        public OpenRiichi openRiichi;
         public Ippatsu ippatsu;
         public Chankan chankan;
         public Rinshan rinshan;
         public Haitei haitei;
         public Houtei houtei;
-        public DaburuRiichi daburu_riichi;
-        public DaburuOpenRiichi daburu_open_riichi;
-        public NagashiMangan nagashi_mangan;
+        public DaburuRiichi daburuRiichi;
+        public DaburuOpenRiichi daburuOpenRiichi;
+        public NagashiMangan nagashiMangan;
         public Renhou renhou;
         public Pinfu pinfu;
         public Tanyao tanyao;
@@ -27,8 +27,8 @@ namespace kandora.bot.mahjong.handcalc
         public South south;
         public West west;
         public North north;
-        public YakuhaiPlace yakuhai_place;
-        public YakuhaiRound yakuhai_round;
+        public YakuhaiPlace yakuhaiPlace;
+        public YakuhaiRound yakuhaiRound;
         public Sanshoku sanshoku;
         public Ittsu ittsu;
         public Chanta chantai;
@@ -36,7 +36,7 @@ namespace kandora.bot.mahjong.handcalc
         public Toitoi toitoi;
         public Sanankou sanankou;
         public Sankantsu sankantsu;
-        public SanshokuDoukou sanshoku_douko;
+        public SanshokuDoukou sanshokuDoukou;
         public Chiitoitsu chiitoitsu;
         public Shousangen shosangen;
         public Honitsu honitsu;
@@ -44,7 +44,7 @@ namespace kandora.bot.mahjong.handcalc
         public Ryanpeikou ryanpeiko;
         public Chinitsu chinitsu;
         public Kokushi kokushi;
-        public ChuurenPoutou chuuren_poutou;
+        public ChuurenPoutou chuurenPoutou;
         public Suuankou suuankou;
         public Daisangen daisangen;
         public Shousuushii shosuushi;
@@ -55,35 +55,35 @@ namespace kandora.bot.mahjong.handcalc
         public Daisharin daisharin;
         public Daichisei daichisei;
         public Daisuushii daisuushi;
-        public DaburuKokushi daburu_kokushi;
-        public SuuankouTanki suuankou_tanki;
-        public DaburuChuurenPoutou daburu_chuuren_poutou;
+        public DaburuKokushi daburuKokushi;
+        public SuuankouTanki suuankouTanki;
+        public DaburuChuurenPoutou daburuChuurenPoutou;
         public Tenhou tenhou;
         public Chiihou chiihou;
-        public RenhouYakuman renhou_yakuman;
+        public RenhouYakuman renhouYakuman;
         public Sashikomi sashikomi;
         public Paarenchan paarenchan;
         // Other
         public Dora dora;
-        public AkaDora aka_dora;
+        public AkaDora akaDora;
 
         public YakuConfig()
         {
             var id = 0;
-            aka_dora = new AkaDora(++id);
+            akaDora = new AkaDora(++id);
             tenhou = new Tenhou(++id);
             // Yaku situations
             tsumo = new Tsumo(++id);
             riichi = new Riichi(++id);
-            open_riichi = new OpenRiichi(++id);
+            openRiichi = new OpenRiichi(++id);
             ippatsu = new Ippatsu(++id);
             chankan = new Chankan(++id);
             rinshan = new Rinshan(++id);
             haitei = new Haitei(++id);
             houtei = new Houtei(++id);
-            daburu_riichi = new DaburuRiichi(++id);
-            daburu_open_riichi = new DaburuOpenRiichi(++id);
-            nagashi_mangan = new NagashiMangan(++id);
+            daburuRiichi = new DaburuRiichi(++id);
+            daburuOpenRiichi = new DaburuOpenRiichi(++id);
+            nagashiMangan = new NagashiMangan(++id);
             renhou = new Renhou(++id);
             // Yaku 1 Han
             pinfu = new Pinfu(++id);
@@ -96,8 +96,8 @@ namespace kandora.bot.mahjong.handcalc
             south = new South(++id);
             west = new West(++id);
             north = new North(++id);
-            yakuhai_place = new YakuhaiPlace(++id);
-            yakuhai_round = new YakuhaiRound(++id);
+            yakuhaiPlace = new YakuhaiPlace(++id);
+            yakuhaiRound = new YakuhaiRound(++id);
             // Yaku 2 Hans
             sanshoku = new Sanshoku(++id);
             ittsu = new Ittsu(++id);
@@ -106,7 +106,7 @@ namespace kandora.bot.mahjong.handcalc
             toitoi = new Toitoi(++id);
             sanankou = new Sanankou(++id);
             sankantsu = new Sankantsu(++id);
-            sanshoku_douko = new SanshokuDoukou(++id);
+            sanshokuDoukou = new SanshokuDoukou(++id);
             chiitoitsu = new Chiitoitsu(++id);
             shosangen = new Shousangen(++id);
             // Yaku 3 Hans
@@ -117,7 +117,7 @@ namespace kandora.bot.mahjong.handcalc
             chinitsu = new Chinitsu(++id);
             // Yakuman list
             kokushi = new Kokushi(++id);
-            chuuren_poutou = new ChuurenPoutou(++id);
+            chuurenPoutou = new ChuurenPoutou(++id);
             suuankou = new Suuankou(++id);
             daisangen = new Daisangen(++id);
             shosuushi = new Shousuushii(++id);
@@ -129,18 +129,18 @@ namespace kandora.bot.mahjong.handcalc
             daichisei = new Daichisei(++id);
             // Double yakuman
             daisuushi = new Daisuushii(++id);
-            daburu_kokushi = new DaburuKokushi(++id);
-            suuankou_tanki = new SuuankouTanki(++id);
-            daburu_chuuren_poutou = new DaburuChuurenPoutou(++id);
+            daburuKokushi = new DaburuKokushi(++id);
+            suuankouTanki = new SuuankouTanki(++id);
+            daburuChuurenPoutou = new DaburuChuurenPoutou(++id);
             // Yakuman situations
             tenhou = new Tenhou(id++);
             chiihou = new Chiihou(++id);
-            renhou_yakuman = new RenhouYakuman(++id);
+            renhouYakuman = new RenhouYakuman(++id);
             sashikomi = new Sashikomi(++id);
             paarenchan = new Paarenchan(++id);
             // Other
             dora = new Dora(++id);
-            aka_dora = new AkaDora(++id);
+            akaDora = new AkaDora(++id);
         }
     }
     

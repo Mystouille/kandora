@@ -11,7 +11,7 @@
         // 
         //     Check if tile is aka dora
         //     
-        public static bool is_aka_dora(int tile_136, bool aka_enabled)
+        public static bool IsAkaDora(int tile_136, bool aka_enabled)
         {
             if (!aka_enabled)
             {
@@ -28,23 +28,28 @@
             return false;
         }
 
-        // 
-        //     Calculate the number of dora for the tile
-        //     
-        public static int plus_dora(int tile_136, List<int> dora_indicators_136, bool add_aka_dora = false)
+
+        /// <summary>
+        /// Calculate the number of dora for the tile
+        /// </summary>
+        /// <param name="tile136"> The hand, in 136 format</param>
+        /// <param name="doraIndicators136"> The 136 format list of dora indicators</param>
+        /// <param name="addAkaDora"> True if aka doras must be counted</param>
+        /// <returns>The number of doras of the hand</returns>   
+        public static int PlusDora(int tile136, List<int> doraIndicators136, bool addAkaDora = false)
         {
-            var tile_index = tile_136 / 4;
-            var dora_count = 0;
-            if (add_aka_dora && is_aka_dora(tile_136, aka_enabled: true))
+            var tileIndex = tile136 / 4;
+            var doraCount = 0;
+            if (addAkaDora && IsAkaDora(tile136, aka_enabled: true))
             {
-                dora_count += 1;
+                doraCount += 1;
             }
-            foreach (var doraIt in dora_indicators_136)
+            foreach (var doraIt in doraIndicators136)
             {
                 var dora = doraIt;
                 dora /= 4;
                 // sou, pin, man
-                if (tile_index < C.EAST)
+                if (tileIndex < C.EAST)
                 {
                     // with indicator 9, dora will be 1
                     if (dora == 8)
@@ -59,9 +64,9 @@
                     {
                         dora = 17;
                     }
-                    if (tile_index == dora + 1)
+                    if (tileIndex == dora + 1)
                     {
-                        dora_count += 1;
+                        doraCount += 1;
                     }
                 }
                 else
@@ -71,7 +76,7 @@
                         continue;
                     }
                     dora -= 9 * 3;
-                    var tile_index_temp = tile_index - 9 * 3;
+                    var tile_index_temp = tileIndex - 9 * 3;
                     // dora indicator is north
                     if (dora == 3)
                     {
@@ -84,18 +89,19 @@
                     }
                     if (tile_index_temp == dora + 1)
                     {
-                        dora_count += 1;
+                        doraCount += 1;
                     }
                 }
             }
-            return dora_count;
+            return doraCount;
         }
 
-        // 
-        //     :param item: list of tile 34 indices
-        //     :return: boolean
-        //     
-        public static bool is_chi(List<int> list)
+        /// <summary>
+        /// Checks if the group is a shuntsu
+        /// </summary>
+        /// <param name="list"> The group, in 136 format</param>
+        /// <returns>True if the group is a shuntsu</returns>   
+        public static bool IsShuntsu(List<int> list)
         {
             if (list.Count != 3)
             {
@@ -104,11 +110,12 @@
             return list[0] == list[1] - 1 && list[0] == list[2] - 2;
         }
 
-        // 
-        //     :param item: list of tile 34 indices
-        //     :return: boolean
-        //     
-        public static bool is_pon(List<int> list)
+        /// <summary>
+        /// Checks if the group is a koutsu
+        /// </summary>
+        /// <param name="list"> The group, in 136 format</param>
+        /// <returns>True if the group is a koutsu</returns>   
+        public static bool IsKoutsu(List<int> list)
         {
             if (list.Count != 3)
             {
@@ -117,235 +124,260 @@
             return list[0] == list[1] && list[0] == list[2];
         }
 
-        public static bool is_kan(List<int> list)
+        /// <summary>
+        /// Checks if the group is a kantsu
+        /// </summary>
+        /// <param name="list"> The group, in 136 format</param>
+        /// <returns>True if the group is a kantsu</returns>   
+        public static bool IsKantsu(List<int> list)
         {
             return list.Count == 4;
         }
 
-        public static bool is_pon_or_kan(List<int> list)
+        /// <summary>
+        /// Checks if the group is a koutsu or kantsu
+        /// </summary>
+        /// <param name="list"> The group, in 136 format</param>
+        /// <returns>True if the group is a koutsu or kantsu</returns>   
+        public static bool IsKoutsuOrKantsu(List<int> list)
         {
-            return is_pon(list) || is_kan(list);
+            return IsKoutsu(list) || IsKantsu(list);
         }
 
-        // 
-        //     :param item: array of tile 34 indices
-        //     :return: boolean
-        //     
-        public static bool is_pair(List<int> item)
+        /// <summary>
+        /// Checks if the group is a pair
+        /// </summary>
+        /// <param name="list"> The group, in 136 format</param>
+        /// <returns>True if the group is a pair</returns>   
+        public static bool IsPair(List<int> list)
         {
-            return item.Count == 2;
+            return list.Count == 2;
         }
 
-        // 
-        //     :param tile: 34 tile format
-        //     :return: boolean
-        //     
-        public static bool is_man(int tile)
+        /// <summary>
+        /// Checks if the tile is a man
+        /// </summary>
+        /// <param name="tile"> The tile, in 34 format</param>
+        /// <returns>True if the tile is a man</returns>   
+        public static bool IsMan(int tile)
         {
             return tile <= 8;
         }
 
-        // 
-        //     :param tile: 34 tile format
-        //     :return: boolean
-        //     
-        public static bool is_pin(int tile)
+        /// <summary>
+        /// Checks if the tile is a pin
+        /// </summary>
+        /// <param name="tile"> The tile, in 34 format</param>
+        /// <returns>True if the tile is a pin</returns>   
+        public static bool IsPin(int tile)
         {
             return 8 < tile && tile <= 17;
         }
 
-        // 
-        //     :param tile: 34 tile format
-        //     :return: boolean
-        //     
-        public static bool is_sou(int tile)
+        /// <summary>
+        /// Checks if the tile is a pin
+        /// </summary>
+        /// <param name="tile"> The tile, in 34 format</param>
+        /// <returns>True if the tile is a pin</returns>   
+        public static bool IsSou(int tile)
         {
             return 17 < tile && tile <= 26;
         }
 
-        // 
-        //     :param tile: 34 tile format
-        //     :return: boolean
-        //     
-        public static bool is_honor(int tile)
+        /// <summary>
+        /// Checks if the tile is a honor
+        /// </summary>
+        /// <param name="tile"> The tile, in 34 format</param>
+        /// <returns>True if the tile is a honor</returns>   
+        public static bool IsHonor(int tile)
         {
             return tile >= 27;
         }
 
-        public static bool is_sangenpai(int tile_34)
+        /// <summary>
+        /// Checks if the tile is a dragon
+        /// </summary>
+        /// <param name="tile"> The tile, in 34 format</param>
+        /// <returns>True if the tile is a dragon</returns>   
+        public static bool IsDragon(int tile_34)
         {
             return tile_34 >= 31;
         }
 
-        // 
-        //     :param tile: 34 tile format
-        //     :return: boolean
-        //     
-        public static bool is_terminal(int tile)
+        /// <summary>
+        /// Checks if the tile is a terminal
+        /// </summary>
+        /// <param name="tile"> The tile, in 34 format</param>
+        /// <returns>True if the tile is a terminal</returns>   
+        public static bool IsTerminal(int tile)
         {
             return C.TERMINAL_INDICES.Contains(tile);
         }
 
-        // 
-        //     :param tile: 34 tile format
-        //     :return: boolean
-        //     
-        public static bool is_dora_indicator_for_terminal(int tile)
+        /// <summary>
+        /// Checks if the tile is a terminal dora indicator
+        /// </summary>
+        /// <param name="tile"> The tile, in 34 format</param>
+        /// <returns>True if the tile is a terminal dora indicator</returns>   
+        public static bool IsDoraIndicatorForTerminal(int tile)
         {
             return tile == 7 || tile == 8 || tile == 16 || tile == 17 || tile == 25 || tile == 26;
         }
 
-        // 
-        //     :param hand_set: array of 34 tiles
-        //     :return: boolean
-        //     
-        public static bool contains_terminals(List<int> hand_set)
+
+        /// <summary>
+        /// Checks if the group contains a terminal
+        /// </summary>
+        /// <param name="handSet"> The group, in 34 format</param>
+        /// <returns>True if the group contains a terminal</returns>   
+        public static bool ContainsTerminal(List<int> handSet)
         {
-            return (from x in hand_set
+            return (from x in handSet
                         select C.TERMINAL_INDICES.Contains(x)).ToList().Any();
         }
 
-        // 
-        //     :param tile: 34 tile format
-        //     :return: tile: 0-8 presentation
-        //     
-        public static int simplify(int tile)
+        /// <summary>
+        /// Return the tile value in 0-8 format
+        /// </summary>
+        /// <param name="tile"> The tile, in 34 format</param>
+        /// <returns>The tile value in 0-8 format</returns>   
+        public static int Simplify(int tile)
         {
             return tile - 9 * (tile / 9);
         }
 
-        // 
-        //     Tiles that don't have -1, 0 and +1 neighbors
-        //     :param hand_34: array of tiles in 34 tile format
-        //     :return: array of isolated tiles indices
-        //     
-        public static Stack<int> find_isolated_tile_indices(int[] hand_34)
+        /// <summary>
+        /// Find indices that do not have a tile for them or their neighbors
+        /// </summary>
+        /// <param name="hand34"> The hand, in 34-count format</param>
+        /// <returns>Array of isolated tiles indices</returns>   
+        public static Stack<int> FindIsolatedTileIndices(int[] hand34)
         {
-            var isolated_indices = new Stack<int>();
+            var isolatedIndices = new Stack<int>();
             foreach (var x in Enumerable.Range(0, C.CHUN + 1 - 0))
             {
                 // for honor tiles we don't need to check nearby tiles
-                if (is_honor(x) && hand_34[x] == 0)
+                if (IsHonor(x) && hand34[x] == 0)
                 {
-                    isolated_indices.Push(x);
+                    isolatedIndices.Push(x);
                 }
                 else
                 {
-                    var simplified = simplify(x);
+                    var simplified = Simplify(x);
                     // 1 suit tile
                     if (simplified == 0)
                     {
-                        if (hand_34[x] == 0 && hand_34[x + 1] == 0)
+                        if (hand34[x] == 0 && hand34[x + 1] == 0)
                         {
-                            isolated_indices.Push(x);
+                            isolatedIndices.Push(x);
                         }
                     }
                     else if (simplified == 8)
                     {
                         // 9 suit tile
-                        if (hand_34[x] == 0 && hand_34[x - 1] == 0)
+                        if (hand34[x] == 0 && hand34[x - 1] == 0)
                         {
-                            isolated_indices.Push(x);
+                            isolatedIndices.Push(x);
                         }
                     }
                     else
                     {
                         // 2-8 tiles tiles
-                        if (hand_34[x] == 0 && hand_34[x - 1] == 0 && hand_34[x + 1] == 0)
+                        if (hand34[x] == 0 && hand34[x - 1] == 0 && hand34[x + 1] == 0)
                         {
-                            isolated_indices.Push(x);
+                            isolatedIndices.Push(x);
                         }
                     }
                 }
             }
-            return isolated_indices;
+            return isolatedIndices;
         }
 
-        // 
-        //     Tile is strictly isolated if it doesn't have -2, -1, 0, +1, +2 neighbors
-        //     :param hand_34: array of tiles in 34 tile format
-        //     :param tile_34: int
-        //     :return: bool
-        //     
-        public static bool is_tile_strictly_isolated(List<int> hand_34, int tile_34)
+
+        /// <summary>
+        /// Find indices that do not have a tile for them or their +1 or +2 neighbors
+        /// </summary>
+        /// <param name="hand34"> The hand, in 34-count format</param>
+        /// <returns>Array of strictly isolated tiles indices</returns>   
+        public static bool IsTileStrictlyIsolated(List<int> hand34, int tile34)
         {
-            if (is_honor(tile_34))
+            if (IsHonor(tile34))
             {
-                return hand_34[tile_34] - 1 <= 0;
+                return hand34[tile34] - 1 <= 0;
             }
-            var simplified = simplify(tile_34);
+            var simplified = Simplify(tile34);
             List<int> indices = new List<int>();
             // 1 suit tile
             if (simplified == 0)
             {
                 indices = new List<int> {
-                    tile_34,
-                    tile_34 + 1,
-                    tile_34 + 2
+                    tile34,
+                    tile34 + 1,
+                    tile34 + 2
                 };
             }
             else if (simplified == 1)
             {
                 // 2 suit tile
                 indices = new List<int> {
-                    tile_34 - 1,
-                    tile_34,
-                    tile_34 + 1,
-                    tile_34 + 2
+                    tile34 - 1,
+                    tile34,
+                    tile34 + 1,
+                    tile34 + 2
                 };
             }
             else if (simplified == 7)
             {
                 // 8 suit tile
                 indices = new List<int> {
-                    tile_34 - 2,
-                    tile_34 - 1,
-                    tile_34,
-                    tile_34 + 1
+                    tile34 - 2,
+                    tile34 - 1,
+                    tile34,
+                    tile34 + 1
                 };
             }
             else if (simplified == 8)
             {
                 // 9 suit tile
                 indices = new List<int> {
-                    tile_34 - 2,
-                    tile_34 - 1,
-                    tile_34
+                    tile34 - 2,
+                    tile34 - 1,
+                    tile34
                 };
             }
             else
             {
                 // 3-7 tiles tiles
                 indices = new List<int> {
-                    tile_34 - 2,
-                    tile_34 - 1,
-                    tile_34,
-                    tile_34 + 1,
-                    tile_34 + 2
+                    tile34 - 2,
+                    tile34 - 1,
+                    tile34,
+                    tile34 + 1,
+                    tile34 + 2
                 };
             }
             var isolated = true;
-            foreach (var tile_index in indices)
+            foreach (var idx in indices)
             {
                 // we don't want to count our tile as it is in hand already
-                if (tile_index == tile_34)
+                if (idx == tile34)
                 {
-                    isolated |= hand_34[tile_index] - 1 <= 0;
+                    isolated |= hand34[idx] - 1 <= 0;
                 }
                 else
                 {
-                    isolated |= hand_34[tile_index] == 0;
+                    isolated |= hand34[idx] == 0;
                 }
             }
             return isolated;
         }
 
-        // 
-        //     Separate tiles by suits and count them
-        //     :param tiles_34: array of tiles to count
-        //     :return: dict
-        //     
-        public static Dictionary<string, int> count_tiles_by_suits(List<int> tiles_34)
+        /// <summary>
+        /// Separate tiles by suits and count them
+        /// </summary>
+        /// <param name="hand34"> The hand, in 34-count format</param>
+        /// <returns>The count of tiles by suit</returns>   
+        public static Dictionary<string, int> CountTilesBySuit(List<int> tiles34)
         {
             var suits = new Dictionary<string, int>();
             suits.Add("sou", 0);
@@ -355,21 +387,25 @@
 
             foreach (var x in Enumerable.Range(0, 34 - 0))
             {
-                var tile = tiles_34[x];
-                if (tile == 0)
+                var nbTiles = tiles34[x];
+                if (nbTiles == 0)
                 {
                     continue;
                 }
-                suits["sou"] += (is_sou(x) ? tile : 0);
-                suits["man"] += (is_man(x) ? tile : 0);
-                suits["pin"] += (is_pin(x) ? tile : 0);
-                suits["honor"] += (is_honor(x) ? tile : 0);
+                suits["sou"] += (IsSou(x) ? nbTiles : 0);
+                suits["man"] += (IsMan(x) ? nbTiles : 0);
+                suits["pin"] += (IsPin(x) ? nbTiles : 0);
+                suits["honor"] += (IsHonor(x) ? nbTiles : 0);
             }
             return suits;
         }
 
-        // Extract the suit order
-        public static string getSuitOrder(string str)
+        /// <summary>
+        /// Get the suit order the hand is in
+        /// </summary>
+        /// <param name="str"> The string representation fo the hand</param>
+        /// <returns>a string of the suits, ordered by appearance in the hand</returns>   
+        public static string GetSuitOrder(string str)
         {
             string order = "";
             var addedChar = new HashSet<char>();
@@ -384,11 +420,17 @@
             return order;
         }
 
-        public static bool are_tiles_in_indices(List<int> set, IEnumerable<int> indices)
+        /// <summary>
+        /// Checks if all tiles are in the given list of values
+        /// </summary>
+        /// <param name="tiles"> The list of the tiles, in any format</param>
+        /// <param name="values"> The list to check the tiles against, in the same format</param>
+        /// <returns>a string of the suits, ordered by appearance in the hand</returns>   
+        public static bool AreAllTilesInIndices(List<int> tiles, IEnumerable<int> values)
         {
-            foreach (var tile in set)
+            foreach (var tile in tiles)
             {
-                if (!indices.Contains(tile))
+                if (!values.Contains(tile))
                 {
                     return false;
                 }

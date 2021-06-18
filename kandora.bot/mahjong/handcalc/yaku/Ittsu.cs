@@ -17,17 +17,17 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
             this.name = "Ittsu";
-            this.tenhou_id = 24;
-            this.han_closed = 2;
-            this.han_open = 1;
+            this.tenhouId = 24;
+            this.nbHanClosed = 2;
+            this.nbHanOpen = 1;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
-            var chis = hand.Where(x => Utils.is_chi(x));
+            var chis = hand.Where(x => Utils.IsShuntsu(x));
             if(chis.Count() < 3)
             {
                 return false;
@@ -37,15 +37,15 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
             var man = new List<List<int>>();
             foreach (var chi in chis)
             {
-                if (U.is_sou(chi[0]))
+                if (U.IsSou(chi[0]))
                 {
                     sou.Add(chi);
                 }
-                else if (U.is_man(chi[0]))
+                else if (U.IsMan(chi[0]))
                 {
                     man.Add(chi);
                 }
-                else if (U.is_pin(chi[0]))
+                else if (U.IsPin(chi[0]))
                 {
                     pin.Add(chi);
                 }
@@ -68,7 +68,7 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
                 var simpleSets = new List<List<int>>();
                 foreach(var set in suit)
                 {
-                    simpleSets.Add(new List<int> { U.simplify(set[0]), U.simplify(set[1]) , U.simplify(set[2]) });
+                    simpleSets.Add(new List<int> { U.Simplify(set[0]), U.Simplify(set[1]) , U.Simplify(set[2]) });
                 }
                 if (simpleSets.Contains(one, comp) && simpleSets.Contains(two, comp) && simpleSets.Contains(three, comp))
                 {

@@ -14,18 +14,18 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
             this.name = "Shousuushii";
-            this.tenhou_id = 50;
-            this.han_open = 13;
-            this.han_closed = 13;
-            this.is_yakuman = true;
+            this.tenhouId = 50;
+            this.nbHanOpen = 13;
+            this.nbHanClosed = 13;
+            this.isYakuman = true;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
-            var pons = hand.Where(x => Utils.is_pon_or_kan(x));
+            var pons = hand.Where(x => Utils.IsKoutsuOrKantsu(x));
             if (pons.Count() < 3)
             {
                 return false;
@@ -35,11 +35,11 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
             var winds = new int[] { Constants.EAST, Constants.WEST, Constants.SOUTH, Constants.NORTH };
             foreach(var group in hand)
             {
-                if (Utils.is_pon_or_kan(group) && winds.Contains(group[0]))
+                if (Utils.IsKoutsuOrKantsu(group) && winds.Contains(group[0]))
                 {
                     nbWindPon++;
                 }
-                if (Utils.is_pair(group) && winds.Contains(group[0]))
+                if (Utils.IsPair(group) && winds.Contains(group[0]))
                 {
                     nbWindPair++;
                 }

@@ -51,7 +51,7 @@ namespace kandora.bot.mahjong.handcalc
             }
             if (yaku != null && yaku.Count > 0)
             {
-                this.yaku = yaku.OrderBy(x => x.yaku_id).ToList();
+                this.yaku = yaku.OrderBy(x => x.yakuId).ToList();
             }
             else
             {

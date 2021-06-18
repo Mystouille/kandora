@@ -15,26 +15,26 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
             this.name = "Junchan";
-            this.tenhou_id = 33;
-            this.han_open = 2;
-            this.han_closed = 3;
-            this.is_yakuman = false;
+            this.tenhouId = 33;
+            this.nbHanOpen = 2;
+            this.nbHanClosed = 3;
+            this.isYakuman = false;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
             int terminals = 0;
             int chi = 0;
             foreach(var group in hand)
             {
-                if (U.is_chi(group))
+                if (U.IsShuntsu(group))
                 {
                     chi++;
                 }
-                if (U.are_tiles_in_indices(group, C.TERMINAL_INDICES)) {
+                if (U.AreAllTilesInIndices(group, C.TERMINAL_INDICES)) {
                     terminals++;
                 }
             }

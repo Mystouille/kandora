@@ -16,30 +16,30 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
-            this.tenhou_id = 37;
+            this.tenhouId = 37;
             this.name = "Daisharin";
-            this.han_open = 0;
-            this.han_closed = 13;
-            this.is_yakuman = true;
+            this.nbHanOpen = 0;
+            this.nbHanClosed = 13;
+            this.isYakuman = true;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
             int sou = 0;
             int pin = 0;
             int man = 0;
             int honor = 0;
-            if (U.is_sou(hand[0][0]))
+            if (U.IsSou(hand[0][0]))
             {
                 sou++;
             }
-            else if (U.is_pin(hand[0][0]))
+            else if (U.IsPin(hand[0][0]))
             {
                 pin++;
             }
-            else if (U.is_man(hand[0][0]))
+            else if (U.IsMan(hand[0][0]))
             {
                 man++;
             }
@@ -64,7 +64,7 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
             {
                 foreach(var tile in set)
                 {
-                    indicesCount[U.simplify(tile)]++;
+                    indicesCount[U.Simplify(tile)]++;
                 }
             }
             foreach(var count in indicesCount)
@@ -80,22 +80,22 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
 
         public void set_paarenchan_count(int count)
         {
-            this.han_open = 13 * count;
-            this.han_closed = 13 * count;
+            this.nbHanOpen = 13 * count;
+            this.nbHanClosed = 13 * count;
             this.count = count;
         }
 
         public void rename(List<List<int>> hand)
         {
-            if (U.is_sou(hand[0][0]))
+            if (U.IsSou(hand[0][0]))
             {
                 this.name = "Daichikurin";
             }
-            else if (U.is_pin(hand[0][0]))
+            else if (U.IsPin(hand[0][0]))
             {
                 this.name = "Daisharin";
             }
-            else if (U.is_man(hand[0][0]))
+            else if (U.IsMan(hand[0][0]))
             {
                 this.name = "Daisuurin";
             }

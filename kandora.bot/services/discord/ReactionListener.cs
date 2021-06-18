@@ -25,7 +25,12 @@ namespace kandora.bot.services.discord
             }
             else if (kanContext.OngoingProblems.ContainsKey(msg.Id))
             {
-                await OngoingProblem.OnProblemReaction(sender, msg, emoji, user, added);
+                var isOver = await kanContext.OngoingProblems[msg.Id].OnProblemReaction(sender, msg, emoji, user, added);
+
+                if (isOver)
+                {
+                    kanContext.OngoingProblems.Remove(msg.Id);
+                }
             }
         }
         

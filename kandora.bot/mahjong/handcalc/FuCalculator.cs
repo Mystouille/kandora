@@ -26,182 +26,182 @@ namespace kandora.bot.mahjong.handcalc
         public const string OPEN_KAN = "open_kan";
         public const string CLOSED_TERMINAL_KAN = "closed_terminal_kan";
         public const string OPEN_TERMINAL_KAN = "open_terminal_kan";
-
-        // 
-        //         Calculate hand fu with explanations
-        //         :param hand: 
-        //         :param win_tile: 136 tile format
-        //         :param win_group: one set where win tile exists
-        //         :param config: HandConfig object
-        //         :param valued_tiles: dragons, player wind, round wind
-        //         :param melds: opened sets
-        //         :return:
-        //         
-        public static (List<(int, string)>, int) calculate_fu(
+   
+        /// <summary>
+        /// Calculate the number of fu of a winning hand
+        /// </summary>
+        /// <param name="hand">The hand in 136 format</param>
+        /// <param name="winTile">Winning tile, 136 format</param>
+        /// <param name="winGroup">The group where the wile tile is, 34 format</param>
+        /// <param name="config">The hand config</param>
+        /// <param name="valuedTiles">Dragons, player wind, round wind</param>
+        /// <param name="melds">Opened sets</param>
+        /// <returns>A list of the fu details and the fu value rounded up to the 10s</returns>
+        public static (List<(int, string)>, int) CalculateFu(
             List<List<int>> hand,
-            int win_tile,
-            List<int> win_group,
+            int winTile,
+            List<int> winGroup,
             HandConfig config,
-            List<int> valued_tiles = null,
+            List<int> valuedTiles = null,
             List<Meld> melds = null)
         {
-            var win_tile_34 = win_tile / 4;
-            if (valued_tiles == null)
+            var winTile34 = winTile / 4;
+            if (valuedTiles == null)
             {
-                valued_tiles = new List<int>();
+                valuedTiles = new List<int>();
             }
             if (melds == null)
             {
                 melds = new List<Meld>();
             }
-            var fu_details = new List<(int, string)>();
+            var fuDetails = new List<(int, string)>();
             if (hand.Count == 7)
             {
                 return (new List<(int,string)>() { (25, BASE) }, 25);
             }
             var pair = (from x in hand
-                        where U.is_pair(x)
+                        where U.IsPair(x)
                         select x).ToList()[0];
-            var pon_sets = (from x in hand
-                            where U.is_pon_or_kan(x)
+            var koutsuList = (from x in hand
+                            where U.IsKoutsuOrKantsu(x)
                             select x).ToList();
-            var copied_opened_melds = (from x in melds
+            var copiedOpenMelds = (from x in melds
                                         where x.type == Meld.CHI
-                                        select x.tiles_34).ToList();
-            var closed_chi_sets = new List<List<int>>();
+                                        select x.Tiles34).ToList();
+            var closedShoutsuSets = new List<List<int>>();
             foreach (var x in hand)
             {
-                if (!copied_opened_melds.Contains(x))
+                if (!copiedOpenMelds.Contains(x))
                 {
-                    closed_chi_sets.Add(x);
+                    closedShoutsuSets.Add(x);
                 }
                 else
                 {
-                    copied_opened_melds.Remove(x);
+                    copiedOpenMelds.Remove(x);
                 }
             }
-            var is_open_hand = (from x in melds
+            var isOpenHand = (from x in melds
                                     select x.opened).Any();
-            if (closed_chi_sets.Contains(win_group))
+            if (closedShoutsuSets.Contains(winGroup))
             {
-                var tile_index = U.simplify(win_tile_34);
+                var tileIdx = U.Simplify(winTile34);
                 // penchan
-                if (U.contains_terminals(win_group))
+                if (U.ContainsTerminal(winGroup))
                 {
                     // 1-2-... wait
-                    if (tile_index == 2 && win_group.FindIndex(x => x == win_tile_34) == 2)
+                    if (tileIdx == 2 && winGroup.FindIndex(x => x == winTile34) == 2)
                     {
-                        fu_details.Add((2,PENCHAN));
+                        fuDetails.Add((2,PENCHAN));
                     }
-                    else if (tile_index == 6 && win_group.FindIndex(x => x == win_tile_34) == 0)
+                    else if (tileIdx == 6 && winGroup.FindIndex(x => x == winTile34) == 0)
                     {
                         // 8-9-... wait
-                        fu_details.Add((2, PENCHAN));
+                        fuDetails.Add((2, PENCHAN));
                     }
                 }
                 // kanchan waiting 5-...-7
-                if (win_group.FindIndex(x => x == win_tile_34) == 1)
+                if (winGroup.FindIndex(x => x == winTile34) == 1)
                 {
-                    fu_details.Add((2, KANCHAN));
+                    fuDetails.Add((2, KANCHAN));
                 }
             }
             // valued pair
-            var count_of_valued_pairs = valued_tiles.Count(x => x==pair[0]);
-            if (count_of_valued_pairs == 1)
+            var valuedPairsCount = valuedTiles.Count(x => x==pair[0]);
+            if (valuedPairsCount == 1)
             {
-                fu_details.Add((2, VALUED_PAIR));
+                fuDetails.Add((2, VALUED_PAIR));
             }
             // east-east pair when you are on east gave double fu
-            if (count_of_valued_pairs == 2)
+            if (valuedPairsCount == 2)
             {
-                fu_details.Add((4, DOUBLE_VALUED_PAIR));
+                fuDetails.Add((4, DOUBLE_VALUED_PAIR));
             }
             // pair wait
-            if (U.is_pair(win_group))
+            if (U.IsPair(winGroup))
             {
-                fu_details.Add((2, PAIR_WAIT));
+                fuDetails.Add((2, PAIR_WAIT));
             }
-            foreach (var set_item in pon_sets)
+            foreach (var koutsu in koutsuList)
             {
-                var open_meld = (from x in melds
-                                    where set_item == x.tiles_34
+                var openMeld = (from x in melds
+                                    where koutsu == x.Tiles34
                                     select x).ToList().FirstOrDefault();
-                var set_was_open = open_meld != null && open_meld.opened;
-                var is_kan_set = open_meld != null && (open_meld.type == Meld.KAN || open_meld.type == Meld.SHOUMINKAN);
-                var is_honor = (C.TERMINAL_INDICES.Concat(C.HONOR_INDICES)).Contains(set_item[0]);
+                var setWasOpen = openMeld != null && openMeld.opened;
+                var isKantsu = openMeld != null && (openMeld.type == Meld.KAN || openMeld.type == Meld.SHOUMINKAN);
+                var isHonor = (C.TERMINAL_INDICES.Concat(C.HONOR_INDICES)).Contains(koutsu[0]);
                 // we win by ron on the third pon tile, our pon will be count as open
-                if (!config.is_tsumo && set_item == win_group)
+                if (!config.isTsumo && koutsu == winGroup)
                 {
-                    set_was_open = true;
+                    setWasOpen = true;
                 }
-                if (is_honor)
+                if (isHonor)
                 {
-                    if (is_kan_set)
+                    if (isKantsu)
                     {
-                        if (set_was_open)
+                        if (setWasOpen)
                         {
-                            fu_details.Add((16, OPEN_TERMINAL_KAN));
+                            fuDetails.Add((16, OPEN_TERMINAL_KAN));
                         }
                         else
                         {
-                            fu_details.Add((32, CLOSED_TERMINAL_KAN));
+                            fuDetails.Add((32, CLOSED_TERMINAL_KAN));
                         }
                     }
-                    else if (set_was_open)
+                    else if (setWasOpen)
                     {
-                        fu_details.Add((4, OPEN_TERMINAL_PON));
+                        fuDetails.Add((4, OPEN_TERMINAL_PON));
                     }
                     else
                     {
-                        fu_details.Add((8, CLOSED_TERMINAL_PON));
+                        fuDetails.Add((8, CLOSED_TERMINAL_PON));
                     }
                 }
-                else if (is_kan_set)
+                else if (isKantsu)
                 {
-                    if (set_was_open)
+                    if (setWasOpen)
                     {
-                        fu_details.Add((8, OPEN_KAN));
+                        fuDetails.Add((8, OPEN_KAN));
                     }
                     else
                     {
-                        fu_details.Add((16, CLOSED_KAN));
+                        fuDetails.Add((16, CLOSED_KAN));
                     }
                 }
-                else if (set_was_open)
+                else if (setWasOpen)
                 {
-                    fu_details.Add((2, OPEN_PON));
+                    fuDetails.Add((2, OPEN_PON));
                 }
                 else
                 {
-                    fu_details.Add((4, CLOSED_PON));
+                    fuDetails.Add((4, CLOSED_PON));
                 }
             }
-            var add_tsumo_fu = fu_details.Count > 0 || config.options.fu_for_pinfu_tsumo;
-            if (config.is_tsumo && add_tsumo_fu)
+            var addTsumoFu = fuDetails.Count > 0 || config.options.fuForPinfuTsumo;
+            if (config.isTsumo && addTsumoFu)
             {
                 // 2 additional fu for tsumo (but not for pinfu)
-                fu_details.Add((2, TSUMO));
+                fuDetails.Add((2, TSUMO));
             }
-            if (is_open_hand && fu_details.Count == 0 && config.options.fu_for_open_pinfu)
+            if (isOpenHand && fuDetails.Count == 0 && config.options.fuForOpenPinfu)
             {
                 // there is no 1-20 hands, so we have to add additional fu
-                fu_details.Add((2, HAND_WITHOUT_FU));
+                fuDetails.Add((2, HAND_WITHOUT_FU));
             }
-            if (is_open_hand || config.is_tsumo)
+            if (isOpenHand || config.isTsumo)
             {
-                fu_details.Add((20, BASE));
+                fuDetails.Add((20, BASE));
             }
             else
             {
-                fu_details.Add((30, BASE));
+                fuDetails.Add((30, BASE));
             }
-            return (fu_details, round_fu(fu_details));
+            return (fuDetails, RoundFu(fuDetails));
         }
 
-        private static int round_fu(List<(int,string)> fu_details)
+        private static int RoundFu(List<(int,string)> fuDetails)
         {
             // 22 -> 30 and etc.
-            var fu = (from x in fu_details
+            var fu = (from x in fuDetails
                         select x.Item1).ToList().Sum();
             return (fu + 9) / 10 * 10;
         }

@@ -14,15 +14,15 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
             this.name = "Chuuren Poutou";
-            this.tenhou_id = 45;
-            this.han_closed = 13;
-            this.is_yakuman = true;
+            this.tenhouId = 45;
+            this.nbHanClosed = 13;
+            this.isYakuman = true;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
             var sous = new List<List<int>>();
             var pins = new List<List<int>>();
@@ -30,15 +30,15 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
             var honor = new List<List<int>>();
             foreach (var group in hand)
             {
-                if (Utils.is_sou(group[0]))
+                if (Utils.IsSou(group[0]))
                 {
                     sous.Add(group);
                 }
-                else if (Utils.is_man(group[0]))
+                else if (Utils.IsMan(group[0]))
                 {
                     mans.Add(group);
                 }
-                else if (Utils.is_pin(group[0]))
+                else if (Utils.IsPin(group[0]))
                 {
                     pins.Add(group);
                 }
@@ -58,7 +58,7 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
 
             var indices = new List<int>();
             hand.ForEach(x => x.ForEach(y => indices.Add(y)));
-            var simple = indices.Select(x => Utils.simplify(x));
+            var simple = indices.Select(x => Utils.Simplify(x));
 
             if (indices.Where(x => x == 0).Count() < 3)
             {

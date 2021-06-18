@@ -12,12 +12,12 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
-            base.set_attributes();
-            this.tenhou_id = 10;
+            base.setAttributes();
+            this.tenhouId = 10;
         }
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
             var playerWind = (int)args[0];
             var roundWind = (int)args[1];

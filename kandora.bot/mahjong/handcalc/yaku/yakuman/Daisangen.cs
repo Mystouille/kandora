@@ -14,22 +14,22 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
             this.name = "Daisangen";
-            this.tenhou_id = 39;
-            this.han_open = 13;
-            this.han_closed = 13;
-            this.is_yakuman = true;
+            this.tenhouId = 39;
+            this.nbHanOpen = 13;
+            this.nbHanClosed = 13;
+            this.isYakuman = true;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
             var dragons = new int[] { Constants.CHUN, Constants.HAKU, Constants.HATSU };
             var count = 0;
             foreach(var group in hand)
             {
-                if(Utils.is_pon_or_kan(group) && dragons.Contains(group[0]))
+                if(Utils.IsKoutsuOrKantsu(group) && dragons.Contains(group[0]))
                 {
                     count++;
                 }

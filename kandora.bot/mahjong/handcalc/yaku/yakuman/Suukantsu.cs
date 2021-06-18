@@ -14,15 +14,15 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
             this.name = "Suukantsu";
-            this.tenhou_id = 51;
-            this.han_open = 13;
-            this.han_closed = 13;
+            this.tenhouId = 51;
+            this.nbHanOpen = 13;
+            this.nbHanClosed = 13;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
             List<Meld> melds = (List<Meld>)args[0];
             var kans = melds.Where(x => x.type == Meld.KAN || x.type == Meld.SHOUMINKAN);

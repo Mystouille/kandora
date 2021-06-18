@@ -15,23 +15,23 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
             this.name = "Sanankou";
-            this.tenhou_id = 29;
-            this.han_open = 2;
-            this.han_closed = 2;
+            this.tenhouId = 29;
+            this.nbHanOpen = 2;
+            this.nbHanClosed = 2;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
             int winTile = ((int)args[0]) / 4;
             List<Meld> melds = (List<Meld>)args[1];
             bool isTsumo = (bool)args[2];
             var gc = new GroupComparer<int>();
-            List<List<int>> openSets = melds.Select(x => x.tiles_34).ToList();
-            var chiSets = hand.Where(x => Utils.is_chi(x) && x.Contains(winTile) && !(openSets.Contains(x, gc)));
-            var ponSets = hand.Where(x => Utils.is_pon_or_kan(x));
+            List<List<int>> openSets = melds.Select(x => x.Tiles34).ToList();
+            var chiSets = hand.Where(x => Utils.IsShuntsu(x) && x.Contains(winTile) && !(openSets.Contains(x, gc)));
+            var ponSets = hand.Where(x => Utils.IsKoutsuOrKantsu(x));
 
             var closed_pons = new List<List<int>>();
             foreach(var pon in ponSets)

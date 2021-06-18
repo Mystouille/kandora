@@ -16,16 +16,16 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
             this.name = "Honitsu";
-            this.tenhou_id = 34;
-            this.han_open = 2;
-            this.han_closed = 3;
-            this.is_yakuman = false;
+            this.tenhouId = 34;
+            this.nbHanOpen = 2;
+            this.nbHanClosed = 3;
+            this.isYakuman = false;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
             int honor = 0;
             int sou = 0;
@@ -37,15 +37,15 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
                     honor++;
                 }
 
-                if (U.is_sou(group[0]))
+                if (U.IsSou(group[0]))
                 {
                     sou++;
                 }
-                else if (U.is_man(group[0]))
+                else if (U.IsMan(group[0]))
                 {
                     man++;
                 }
-                else if (U.is_pin(group[0]))
+                else if (U.IsPin(group[0]))
                 {
                     pin++;
                 }

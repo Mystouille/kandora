@@ -13,15 +13,15 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
             this.name = "Kokushi Musou";
-            this.tenhou_id = 47;
-            this.han_closed = 13;
-            this.is_yakuman = true;
+            this.tenhouId = 47;
+            this.nbHanClosed = 13;
+            this.isYakuman = true;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
             var tiles_34 = (int[])args[0];
             return tiles_34[0]

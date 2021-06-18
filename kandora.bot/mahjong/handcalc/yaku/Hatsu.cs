@@ -14,13 +14,13 @@ namespace kandora.bot.mahjong.handcalc.yaku.yakuman
         {
         }
 
-        public override void set_attributes()
+        public override void setAttributes()
         {
-            base.set_attributes();
-            this.tenhou_id = 19;
+            base.setAttributes();
+            this.tenhouId = 19;
         }
 
-        public override bool is_condition_met(List<List<int>> hand, params object[] args)
+        public override bool isConditionMet(List<List<int>> hand, params object[] args)
         {
             return hand.Exists(x => checkKoutsu(x, Constants.HATSU));
         }
