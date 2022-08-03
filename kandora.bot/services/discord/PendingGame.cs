@@ -1,6 +1,6 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
-using kandora.bot.commands;
+using kandora.bot.commands.regular;
 using kandora.bot.http;
 using kandora.bot.models;
 using kandora.bot.services.db;
@@ -49,19 +49,19 @@ namespace kandora.bot.services.discord
         public bool IsCancelled
         {
             get {
-                return usersNo.Count == UserIds.Count();
+                return usersNo.Count == UserIds.Count() || usersNo.Where(x => Bypass.isSuperUser(x)).Any();
             }
         }
         public bool IsValidated
         {
             get
             {
-                return usersOk.Count == UserIds.Count();
+                return usersOk.Count == UserIds.Count() || usersOk.Where(x=>Bypass.isSuperUser(x)).Any();
             }
         }
         private bool TryChangeSet(ISet<string> set, string userId, bool isAdd)
         {
-            if (UserIds.Contains(userId))
+            if (UserIds.Contains(userId) || Bypass.isKandora(userId) || Bypass.isSuperUser(userId))
             {
                 if (isAdd)
                 {
@@ -85,11 +85,11 @@ namespace kandora.bot.services.discord
             bool result = false;
             var okEmoji = DiscordEmoji.FromName(sender, Reactions.OK);
             var noEmoji = DiscordEmoji.FromName(sender, Reactions.NO);
-            if (emoji.Id == okEmoji.Id)
+            if (emoji.Name == okEmoji.Name)
             {
                 result = game.TryChangeUserOk(userId, isAdd: added);
             }
-            else if (emoji.Id == noEmoji.Id)
+            else if (emoji.Name == noEmoji.Name)
             {
                 result = game.TryChangeUserNo(userId, isAdd: added);
             }

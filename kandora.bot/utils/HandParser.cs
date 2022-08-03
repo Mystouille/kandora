@@ -45,17 +45,21 @@ namespace kandora.bot.utils
             }
         }
 
-        public static IEnumerable<DiscordEmoji> GetHandEmojiCodes(string hand, DiscordClient client)
+        public static IEnumerable<DiscordEmoji> GetHandEmojiCodes(string hand, DiscordClient client, bool sorted = false)
         {
             StringBuilder sb = new StringBuilder();
             var tileList = SplitTiles(hand);
+            if (sorted)
+            {
+                tileList.Sort(new TileComparer());
+            }
             return tileList.Select(x => GetEmojiCode(x, client));
         }
 
         //input: RRRg output: 777z
         public static string GetSimpleHand(string hand)
         {
-            var tileList = string.Join("",SimpleTiles(hand));
+            var tileList = string.Join("", SimpleTiles(hand));
             return tileList;
         }
 
@@ -90,11 +94,12 @@ namespace kandora.bot.utils
             return tileNames;
         }
 
-        //input: RRRg output: 7z,7z,7z,z
-        public static List<string> SimpleTiles(string hand)
+        //input: RRRg output: 7z,7z,7z
+        public static List<string> SimpleTiles(string handWithMelds)
         {
             var tileNames = new List<string>();
             int i = 0;
+            var hand = handWithMelds.Replace("'", string.Empty).Replace("k", string.Empty);
             while (i < hand.Length)
             {
                 if (SUIT_NAMES.Contains(hand[i])) break;
@@ -128,6 +133,60 @@ namespace kandora.bot.utils
             tileNames.AddRange(SimpleTiles(restHand));
 
             return tileNames;
+        }
+
+        //input: RRRg output: 7z,7z,7z
+        public static List<string> VisualTiles(string hand)
+        {
+            var (tileNames, kans) = processKans(hand);
+            int i = 0;
+            while (i < hand.Length)
+            {
+                if (SUIT_NAMES.Contains(hand[i])) break;
+                i++;
+            }
+            if (i == hand.Length)
+            {
+                return tileNames;
+            }
+            var suit = hand[i];
+            var subHandValues = hand.Substring(0, i);
+            foreach (char c in subHandValues)
+            {
+                if (c == ' ') continue;
+                if (c == '\'')
+                {
+                    tileNames.Last().Append('\'');
+                }
+                if (c == 'k')
+                {
+                    tileNames.Append(kans.First());
+                    kans.RemoveAt(0);
+                }
+                var tile = $"{c}{suit}";
+                if (ALTERNATIVE_IDS.ContainsKey(tile))
+                {
+                    tile = ALTERNATIVE_IDS[tile];
+                    suit = tile[1];
+                    tile = tile[0].ToString();
+                }
+                tileNames.Add(tile);
+            }
+            tileNames.Add(suit.ToString());
+            if (i == hand.Length - 1)
+            {
+                return tileNames;
+            }
+            var restHand = hand.Substring(i + 1);
+            tileNames.AddRange(VisualTiles(restHand));
+
+            return tileNames;
+        }
+
+        private static (List<string>, List<string>) processKans(string hand)
+        {
+            var tileNames = new List<string>();
+            return (tileNames, new List<string>());
         }
 
 

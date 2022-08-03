@@ -2,6 +2,8 @@
 using kandora.bot.models;
 using kandora.bot.services.db;
 using kandora.bot.utils;
+using Npgsql;
+using NpgsqlTypes;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -10,8 +12,8 @@ namespace kandora.bot.services
 {
     class ServerDbService: DbService
     {
-        public static string serverTableName = "[dbo].[Server]";
-        public static string ServerUserTableName = "[dbo].[ServerUser]";
+        public static string serverTableName = "Server";
+        public static string ServerUserTableName = "ServerUser";
 
         //both
         public static string idCol = "Id";
@@ -20,14 +22,12 @@ namespace kandora.bot.services
         public static string displayNameCol = "displayName";
         public static string leagueRoleIdCol = "leagueRoleId";
         public static string leagueNameCol = "leagueName";
-        public static string targetChannelIdCol = "targetChannelId";
         public static string leagueConfigIdCol = "leagueId";
 
         //ServerUser
         public static string userIdCol = "userId";
         public static string serverIdCol = "serverId";
         public static string isAdminCol = "isAdmin";
-        public static string isOwnerCol = "isOwner";
 
 
         public static Server GetServer(string serverId)
@@ -35,9 +35,9 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {displayNameCol}, {targetChannelIdCol}, {leagueRoleIdCol}, {leagueNameCol}, {leagueConfigIdCol} FROM {serverTableName} WHERE {idCol} = {serverId}";
+                command.CommandText = $"SELECT {displayNameCol}, {leagueRoleIdCol}, {leagueNameCol}, {leagueConfigIdCol} FROM {serverTableName} WHERE {idCol} = \'{serverId}\'";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();
@@ -45,13 +45,12 @@ namespace kandora.bot.services
                 while (reader.Read())
                 {
                     string displayName = reader.IsDBNull(0) ? null : reader.GetString(0);
-                    string targetChannelId = reader.IsDBNull(1) ? null : reader.GetString(1);
-                    string leagueRoleId = reader.IsDBNull(2) ? null : reader.GetString(2);
-                    string leagueName = reader.IsDBNull(3) ? null : reader.GetString(3);
-                    int leagueConfigId = reader.GetInt32(4);
+                    string leagueRoleId = reader.IsDBNull(1) ? null : reader.GetString(1);
+                    string leagueName = reader.IsDBNull(2) ? null : reader.GetString(2);
+                    int leagueConfigId = reader.GetInt32(3);
 
                     reader.Close();
-                    return new Server(serverId, displayName, leagueRoleId, leagueName, targetChannelId, leagueConfigId); ;
+                    return new Server(serverId, displayName, leagueRoleId, leagueName, leagueConfigId); ;
                 }
                 reader.Close();
                 throw (new EntityNotFoundException("Server", serverId));
@@ -64,9 +63,9 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {userIdCol} FROM {ServerUserTableName} WHERE {userIdCol} = {userId} AND {serverIdCol} = {serverId}";
+                command.CommandText = $"SELECT {userIdCol} FROM {ServerUserTableName} WHERE {userIdCol} = \'{userId}\' AND {serverIdCol} = \'{serverId}\'";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();
@@ -88,9 +87,9 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {idCol}, {displayNameCol}, {targetChannelIdCol}, {leagueRoleIdCol}, {leagueNameCol} , {leagueConfigIdCol} FROM {serverTableName}";
+                command.CommandText = $"SELECT {idCol}, {displayNameCol}, {leagueRoleIdCol}, {leagueNameCol} , {leagueConfigIdCol} FROM {serverTableName}";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();
@@ -98,15 +97,14 @@ namespace kandora.bot.services
                 {
                     string id = reader.GetString(0).Trim();
                     string displayName = reader.GetString(1);
-                    string targetChannelId = reader.GetString(2);
-                    string leagueRoleId = reader.GetString(3);
-                    string leagueName = reader.GetString(4);
-                    int leagueConfigId = reader.GetInt32(5);
-                    serverMap.Add(id, new Server(id, displayName, leagueRoleId, leagueName, targetChannelId, leagueConfigId));
+                    string leagueRoleId = reader.GetString(2);
+                    string leagueName = reader.GetString(3);
+                    int leagueConfigId = reader.GetInt32(4);
+                    serverMap.Add(id, new Server(id, displayName, leagueRoleId, leagueName, leagueConfigId));
                 }
                 reader.Close();
 
-                command.CommandText = $"SELECT {userIdCol}, {serverIdCol}, {isAdminCol}, {isOwnerCol} FROM {ServerUserTableName}";
+                command.CommandText = $"SELECT {userIdCol}, {serverIdCol}, {isAdminCol} FROM {ServerUserTableName}";
                 reader = command.ExecuteReader();
 
                 while (reader.Read())
@@ -114,17 +112,12 @@ namespace kandora.bot.services
                     string userId = reader.GetString(0).Trim();
                     string serverId = reader.GetString(1).Trim();
                     bool isAdmin = reader.GetBoolean(2);
-                    bool isOwner = reader.GetBoolean(3);
                     var user = users[userId];
                     var server = serverMap[serverId];
                     server.Users.Add(user);
                     if (isAdmin)
                     {
                         server.Admins.Add(user);
-                    }
-                    if (isOwner)
-                    {
-                        server.Owners.Add(user);
                     }
                 }
                 reader.Close();
@@ -138,31 +131,16 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
-                command.Connection = dbCon.Connection;
-                command.CommandText = $"INSERT INTO {serverTableName} ({displayNameCol}, {leagueRoleIdCol}, {leagueNameCol}, {idCol}, {leagueConfigIdCol}) " +
+                var sql = $"INSERT INTO {serverTableName} ({displayNameCol}, {leagueRoleIdCol}, {leagueNameCol}, {idCol}, {leagueConfigIdCol}) " +
                     $"VALUES (@displayName, @leagueRoleId, @leagueName, @discordId, @leagueConfigId);";
 
-                command.Parameters.Add(new SqlParameter("@displayName", SqlDbType.VarChar)
-                {
-                    Value = displayName
-                });
-                command.Parameters.Add(new SqlParameter("@leagueRoleId", SqlDbType.VarChar)
-                {
-                    Value = leagueRoleId
-                });
-                command.Parameters.Add(new SqlParameter("@leagueName", SqlDbType.VarChar)
-                {
-                    Value = leagueName
-                });
-                command.Parameters.Add(new SqlParameter("@discordId", SqlDbType.VarChar)
-                {
-                    Value = discordId
-                });
-                command.Parameters.Add(new SqlParameter("@leagueConfigId", SqlDbType.Int)
-                {
-                    Value = leagueConfigId
-                });
+                using var command = new NpgsqlCommand(sql, dbCon.Connection);
+
+                command.Parameters.AddWithValue("@displayName", NpgsqlDbType.Varchar, displayName);
+                command.Parameters.AddWithValue("@leagueRoleId", NpgsqlDbType.Varchar, leagueRoleId);
+                command.Parameters.AddWithValue("@leagueName", NpgsqlDbType.Varchar, leagueName);
+                command.Parameters.AddWithValue("@discordId", NpgsqlDbType.Varchar, discordId);
+                command.Parameters.AddWithValue("@leagueConfigId", NpgsqlDbType.Integer, leagueConfigId);
                 command.CommandType = CommandType.Text;
 
                 command.ExecuteNonQuery();
@@ -171,10 +149,34 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static void SetTargetChannel(string serverId, string channelId)
+        public static void DeleteServer(string serverId)
         {
-            UpdateFieldInTable(serverTableName, targetChannelIdCol, serverId, channelId);
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                var sql = $"DELETE FROM {serverTableName} WHERE {idCol} = \'{serverId}\';";
+                using var command = new NpgsqlCommand(sql, dbCon.Connection);
+                command.CommandType = CommandType.Text;
+                command.ExecuteNonQuery();
+                return;
+            }
+            throw (new DbConnectionException());
         }
+
+        public static void DeleteUsersFromServer(string serverId)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                var sql = $"DELETE FROM {ServerUserTableName} WHERE {serverIdCol} = \'{serverId}\';";
+                using var command = new NpgsqlCommand(sql, dbCon.Connection);
+                command.CommandType = CommandType.Text;
+                command.ExecuteNonQuery();
+                return;
+            }
+            throw (new DbConnectionException());
+        }
+
         public static void SetDisplayName(string serverId, string name)
         {
             UpdateFieldInTable(serverTableName, displayNameCol, serverId, name);
@@ -192,69 +194,41 @@ namespace kandora.bot.services
         {
             SetServerUserRole(serverId, userId, isAdminCol, isAdmin);
         }
-        public static void SetIsOwner(string serverId, string userId, bool isAdmin)
-        {
-            SetServerUserRole(serverId, userId, isOwnerCol, isAdmin);
-        }
 
-        private static void SetServerUserRole(string serverId, string userId, string column, bool roleBool)
+        private static void SetServerUserRole(string serverId, string userId, string roleColumn, bool roleFlag)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using (var command = SqlClientFactory.Instance.CreateCommand())
-                {
-                    command.Connection = dbCon.Connection;
-                    command.CommandType = CommandType.Text;
-                    command.CommandText = $"UPDATE {ServerUserTableName} SET {column} = @isAdmin, WHERE {serverIdCol} = @serverId AND {userIdCol} = @userId";
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.Connection = dbCon.Connection;
+                command.CommandType = CommandType.Text;
+                command.CommandText = $"UPDATE {ServerUserTableName} SET {roleColumn} = @roleFlag, WHERE {serverIdCol} = @serverId AND {userIdCol} = @userId";
 
-                    command.Parameters.Add(new SqlParameter("@isAdmin", SqlDbType.Bit)
-                    {
-                        Value = roleBool
-                    });
-                    command.Parameters.Add(new SqlParameter("@serverId", SqlDbType.NVarChar)
-                    {
-                        Value = serverId
-                    });
-                    command.Parameters.Add(new SqlParameter("@userId", SqlDbType.NVarChar)
-                    {
-                        Value = userId
-                    });
-                    command.CommandType = CommandType.Text;
+                command.Parameters.AddWithValue("@roleFlag", NpgsqlDbType.Boolean, roleFlag);
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
+                command.Parameters.AddWithValue("@userId", NpgsqlDbType.Varchar, userId);
+                command.CommandType = CommandType.Text;
 
-                    command.ExecuteNonQuery();
-                    return;
-                }
+                command.ExecuteNonQuery();
+                return;
             }
             throw (new DbConnectionException());
         }
 
-        public static void AddUserToServer(string userId, string serverId, bool isAdmin = false, bool isOwner = false)
+        public static void AddUserToServer(string userId, string serverId, bool isAdmin = false)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"INSERT INTO {ServerUserTableName} ({userIdCol}, {serverIdCol}, {isAdminCol}, {isOwnerCol}) " +
-                    $"VALUES (@userId, @serverId, @isAdmin, @isOwner);";
+                command.CommandText = $"INSERT INTO {ServerUserTableName} ({userIdCol}, {serverIdCol}, {isAdminCol}) " +
+                    $"VALUES (@userId, @serverId, @isAdmin);";
 
-                command.Parameters.Add(new SqlParameter("@userId", SqlDbType.VarChar)
-                {
-                    Value = userId
-                });
-                command.Parameters.Add(new SqlParameter("@serverId", SqlDbType.VarChar)
-                {
-                    Value = serverId
-                });
-                command.Parameters.Add(new SqlParameter("@isAdmin", SqlDbType.Bit)
-                {
-                    Value = isAdmin || Bypass.isMyst(userId)
-                });
-                command.Parameters.Add(new SqlParameter("@isOwner", SqlDbType.Bit)
-                {
-                    Value = isOwner || Bypass.isMyst(userId)
-                });
+                command.Parameters.AddWithValue("@userId", NpgsqlDbType.Varchar, userId);
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
+                command.Parameters.AddWithValue("@isAdmin", NpgsqlDbType.Boolean, isAdmin || Bypass.isSuperUser(userId));
                 command.CommandType = CommandType.Text;
 
                 command.ExecuteNonQuery();
@@ -268,9 +242,9 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"DELETE FROM {ServerUserTableName} WHERE {userIdCol} = {userId} AND {serverIdCol} = {serverId}";
+                command.CommandText = $"DELETE FROM {ServerUserTableName} WHERE {userIdCol} = \'{userId}\' AND {serverIdCol} = \'{serverId}\'";
                 command.CommandType = CommandType.Text;
 
                 command.ExecuteNonQuery();

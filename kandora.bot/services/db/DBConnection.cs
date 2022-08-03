@@ -1,5 +1,5 @@
-﻿using System.Configuration;
-using System.Data.SqlClient;
+﻿using Npgsql;
+using System.Configuration;
 using DT = System.Data;
 
 namespace kandora.bot.services
@@ -18,8 +18,8 @@ namespace kandora.bot.services
         }
 
         public string Password { get; set; }
-        private SqlConnection connection = null;
-        public SqlConnection Connection
+        private NpgsqlConnection connection = null;
+        public NpgsqlConnection Connection
         {
             get { return connection; }
         }
@@ -37,7 +37,7 @@ namespace kandora.bot.services
             if (Connection == null)
             {
                 string connstring = ConfigurationManager.ConnectionStrings["kandoradb"].ConnectionString;
-                connection = new SqlConnection(connstring);
+                connection = new NpgsqlConnection(connstring);
                 connection.Open();
             }
             if (Connection.State == DT.ConnectionState.Closed)

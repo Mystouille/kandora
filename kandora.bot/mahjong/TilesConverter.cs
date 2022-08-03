@@ -318,7 +318,7 @@ namespace kandora.bot.mahjong
         }
 
 
-        public static string From34DdxHandToString(List<List<int>> hand)
+        public static string From34IdxHandToString(List<List<int>> hand)
         {
             var array = From34IxdHandTo136(hand);
             return ToString(array);

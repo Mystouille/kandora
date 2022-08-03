@@ -7,13 +7,12 @@ namespace kandora.bot.models
 {
     public class Server
     {
-        public Server(string id, string displayName, string leagueRoleId, string leagueName, string targetChannelId, int leagueConfigId)
+        public Server(string id, string displayName, string leagueRoleId, string leagueName, int leagueConfigId)
         {
             Id = id;
             DisplayName = displayName;
             LeagueRoleId = leagueRoleId;
             LeagueName = leagueName;
-            TargetChannelId = targetChannelId;
             LeagueConfigId = leagueConfigId;
             Users = new List<User>();
             Admins = new List<User>();
@@ -23,7 +22,6 @@ namespace kandora.bot.models
         public string DisplayName { get; set; }
         public string LeagueRoleId { get; set; }
         public string LeagueName { get; set; }
-        public string TargetChannelId { get; set; }
         public int LeagueConfigId { get; set; }
 
         public virtual List<User> Users { get; set; }

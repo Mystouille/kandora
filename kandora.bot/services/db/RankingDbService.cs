@@ -1,17 +1,18 @@
 ﻿using kandora.bot.exceptions;
 using kandora.bot.models;
 using kandora.bot.services.db;
+using Npgsql;
+using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
 
 namespace kandora.bot.services
 {
     internal class RankingDbService: DbService
     {
-        private const string tableName = "[dbo].[Ranking]";
+        private const string tableName = "Ranking";
         private const string idCol = "Id";
         private const string userIdCol = "userId";
         private const string serverIdCol = "serverId";
@@ -35,10 +36,10 @@ namespace kandora.bot.services
 
             List<Ranking> newRkList = new List<Ranking>
             {
-                new Ranking(game.User1Id, rkList1, rkList2.Last(), rkList3.Last(), rkList4.Last(), 1, game.Id, game.Server.Id, config),
-                new Ranking(game.User2Id, rkList2, rkList1.Last(), rkList3.Last(), rkList4.Last(), 2, game.Id, game.Server.Id, config),
-                new Ranking(game.User3Id, rkList3, rkList2.Last(), rkList1.Last(), rkList4.Last(), 3, game.Id, game.Server.Id, config),
-                new Ranking(game.User4Id, rkList4, rkList2.Last(), rkList3.Last(), rkList1.Last(), 4, game.Id, game.Server.Id, config)
+                new Ranking(game.User1Id, rkList1, rkList2.First(), rkList3.First(), rkList4.First(), 1, game.Id, game.Server.Id, config),
+                new Ranking(game.User2Id, rkList2, rkList1.First(), rkList3.First(), rkList4.First(), 2, game.Id, game.Server.Id, config),
+                new Ranking(game.User3Id, rkList3, rkList2.First(), rkList1.First(), rkList4.First(), 3, game.Id, game.Server.Id, config),
+                new Ranking(game.User4Id, rkList4, rkList2.First(), rkList3.First(), rkList1.First(), 4, game.Id, game.Server.Id, config)
             };
 
             foreach (var ranking in newRkList)
@@ -53,35 +54,17 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
                 command.CommandText = $"INSERT INTO {tableName} ({userIdCol}, {oldEloCol}, {newEloCol}, {positionCol}, {gameIdCol}, {serverIdCol}) " +
                     $"VALUES (@userId, @oldElo, @newElo, @position, @gameId, @serverId);";
 
-                command.Parameters.Add(new SqlParameter("@userId", SqlDbType.VarChar)
-                {
-                    Value = rk.UserId
-                });
-                command.Parameters.Add(new SqlParameter("@serverId", SqlDbType.VarChar)
-                {
-                    Value = rk.ServerId
-                });
-                command.Parameters.Add(new SqlParameter("@position", SqlDbType.Int)
-                {
-                    Value = rk.Position
-                });
-                command.Parameters.Add(new SqlParameter("@gameId", SqlDbType.VarChar)
-                {
-                    Value = rk.GameId
-                });
-                command.Parameters.Add(new SqlParameter("@oldElo", SqlDbType.Float)
-                {
-                    Value = rk.OldRank
-                });
-                command.Parameters.Add(new SqlParameter("@newElo", SqlDbType.Float)
-                {
-                    Value = rk.NewRank
-                });
+                command.Parameters.AddWithValue("@userId", NpgsqlDbType.Varchar, rk.UserId);
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, rk.ServerId);
+                command.Parameters.AddWithValue("@position", NpgsqlDbType.Integer, rk.Position);
+                command.Parameters.AddWithValue("@gameId", NpgsqlDbType.Varchar, rk.GameId);
+                command.Parameters.AddWithValue("@oldElo", NpgsqlDbType.Double, rk.OldRank);
+                command.Parameters.AddWithValue("@newElo", NpgsqlDbType.Double, rk.NewRank);
                 command.CommandType = CommandType.Text;
                 return command.ExecuteNonQuery() > 0;
             }
@@ -99,25 +82,27 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
-                command.Connection = dbCon.Connection;
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.CommandText = $"INSERT INTO {tableName} ({userIdCol}, {serverIdCol}, {newEloCol}) " +
                     $"VALUES (@userId, @serverId, @rank);";
 
-                command.Parameters.Add(new SqlParameter("@userId", SqlDbType.VarChar)
-                {
-                    Value = userId
-                });
-                command.Parameters.Add(new SqlParameter("@serverId", SqlDbType.VarChar)
-                {
-                    Value = serverId
-                });
-                command.Parameters.Add(new SqlParameter("@rank", SqlDbType.Float)
-                {
-                    Value = leagueConfig.InitialElo
-                });
+                command.Parameters.AddWithValue("@userId", NpgsqlDbType.Varchar, userId);
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
+                command.Parameters.AddWithValue("@rank", NpgsqlDbType.Double, leagueConfig.InitialElo);
                 command.CommandType = CommandType.Text;
                 command.ExecuteNonQuery();
+                return;
+            }
+            throw (new DbConnectionException());
+        }
+
+        internal static void DeleteRankings(string serverId)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.CommandText = $"DELETE FROM  {tableName} WHERE {serverIdCol} = \'{serverId}\';";
                 return;
             }
             throw (new DbConnectionException());
@@ -129,21 +114,15 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
-                command.Connection = dbCon.Connection;
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.CommandText = $"SELECT {idCol}, {oldEloCol}, {newEloCol}, {positionCol}, {timeStampCol} , {gameIdCol} FROM {tableName} " +
                     $"WHERE {userIdCol} = @userId AND {serverIdCol} = @serverId " +
                     $"ORDER BY {idCol} DESC";
                 command.CommandType = CommandType.Text;
 
-                command.Parameters.Add(new SqlParameter("@userId", SqlDbType.VarChar)
-                {
-                    Value = userId
-                });
-                command.Parameters.Add(new SqlParameter("@serverId", SqlDbType.VarChar)
-                {
-                    Value = serverId
-                });
+                command.Parameters.AddWithValue("@userId", NpgsqlDbType.Varchar, userId);
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
+
                 var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
@@ -170,10 +149,9 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
-                command.Connection = dbCon.Connection;
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.CommandText = $"SELECT {idCol}, {userIdCol}, {oldEloCol}, {newEloCol}, {positionCol}, {timeStampCol} , {gameIdCol} FROM {tableName} " +
-                    $"WHERE {serverIdCol} = {serverId} " +
+                    $"WHERE {serverIdCol} = \'{serverId}\' " +
                     $"ORDER BY {idCol} DESC";
                 command.CommandType = CommandType.Text;
 

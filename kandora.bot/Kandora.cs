@@ -3,10 +3,13 @@ using DSharpPlus;
 using System.Configuration;
 using DSharpPlus.CommandsNext;
 using Microsoft.Extensions.Logging;
-using kandora.bot.commands;
+using kandora.bot.commands.regular;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.Interactivity;
 using kandora.bot.services.discord;
+using DSharpPlus.SlashCommands;
+using kandora.bot.commands.slash;
+using DSharpPlus.Entities;
 
 namespace kandora.bot
 {
@@ -14,6 +17,7 @@ namespace kandora.bot
     {
         static DiscordClient client;
         static CommandsNextExtension commands;
+        static SlashCommandsExtension slashCommands;
 
         static void Main()
         {
@@ -22,6 +26,7 @@ namespace kandora.bot
 
         static async Task MainAsync()
         {
+            var token = ConfigurationManager.AppSettings.Get("ClientToken");
             client = new DiscordClient(new DiscordConfiguration
             {
                 Token = ConfigurationManager.AppSettings.Get("ClientToken"),
@@ -35,12 +40,22 @@ namespace kandora.bot
             {
                 StringPrefixes = new string[1] { "!" }
             });
+            slashCommands = client.UseSlashCommands();
+
 
             commands.RegisterCommands<MahjongCommands>();
             commands.RegisterCommands<RankingCommands>(); 
             commands.RegisterCommands<UserCommands>();
             commands.RegisterCommands<LeagueConfigCommands>();
             commands.RegisterCommands<InitCommands>();
+
+            ulong guildId = 984913976544616479; //KandoraHome discord guild id
+            slashCommands.RegisterCommands<QuizzSlashCommands>(guildId);
+            slashCommands.RegisterCommands<MahjongSlashCommands>(guildId);
+            slashCommands.RegisterCommands<AdminSlashCommands>(guildId);
+
+            ulong tntGuildId = 665504390181945344; //TNT discord guild
+            //slashCommands.RegisterCommands<MahjongSlashCommands>(tntGuildId);
 
             client.MessageReactionAdded += ReactionListener.OnReactionAdded;
             client.MessageReactionRemoved += ReactionListener.OnReactionRemoved;

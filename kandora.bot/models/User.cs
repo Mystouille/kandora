@@ -15,5 +15,6 @@ namespace kandora.bot.models
         public string MahjsoulUserId { get; set; }
         public string MahjsoulName { get; set; }
         public string TenhouName { get; set; }
+        public string LeaguePassword { get; set; }
     }
 }

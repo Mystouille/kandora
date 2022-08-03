@@ -1,12 +1,9 @@
 ﻿using kandora.bot.exceptions;
-using System;
-using System.Collections.Generic;
+using Npgsql;
+using NpgsqlTypes;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace kandora.bot.services.db
 {
@@ -18,9 +15,8 @@ namespace kandora.bot.services.db
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
-                command.Connection = dbCon.Connection;
-                command.CommandText = $"BEGIN TRANSACTION {transaction};";
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.CommandText = $"START TRANSACTION READ WRITE;";
                 command.CommandType = CommandType.Text;
                 command.ExecuteNonQuery();
                 return;
@@ -32,9 +28,8 @@ namespace kandora.bot.services.db
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
-                command.Connection = dbCon.Connection;
-                command.CommandText = $"COMMIT TRANSACTION {transaction};";
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.CommandText = $"COMMIT TRANSACTION;";
                 command.CommandType = CommandType.Text;
                 command.ExecuteNonQuery();
                 return;
@@ -46,9 +41,8 @@ namespace kandora.bot.services.db
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
-                command.Connection = dbCon.Connection;
-                command.CommandText = $"ROLLBACK TRANSACTION {transaction};";
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.CommandText = $"ROLLBACK TRANSACTION;";
                 command.CommandType = CommandType.Text;
                 command.ExecuteNonQuery();
                 return;
@@ -60,45 +54,36 @@ namespace kandora.bot.services.db
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using (var command = SqlClientFactory.Instance.CreateCommand())
-                {
-                    command.Connection = dbCon.Connection;
-                    command.CommandType = CommandType.Text;
-                    command.CommandText = $"UPDATE {tableName} SET {columnName} = @newValue WHERE Id = @forId";
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.CommandType = CommandType.Text;
+                command.CommandText = $"UPDATE {tableName} SET {columnName} = @newValue WHERE Id = @forId";
 
-                    SqlDbType newValueType = GetSqlType(newValue);
-                    SqlDbType forIdType = GetSqlType(forId);
-                    command.Parameters.Add(new SqlParameter("@forId", forIdType)
-                    {
-                        Value = forId
-                    });
-                    command.Parameters.Add(new SqlParameter("@newValue", newValueType)
-                    {
-                        Value = newValue
-                    });
-                    command.CommandType = CommandType.Text;
+                NpgsqlDbType newValueType = GetSqlType(newValue);
+                NpgsqlDbType forIdType = GetSqlType(forId);
+                command.Parameters.AddWithValue("@forId", forIdType, forId);
+                command.Parameters.AddWithValue("@newValue", newValueType, newValue);
+                command.CommandType = CommandType.Text;
 
-                    command.ExecuteNonQuery();
-                    return;
-                }
+                command.ExecuteNonQuery();
+                return;
             }
             throw (new DbConnectionException());
         }
 
-        private static SqlDbType GetSqlType<T>(T val)
+        private static NpgsqlDbType GetSqlType<T>(T val)
         {
-            SqlDbType type = SqlDbType.VarChar;
+            NpgsqlDbType type = NpgsqlDbType.Varchar;
             if (val.GetType() == typeof(int))
             {
-                type = SqlDbType.Int;
+                type = NpgsqlDbType.Integer;
             }
             else if (val.GetType() == typeof(bool))
             {
-                type = SqlDbType.Bit;
+                type = NpgsqlDbType.Boolean;
             }
-            else if (val.GetType() == typeof(float))
+            else if (val.GetType() == typeof(double))
             {
-                type = SqlDbType.Float;
+                type = NpgsqlDbType.Double;
             }
             return type;
         }
@@ -108,7 +93,7 @@ namespace kandora.bot.services.db
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
                 command.CommandText = $"SELECT {colName} FROM {tableName}";
                 command.CommandType = CommandType.Text;

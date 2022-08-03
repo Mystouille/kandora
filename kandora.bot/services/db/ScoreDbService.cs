@@ -2,18 +2,18 @@
 using kandora.bot.http;
 using kandora.bot.models;
 using kandora.bot.services.db;
+using Npgsql;
+using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.Common;
-using System.Data.SqlClient;
 using System.Linq;
 
 namespace kandora.bot.services
 {
     class ScoreDbService : DbService
     {
-        private const string GameTableName = "[dbo].[Game]";
+        private const string GameTableName = "Game";
 
         //Game
         private const string User1IdCol = "user1Id";
@@ -40,7 +40,7 @@ namespace kandora.bot.services
 
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
 
                 var scoreColumns = scores == null
@@ -52,29 +52,17 @@ namespace kandora.bot.services
                     : $", @score1, @score2, @score3{(scores.Length > 3 ? $", @score4" : "")}";
 
                 command.CommandText = $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {IdCol}, {PlatformCol}, {ServerIdCol}{scoreColumns}) " +
-                    $"VALUES ({members[0]}, {members[1]}, {members[2]}, {members[3]}, @logId, @gameType, @serverId{scoreValues});";
+                    $"VALUES (\'{members[0]}\', \'{members[1]}\', \'{members[2]}\', \'{members[3]}\', @logId, @gameType, @serverId{scoreValues});";
                 command.CommandType = CommandType.Text;
 
-                command.Parameters.Add(new SqlParameter("@logId", SqlDbType.NVarChar)
-                {
-                    Value = logId
-                });
-                command.Parameters.Add(new SqlParameter("@gameType", SqlDbType.NVarChar)
-                {
-                    Value = GameType.IRL
-                });
-                command.Parameters.Add(new SqlParameter("@serverId", SqlDbType.NVarChar)
-                {
-                    Value = server.Id
-                });
+                command.Parameters.AddWithValue("@logId", NpgsqlDbType.Varchar, logId);
+                command.Parameters.AddWithValue("@gameType", NpgsqlDbType.Varchar, GameType.IRL.ToString());
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, server.Id);
                 if (scores != null)
                 {
                     for (int i = 0; i < scores.Length && i < 4; i++)
                     {
-                        command.Parameters.Add(new SqlParameter($"@score{i + 1}", SqlDbType.Float)
-                        {
-                            Value = scores[i]
-                        });
+                        command.Parameters.AddWithValue($"@score{i + 1}", NpgsqlDbType.Double, scores[i]);
                     }
                 }
                 command.ExecuteNonQuery();
@@ -148,44 +136,19 @@ namespace kandora.bot.services
 
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
-                command.Connection = dbCon.Connection;
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.CommandText = $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {IdCol}, {FullLogIdCol}, {PlatformCol}, {ServerIdCol}) " +
                     $"VALUES (@playerId1, @playerId2, @playerId3, @playerId4, {sortedScores[0]}, {sortedScores[1]}, {sortedScores[2]}, {sortedScores[3]}, @logId, @fullLog, @platform, @serverId);";
                 command.CommandType = CommandType.Text;
 
-                command.Parameters.Add(new SqlParameter("@playerId1", SqlDbType.NVarChar)
-                {
-                    Value = sortedPlayerIds[0]
-                });
-                command.Parameters.Add(new SqlParameter("@playerId2", SqlDbType.NVarChar)
-                {
-                    Value = sortedPlayerIds[1]
-                });
-                command.Parameters.Add(new SqlParameter("@playerId3", SqlDbType.NVarChar)
-                {
-                    Value = sortedPlayerIds[2]
-                });
-                command.Parameters.Add(new SqlParameter("@playerId4", SqlDbType.NVarChar)
-                {
-                    Value = sortedPlayerIds[3]
-                });
-                command.Parameters.Add(new SqlParameter("@fullLog", SqlDbType.NVarChar)
-                {
-                    Value = fullLog
-                });
-                command.Parameters.Add(new SqlParameter("@logId", SqlDbType.NVarChar)
-                {
-                    Value = logId
-                });
-                command.Parameters.Add(new SqlParameter("@platform", SqlDbType.NVarChar)
-                {
-                    Value = platform
-                });
-                command.Parameters.Add(new SqlParameter("@serverId", SqlDbType.NVarChar)
-                {
-                    Value = serverWithUsers.Id
-                });
+                command.Parameters.AddWithValue("@playerId1", NpgsqlDbType.Varchar, sortedPlayerIds[0]);
+                command.Parameters.AddWithValue("@playerId2", NpgsqlDbType.Varchar, sortedPlayerIds[1]);
+                command.Parameters.AddWithValue("@playerId3", NpgsqlDbType.Varchar, sortedPlayerIds[2]);
+                command.Parameters.AddWithValue("@playerId4", NpgsqlDbType.Varchar, sortedPlayerIds[3]);
+                command.Parameters.AddWithValue("@fullLog", NpgsqlDbType.Varchar, fullLog);
+                command.Parameters.AddWithValue("@logId", NpgsqlDbType.Varchar, logId);
+                command.Parameters.AddWithValue("@platform", NpgsqlDbType.Varchar, platform);
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverWithUsers.Id);
                 command.ExecuteNonQuery();
 
                 //Add the majsouldID to the new users:
@@ -215,23 +178,33 @@ namespace kandora.bot.services
             return GetMaxValueFromCol(GameTableName, IdCol);
         }
 
+         public static void DeleteGamesFromServer(string serverId)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.CommandText = $"DELETE FROM {GameTableName} WHERE {ServerIdCol} = \'{serverId}\';";
+                command.CommandType = CommandType.Text;
+                command.ExecuteNonQuery();
+                return;
+            }
+            throw (new DbConnectionException());
+        }
+
         public static Game GetLastRecordedGame(Server server)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
-                command.Connection = dbCon.Connection;
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.CommandText = $"SELECT {IdCol}, {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {FullLogIdCol}, {PlatformCol}, {TimestampCol}" +
                     $" FROM {GameTableName}" +
                     $" WHERE {ServerIdCol} = @serverId" +
-                    $" ORDER BY {Timestamp} DESC";
+                    $" ORDER BY {Timestamp} DESC;";
                 command.CommandType = CommandType.Text;
 
-                command.Parameters.Add(new SqlParameter("@serverId", SqlDbType.VarChar)
-                {
-                    Value = server.Id
-                });
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, server.Id);
 
                 Reader = command.ExecuteReader();
                 while (Reader.Read())
@@ -267,16 +240,12 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
-                command.Connection = dbCon.Connection;
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.CommandText = $"SELECT {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {ServerIdCol}, {PlatformCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {TimestampCol}, {FullLogIdCol}" +
                     $" FROM {GameTableName}" +
                     $" WHERE {IdCol} = @logId";
 
-                command.Parameters.Add(new SqlParameter("@logId", SqlDbType.VarChar)
-                {
-                    Value = logId
-                });
+                command.Parameters.AddWithValue("@logId", NpgsqlDbType.Varchar, logId);
 
                 command.CommandType = CommandType.Text;
                 Reader = command.ExecuteReader();

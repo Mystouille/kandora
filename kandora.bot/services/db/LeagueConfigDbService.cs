@@ -1,6 +1,8 @@
 ﻿using kandora.bot.exceptions;
 using kandora.bot.models;
 using kandora.bot.services.db;
+using Npgsql;
+using NpgsqlTypes;
 using System;
 using System.Data;
 using System.Data.SqlClient;
@@ -9,7 +11,7 @@ namespace kandora.bot.services
 {
     class LeagueConfigDbService: DbService
     {
-        public static string tableName = "[dbo].[LeagueConfig]";
+        public static string tableName = "LeagueConfig";
         public static string idCol = "Id";
         public static string countPointsCol = "countPoints";
         public static string startingPointsCol = "startingPoints";
@@ -36,8 +38,7 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
-                command.Connection = dbCon.Connection;
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.CommandText = $"SELECT {idCol}, {countPointsCol}, {startingPointsCol}, " //0-2
                     + $"{uma3p1Col}, {uma3p2Col}, {uma3p3Col}, {uma4p1Col}, {uma4p2Col}, {uma4p3Col}, {uma4p4Col}, " // 3-9
                     + $"{okaCol}, {penaltyLastCol}, {useEloSystemCol}, {initialEloCol}, {minEloCol}, {baseEloChangeDampeningCol}, " //10-15
@@ -45,10 +46,7 @@ namespace kandora.bot.services
                     + $"FROM {tableName} "
                     + $"WHERE {idCol} = @leagueId";
                 command.CommandType = CommandType.Text;
-                command.Parameters.Add(new SqlParameter("@leagueId", SqlDbType.VarChar)
-                {
-                    Value = leagueConfigId
-                });
+                command.Parameters.AddWithValue("@leagueId", NpgsqlDbType.Integer, leagueConfigId);
 
                 var reader = command.ExecuteReader();
 
@@ -59,24 +57,24 @@ namespace kandora.bot.services
                     var useEloSystem = reader.GetBoolean(12);
                     var league = new LeagueConfig(id, countPoints, useEloSystem); ;
 
-                    league.StartingPoints = (float)reader.GetDouble(2);
+                    league.StartingPoints = reader.GetDouble(2);
 
-                    league.Uma3p1 = reader.IsDBNull(3) ? -9999 : (float)reader.GetDouble(3);
-                    league.Uma3p2 = reader.IsDBNull(4) ? -9999 : (float)reader.GetDouble(4);
-                    league.Uma3p3 = reader.IsDBNull(5) ? -9999 : (float)reader.GetDouble(5);
-                    league.Uma4p1 = reader.IsDBNull(6) ? -9999 : (float)reader.GetDouble(6);
-                    league.Uma4p2 = reader.IsDBNull(7) ? -9999 : (float)reader.GetDouble(7);
-                    league.Uma4p3 = reader.IsDBNull(8) ? -9999 : (float)reader.GetDouble(8);
-                    league.Uma4p4 = reader.IsDBNull(9) ? -9999 : (float)reader.GetDouble(9);
+                    league.Uma3p1 = reader.IsDBNull(3) ? -9999 : reader.GetDouble(3);
+                    league.Uma3p2 = reader.IsDBNull(4) ? -9999 : reader.GetDouble(4);
+                    league.Uma3p3 = reader.IsDBNull(5) ? -9999 : reader.GetDouble(5);
+                    league.Uma4p1 = reader.IsDBNull(6) ? -9999 : reader.GetDouble(6);
+                    league.Uma4p2 = reader.IsDBNull(7) ? -9999 : reader.GetDouble(7);
+                    league.Uma4p3 = reader.IsDBNull(8) ? -9999 : reader.GetDouble(8);
+                    league.Uma4p4 = reader.IsDBNull(9) ? -9999 : reader.GetDouble(9);
 
-                    league.Oka = reader.IsDBNull(10) ? -9999 : (float)reader.GetDouble(10);
-                    league.PenaltyLast = reader.IsDBNull(11) ? -9999 : (float)reader.GetDouble(11);
-                    league.InitialElo = reader.IsDBNull(13) ? -9999 : (float)reader.GetDouble(13);
-                    league.MinElo = reader.IsDBNull(14) ? -9999 : (float)reader.GetDouble(14);
-                    league.BaseEloChangeDampening = reader.IsDBNull(15) ? -9999 : (float)reader.GetDouble(15);
+                    league.Oka = reader.IsDBNull(10) ? -9999 : reader.GetDouble(10);
+                    league.PenaltyLast = reader.IsDBNull(11) ? -9999 : reader.GetDouble(11);
+                    league.InitialElo = reader.IsDBNull(13) ? -9999 : reader.GetDouble(13);
+                    league.MinElo = reader.IsDBNull(14) ? -9999 : reader.GetDouble(14);
+                    league.BaseEloChangeDampening = reader.IsDBNull(15) ? -9999 : reader.GetDouble(15);
 
-                    league.EloChangeStartRatio = reader.IsDBNull(16) ? -9999 : (float)reader.GetDouble(16);
-                    league.EloChangeEndRatio = reader.IsDBNull(17) ? -9999 : (float)reader.GetDouble(17);
+                    league.EloChangeStartRatio = reader.IsDBNull(16) ? -9999 : reader.GetDouble(16);
+                    league.EloChangeEndRatio = reader.IsDBNull(17) ? -9999 : reader.GetDouble(17);
                     league.TrialPeriodDuration = reader.IsDBNull(18) ? -9999 : reader.GetInt32(18);
                     league.AllowSanma = reader.GetBoolean(19);
 
@@ -94,23 +92,37 @@ namespace kandora.bot.services
             var leagueId = CreateLeague(countPoints: false, useEloSystem: true);
             SetConfigValue(startingPointsCol, leagueId, 0);
             SetConfigValue(allowSanmaCol, leagueId, false);
-            SetConfigValue(uma3p1Col, leagueId, (float)20);
-            SetConfigValue(uma3p2Col, leagueId, (float)0);
-            SetConfigValue(uma3p3Col, leagueId, (float)(-20));
-            SetConfigValue(uma4p1Col, leagueId, (float)30);
-            SetConfigValue(uma4p2Col, leagueId, (float)10);
-            SetConfigValue(uma4p3Col, leagueId, (float)(-10));
-            SetConfigValue(uma4p4Col, leagueId, (float)(-30));
-            SetConfigValue(okaCol, leagueId, (float)0);
-            SetConfigValue(penaltyLastCol, leagueId, (float)0);
-            SetConfigValue(initialEloCol, leagueId, (float)1500);
-            SetConfigValue(minEloCol, leagueId, (float)1200);
-            SetConfigValue(baseEloChangeDampeningCol, leagueId, (float)10);
-            SetConfigValue(eloChangeStartRatioCol, leagueId, (float)1);
-            SetConfigValue(eloChangeEndRatioCol, leagueId, (float)0.2);
+            SetConfigValue(uma3p1Col, leagueId, (double)20);
+            SetConfigValue(uma3p2Col, leagueId, (double)0);
+            SetConfigValue(uma3p3Col, leagueId, (double)(-20));
+            SetConfigValue(uma4p1Col, leagueId, (double)30);
+            SetConfigValue(uma4p2Col, leagueId, (double)10);
+            SetConfigValue(uma4p3Col, leagueId, (double)(-10));
+            SetConfigValue(uma4p4Col, leagueId, (double)(-30));
+            SetConfigValue(okaCol, leagueId, (double)0);
+            SetConfigValue(penaltyLastCol, leagueId, (double)0);
+            SetConfigValue(initialEloCol, leagueId, (double)1500);
+            SetConfigValue(minEloCol, leagueId, (double)1200);
+            SetConfigValue(baseEloChangeDampeningCol, leagueId, (double)10);
+            SetConfigValue(eloChangeStartRatioCol, leagueId, (double)1);
+            SetConfigValue(eloChangeEndRatioCol, leagueId, (double)0.2);
             SetConfigValue(trialPeriodDurationCol, leagueId, 80);
 
             return leagueId;
+        }
+
+        public static void DeleteLeagueConfig(int leagueConfigId)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.CommandText = $"DELETE FROM {tableName} WHERE {idCol} = {leagueConfigId};";
+                command.CommandType = CommandType.Text;
+                var reader = command.ExecuteNonQuery();
+                return;
+            }
+            throw (new DbConnectionException());
         }
 
         private static int CreateLeague(bool countPoints, bool useEloSystem)
@@ -118,20 +130,13 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
-                command.Connection = dbCon.Connection;
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.CommandText = $"INSERT INTO {tableName} ({countPointsCol}, {useEloSystemCol}) "
-                + $"OUTPUT INSERTED.{idCol} "
-                + $"VALUES (@countPoints, @useElo) ";
+                + $"VALUES (@countPoints, @useElo) "
+                + $"RETURNING {idCol} ";
 
-                command.Parameters.Add(new SqlParameter("@countPoints", SqlDbType.Bit)
-                {
-                    Value = countPoints
-                });
-                command.Parameters.Add(new SqlParameter("@useElo", SqlDbType.Bit)
-                {
-                    Value = useEloSystem
-                });
+                command.Parameters.AddWithValue("@countPoints", NpgsqlDbType.Boolean, countPoints);
+                command.Parameters.AddWithValue("@useElo", NpgsqlDbType.Boolean, useEloSystem);
                 command.CommandType = CommandType.Text;
                 var reader = command.ExecuteReader();
 

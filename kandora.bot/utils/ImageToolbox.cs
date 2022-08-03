@@ -21,6 +21,10 @@ namespace kandora.bot.utils
         const string resourcesDirName = "resources";
         const string outputDirName = "generated";
 
+        static readonly char dirChar = Path.DirectorySeparatorChar;
+        static readonly string outputDirPath = string.Join(dirChar, Assembly.GetExecutingAssembly().Location.Split(dirChar).SkipLast(1).Append(resourcesDirName).Append(outputDirName));
+
+
         static Bitmap GetAllTiles()
         {
             var inputFileStream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"{inputResourceLoc}.{inputfileName}");
@@ -29,89 +33,39 @@ namespace kandora.bot.utils
             return image;
         }
 
-        public static bool ImageExists(string hand)
+        public static bool ImageExists(string hand, bool separateLastTile = false)
         {
-            var dirChar = Path.DirectorySeparatorChar;
-            var outputDirPath = string.Join(dirChar, Assembly.GetExecutingAssembly().Location.Split(dirChar).SkipLast(1).Append(resourcesDirName).Append(outputDirName));
-            var outputFileName = $"{hand}.png";
-            var outputFilePath = string.Join(dirChar, new string[] { outputDirPath, outputFileName });
+            var outputFilePath = string.Join(dirChar, new string[] { outputDirPath, GetFileName(hand, separateLastTile) });
             return File.Exists(outputFilePath);
         }
 
-        public static (FileStream,string) getNewProblem(string suit = "s")
+        public static string GetFileName(string hand, bool lastTileSeparation = false)
         {
-            var dirChar = Path.DirectorySeparatorChar;
-            var outputDirPath = string.Join(dirChar, Assembly.GetExecutingAssembly().Location.Split(dirChar).SkipLast(1).Append(resourcesDirName).Append(outputDirName));
-
-            var offset = 0;
-            if (suit == "s")
-            {
-                offset = 18;
-            }
-            else if (suit == "p")
-            {
-                offset = 9;
-            }
-            var rd = new Random();
-            int[] hand;
-            string handStr = "";
-            int shanten = 7;
-            bool handAlreadyExist = true;
-            var nbIter = 0;
-            var shantenCalc = new ShantenCalculator();
-            while (shanten != 0 || handAlreadyExist)
-            {
-                var availableTiles = new List<int>();
-                for (int i = 0; i <= 8; i++)
-                {
-                    availableTiles.Add(i);
-                    availableTiles.Add(i);
-                    availableTiles.Add(i);
-                    availableTiles.Add(i);
-                }
-                hand = new int[34];
-                for (int i = 1; i <= 13; i++)
-                {
-                    var roll = rd.Next(0, availableTiles.Count);
-                    var value = availableTiles[roll];
-                    hand[offset + value]++;
-                    availableTiles.RemoveAt(roll);
-                }
-                shanten = shantenCalc.GetNbShanten(hand);
-                nbIter++;
-                var hand136 = TilesConverter.From34countTo136(hand.ToList());
-                handStr = TilesConverter.ToString(hand136);
-
-                var outputFileName = $"{handStr}.png";
-                var outputFilePath = string.Join(dirChar, new string[] { outputDirPath, outputFileName });
-                handAlreadyExist = File.Exists(outputFilePath);
-            }
-            return (GetImageFromTiles(handStr),handStr);
+            return $"{hand}{(lastTileSeparation ? "x" : "")}.png";
         }
 
-        public static FileStream GetImageFromTiles(string hand)
+        public static FileStream GetImageFromTiles(string hand, bool separateLastTile=false)
         {
             List<string> tiles = HandParser.SimpleTiles(hand).Where(x => x.Length == 2).ToList();
-            var dirChar = Path.DirectorySeparatorChar;
-            var outputDirPath = string.Join(dirChar, Assembly.GetExecutingAssembly().Location.Split(dirChar).SkipLast(1).Append(resourcesDirName).Append(outputDirName));
-            var outputFileName = $"{hand}.png";
-            var outputFilePath = string.Join(dirChar, new string[] { outputDirPath, outputFileName });
-            if (!File.Exists(outputFilePath))
+            var outputFilePath = string.Join(dirChar, new string[] { outputDirPath, GetFileName(hand, separateLastTile) });
+            if (!ImageExists(hand, separateLastTile))
             {
                 if (!Directory.Exists(outputDirPath))
                 {
                     Directory.CreateDirectory(outputDirPath);
                 }
-                CreateSaveImageFromHand(tiles, outputFilePath);
+                CreateSaveImageFromHand(tiles, outputFilePath, separateLastTile);
             }
             return new FileStream(outputFilePath, FileMode.Open);
         }
 
-        public static void CreateSaveImageFromHand(List<string> tiles, string outputFilePath)
+        public static void CreateSaveImageFromHand(List<string> tiles, string outputFilePath, bool separateLastTile = false)
         {
             var resImage = GetAllTiles();
 
-            int destImageWidth = (int)(tileImgWidth * tiles.Count / shrinkFactor);
+            //expressed relative to a tile width
+            double lastTileSeparation = separateLastTile ? 0.5 : 0;
+            int destImageWidth = (int)(tileImgWidth * (tiles.Count + lastTileSeparation) / shrinkFactor);
             int destImageHeight = (int)(tileImgHeight / shrinkFactor);
             var destImage = new Bitmap(destImageWidth, destImageHeight);
             destImage.SetResolution(resImage.HorizontalResolution, resImage.VerticalResolution);
@@ -127,9 +81,10 @@ namespace kandora.bot.utils
                 using (var wrapMode = new ImageAttributes())
                 {
                     wrapMode.SetWrapMode(WrapMode.TileFlipXY);
-                    int idx = 0;
-                    foreach(var tile in tiles)
+                    for(int idx=0;idx<tiles.Count;idx++)
                     {
+                        var tile = tiles[idx];
+                        //Note: Luckily, the aka, noted "0" is also the first of the line in the resource file
                         int xPosition = int.Parse(tile[0].ToString())*tileImgWidth;
                         int yPosition = 0;
                         char suit = tile[1];
@@ -146,18 +101,18 @@ namespace kandora.bot.utils
                                 break;
                             case 'z':
                                 yPosition = 3;
+                                xPosition = xPosition - tileImgWidth;
                                 break;
                         }
                         yPosition *= tileImgHeight;
                         var srcRegion = new Rectangle(xPosition, yPosition, tileImgWidth, tileImgHeight);
                         var destRegion = new Rectangle(
-                            (int)(idx * tileImgWidth / shrinkFactor),
+                            (int)((idx + (idx==tiles.Count-1?lastTileSeparation:0)) * tileImgWidth / shrinkFactor),
                             0,
                             (int)(tileImgWidth / shrinkFactor),
                             (int)(tileImgHeight / shrinkFactor)
                         );
                         graphics.DrawImage(resImage, destRegion, srcRegion, GraphicsUnit.Pixel);
-                        idx++;
                     }
                     
                 }

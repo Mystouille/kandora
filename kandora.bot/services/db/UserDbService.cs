@@ -1,6 +1,8 @@
 ﻿using kandora.bot.exceptions;
 using kandora.bot.models;
 using kandora.bot.services.db;
+using Npgsql;
+using NpgsqlTypes;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -10,12 +12,14 @@ namespace kandora.bot.services
     class UserDbService: DbService
     {
 
-        public static string tableName = "[dbo].[User]";
+        public static string tableName = "DiscordUser";
         public static string idCol = "Id";
         public static string mahjsoulNameCol = "mahjsoulName";
         public static string mahjsoulFriendIdCol = "mahjsoulFriendId";
         public static string mahjsoulUserIdCol = "mahjsoulUserId";
         public static string tenhouNameCol = "tenhouName";
+        public static string leaguePasswordCol = "leaguePassword";
+        
         public static string isAdminCol = "isAdmin";
 
         public static Dictionary<string,User> GetUsers()
@@ -24,9 +28,9 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {idCol}, {mahjsoulNameCol}, {mahjsoulFriendIdCol}, {mahjsoulUserIdCol}, {tenhouNameCol} FROM {tableName}";
+                command.CommandText = $"SELECT {idCol}, {mahjsoulNameCol}, {mahjsoulFriendIdCol}, {mahjsoulUserIdCol}, {tenhouNameCol}, {leaguePasswordCol} FROM {tableName}";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();
@@ -39,6 +43,7 @@ namespace kandora.bot.services
                     user.MahjsoulFriendId = reader.IsDBNull(2) ? null : reader.GetString(2);
                     user.MahjsoulUserId = reader.IsDBNull(3) ? null : reader.GetString(3);
                     user.TenhouName = reader.IsDBNull(4) ? null : reader.GetString(4);
+                    user.LeaguePassword = reader.IsDBNull(5) ? null : reader.GetString(5);
 
                     users.Add(id, user);
                 }
@@ -53,9 +58,9 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {idCol} FROM {tableName} WHERE {idCol} = {userId}";
+                command.CommandText = $"SELECT {idCol} FROM {tableName} WHERE {idCol} = \'{userId}\'";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();
@@ -76,15 +81,11 @@ namespace kandora.bot.services
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                using var command = SqlClientFactory.Instance.CreateCommand();
-                command.Connection = dbCon.Connection;
+                using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.CommandText = $"INSERT INTO {tableName} ({idCol}) " +
                     $"VALUES (@discordId);";
 
-                command.Parameters.Add(new SqlParameter("@discordId", SqlDbType.VarChar)
-                {
-                    Value = userDiscordId
-                });
+                command.Parameters.AddWithValue("@discordId", NpgsqlDbType.Varchar, userDiscordId);
                 command.CommandType = CommandType.Text;
 
                 command.ExecuteNonQuery();
@@ -111,5 +112,12 @@ namespace kandora.bot.services
         {
             UpdateFieldInTable(tableName, tenhouNameCol, userId, value);
         }
+        public static void SetLeaguePassword(string userId, string value)
+        {
+            var hashedPass = BCrypt.Net.BCrypt.HashPassword(value, workFactor: 13);
+            UpdateFieldInTable(tableName, leaguePasswordCol, userId, hashedPass);
+        }
+
+
     }
 }

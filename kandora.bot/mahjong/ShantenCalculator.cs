@@ -44,6 +44,39 @@ namespace kandora.bot.mahjong
             return shantenResults.Min();
         }
 
+        public string GetNbShantenStr(int[] tiles_34, bool useChiitoitsu = true, bool use_kokushi = true)
+        {
+            return GetShantenStr(GetNbShanten(tiles_34, useChiitoitsu, use_kokushi));
+        }
+
+        // 
+        //         Return a pretty text for a given shanten
+        //    
+        private string GetShantenStr(int shanten)
+        {
+            if (shanten < -1)
+            {
+                return "";
+            }
+            if (shanten == -1)
+            {
+                return "AGARI";
+            }
+            if (shanten == 0)
+            {
+                return "tenpai";
+            }
+            if (shanten == 1)
+            {
+                return "ii-shanten";
+            }
+            if (shanten == 2)
+            {
+                return "ryan-shanten";
+            }
+            return $"{shanten}-shanten";
+        }
+
         // 
         //         Calculate the number of shanten for chiitoitsu hand
         //         
