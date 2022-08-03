@@ -13,26 +13,18 @@ namespace kandora.bot.commands
     {
         protected static KandoraContext context = KandoraContext.Instance;
 
-        protected static async Task executeCommand(CommandContext ctx, Func<Task> command, bool userMustBeRegistered = true, bool userMustBeInChannel = true, bool serverMustBeRegistered = true)
+        protected static async Task executeCommand(CommandContext ctx, Func<Task> command, bool userMustBeRegistered = true, bool serverMustBeRegistered = true)
         {
             var commandStr = "command";
             try
             {
-                if (userMustBeInChannel && (ctx.Channel == null || ctx.Guild == null))
-                {
-                    throw new Exception("You must be in a text channel for that command.");
-                }
                 string serverId = (ctx.Guild.Id.ToString());
                 string channelId = (ctx.Channel.Id.ToString());
                 string userId = (ctx.User.Id.ToString());
                 Server server = null;
-                if (serverMustBeRegistered || userMustBeInChannel)
+                if (serverMustBeRegistered)
                 {
                     server = ServerDbService.GetServer(serverId);
-                }
-                if (userMustBeInChannel && (server == null || server.TargetChannelId != channelId))
-                {
-                    throw new SilentException();
                 }
                 if (userMustBeRegistered && !ServerDbService.isUserOnServer(userId, serverId))
                 {

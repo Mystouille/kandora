@@ -19,7 +19,7 @@ namespace kandora.bot.commands.slash
     [SlashCommandGroup("mjg", Resources.mahjong_groupDescription)]
     class MahjongSlashCommands : KandoraSlashCommandModule
     {
-        [SlashCommand("img", Resources.mahjong_image_description)]
+        //[SlashCommand("img", Resources.mahjong_image_description)]
         public async Task Image(InteractionContext ctx,
             [Option(Resources.mahjong_option_handstr, Resources.mahjong_option_handstr_description)] string handStr)
         {
@@ -46,6 +46,42 @@ namespace kandora.bot.commands.slash
             finally
             {
                 if(stream != null)
+                {
+                    stream.Dispose();
+                }
+            }
+        }
+
+        //[SlashCommand("info", Resources.mahjong_info_description)]
+        public async Task Info(InteractionContext ctx,
+            [Option(Resources.mahjong_option_handstr, Resources.mahjong_option_handstr_description)] string handStr)
+        {
+            FileStream stream = null;
+            try
+            {
+
+                var basicHand = HandParser.GetSimpleHand(handStr);
+                var hand34 = TilesConverter.FromStringTo34Count(basicHand);
+
+                var commandStr = $"Input: `/mjg info {Resources.mahjong_option_handstr}:{handStr}`";
+
+                var shantenCalc = new ShantenCalculator();
+                var sb = new StringBuilder();
+                sb.AppendLine(commandStr);
+                sb.Append(shantenCalc.GetNbShantenStr(hand34));
+                stream = ImageToolbox.GetImageFromTiles(handStr);
+                var rb = new DiscordInteractionResponseBuilder().WithContent(sb.ToString()).AddFile(stream);
+
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ContinueWith(precedent => stream.Dispose()).ConfigureAwait(true);
+
+            }
+            catch (Exception e)
+            {
+                replyWithException(ctx, e);
+            }
+            finally
+            {
+                if (stream != null)
                 {
                     stream.Dispose();
                 }
@@ -112,7 +148,7 @@ namespace kandora.bot.commands.slash
                     sb.AppendLine(string.Join(" | ", context));
                 }
 
-                sb.AppendLine(Resources.mahjong_nanikiru_wwyd);
+                //sb.AppendLine(Resources.mahjong_nanikiru_wwyd);
 
                 var stream = ImageToolbox.GetImageFromTiles(handStr, separateLastTile: true);
                 var rb = new DiscordInteractionResponseBuilder().WithContent(sb.ToString());

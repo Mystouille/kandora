@@ -1,14 +1,10 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using DSharpPlus.SlashCommands.Attributes;
-using kandora.bot.commands.slash.attributes;
 using kandora.bot.resources;
 using kandora.bot.services;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace kandora.bot.commands.slash
@@ -29,7 +25,7 @@ namespace kandora.bot.commands.slash
                     throw new Exception(string.Format(Resources.admin_startLeague_leagueAlreadyExists, ctx.Guild.Name));
                 }
                 var leagueConfigId = LeagueConfigDbService.CreateLeague();
-                var roleName = "KandoraLeague";
+                var roleName = Resources.kandoraLeague_roleName;
                 ulong roleId = ctx.Guild.Roles.Where(x => x.Value.Name == roleName).Select(x => x.Key).FirstOrDefault();
                 if (roleId == 0)
                 {

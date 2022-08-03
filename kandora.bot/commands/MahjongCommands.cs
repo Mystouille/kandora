@@ -20,47 +20,7 @@ namespace kandora.bot.commands
         public object Tiles { get; private set; }
         public object Divider { get; private set; }
 
-        [Command("problem"), Description(""), Aliases("p")]
-        public async Task Problem(
-            CommandContext ctx,
-            string suit="s"
-        )
-        {
-            try
-            {
-                var (stream, waits, options) = ChinitsuProblemGenerator.getNewProblem(suit);
-                var mb = new DiscordMessageBuilder();
-                mb.WithFile(stream);
-                var msg = await mb.SendAsync(ctx.Channel);
-                stream.Close();
-                await context.AddOngoingProblem(ctx, msg, waits, options);
-            }
-            catch (Exception e)
-            {
-                await ctx.RespondAsync(e.Message + "\n" + e.StackTrace);
-            }
-        }
-
-        [Command("problem2"), Description(""), Aliases("p2")]
-        public async Task Problems(
-            CommandContext ctx,
-            string suit = "s"
-        )
-        {
-            try
-            {
-                var (stream, waits, options) = ChinitsuProblemGenerator.getNewProblem(suit);
-                var mb = new DiscordMessageBuilder();
-                mb.WithFile(stream);
-                var msg = await mb.SendAsync(ctx.Channel);
-                stream.Close();
-                await context.AddOngoingProblem(ctx, msg, waits, options, 10000);
-            }
-            catch (Exception e)
-            {
-                await ctx.RespondAsync(e.Message + "\n" + e.StackTrace);
-            }
-        }
+        
 
         [Command("image"), Description(""), Aliases("i")]
         public async Task Image(

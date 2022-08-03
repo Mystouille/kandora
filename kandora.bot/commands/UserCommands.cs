@@ -71,14 +71,14 @@ namespace kandora.bot.commands
                         DateTime time;
                         if (!playersRank.TryGetValue(playerId, out rank) || !playersTime.TryGetValue(playerId, out time))
                         {
-                            playersRank.Add(playerId, ranking.NewRank);
+                            playersRank.Add(playerId, (float)ranking.NewRank);
                             playersTime.Add(playerId, ranking.Timestamp);
                         }
                         else
                         {
                             if (ranking.Timestamp.CompareTo(time)> 0)
                             {
-                                playersRank[playerId] = ranking.NewRank;
+                                playersRank[playerId] = (float)ranking.NewRank;
                                 playersTime[playerId] = ranking.Timestamp;
                             }
                         }
@@ -160,8 +160,7 @@ namespace kandora.bot.commands
             await executeCommand(
                 ctx,
                 getListAction(ctx),
-                userMustBeRegistered: false,
-                userMustBeInChannel: true
+                userMustBeRegistered: false
             );
         }
 

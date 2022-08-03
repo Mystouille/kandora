@@ -2,6 +2,7 @@
 using System.Linq;
 using System;
 using C = kandora.bot.mahjong.Constants;
+using kandora.bot.resources;
 
 namespace kandora.bot.mahjong
 {
@@ -66,14 +67,14 @@ namespace kandora.bot.mahjong
             {
                 return "tenpai";
             }
-            if (shanten == 1)
-            {
-                return "ii-shanten";
-            }
-            if (shanten == 2)
-            {
-                return "ryan-shanten";
-            }
+            //if (shanten == 1)
+            //{
+            //    return "ii-shanten";
+            //}
+            //if (shanten == 2)
+            //{
+            //    return "ryan-shanten";
+            //}
             return $"{shanten}-shanten";
         }
 
@@ -123,7 +124,7 @@ namespace kandora.bot.mahjong
             var count_of_tiles = tiles34.Sum();
             if(count_of_tiles > 14)
             {
-                throw new Exception($"Too many tiles = {count_of_tiles}");
+                throw new Exception(String.Format(Resources.commandError_TooManyTiles,count_of_tiles));
             }
             RemoveCharacterTiles(count_of_tiles);
             var init_mentsu = (int)Math.Floor((decimal)((14 - count_of_tiles) / 3));

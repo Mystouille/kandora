@@ -55,7 +55,8 @@ namespace kandora.bot
             slashCommands.RegisterCommands<AdminSlashCommands>(guildId);
 
             ulong tntGuildId = 665504390181945344; //TNT discord guild
-            //slashCommands.RegisterCommands<MahjongSlashCommands>(tntGuildId);
+            slashCommands.RegisterCommands<MahjongSlashCommands>(tntGuildId);
+            slashCommands.RegisterCommands<QuizzSlashCommands>(tntGuildId);
 
             client.MessageReactionAdded += ReactionListener.OnReactionAdded;
             client.MessageReactionRemoved += ReactionListener.OnReactionRemoved;

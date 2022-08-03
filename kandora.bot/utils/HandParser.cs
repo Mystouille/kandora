@@ -1,5 +1,7 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
+using kandora.bot.resources;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -138,7 +140,7 @@ namespace kandora.bot.utils
         //input: RRRg output: 7z,7z,7z
         public static List<string> VisualTiles(string hand)
         {
-            var (tileNames, kans) = processKans(hand);
+            var tileNames = new List<string>();
             int i = 0;
             while (i < hand.Length)
             {
@@ -154,15 +156,6 @@ namespace kandora.bot.utils
             foreach (char c in subHandValues)
             {
                 if (c == ' ') continue;
-                if (c == '\'')
-                {
-                    tileNames.Last().Append('\'');
-                }
-                if (c == 'k')
-                {
-                    tileNames.Append(kans.First());
-                    kans.RemoveAt(0);
-                }
                 var tile = $"{c}{suit}";
                 if (ALTERNATIVE_IDS.ContainsKey(tile))
                 {
@@ -182,14 +175,6 @@ namespace kandora.bot.utils
 
             return tileNames;
         }
-
-        private static (List<string>, List<string>) processKans(string hand)
-        {
-            var tileNames = new List<string>();
-            return (tileNames, new List<string>());
-        }
-
-
     }
 
 }

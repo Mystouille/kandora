@@ -51,6 +51,7 @@
         public const string mahjong_nanikiru_dora = "Dora {0}";
         public const string mahjong_nanikiru_wwyd = "What would you cut?";
         public const string mahjong_nanikiru_discussHere = "Discuss it here!";
+        public const string mahjong_info_description = "Displays a hand's acceptance";
 
         //Ongoing Quizz
         // fullflush
@@ -75,5 +76,10 @@
 
         //Slash commands
         public const string commandError_title = "An error happened";
+        public const string commandError_InvalidKanFormat = "A kan is not correct: {0}";
+        public const string commandError_TooManyTiles = "Too many tiles: {0}";
+
+        //League
+        public const string kandoraLeague_roleName = "Kandora League";
     }
 }

@@ -52,6 +52,7 @@
         public const string mahjong_nanikiru_dora = "Dora {0}";
         public const string mahjong_nanikiru_wwyd = "Que feriez vous?";
         public const string mahjong_nanikiru_discussHere = "Discutez-en ici!";
+        public const string mahjong_info_description = "Affiche les améliorations d'une main";
 
 
         //Ongoing Quizz
@@ -77,5 +78,11 @@
 
         //Slash commands
         public const string commandError_title = "Une erreur s'est produite";
+        public const string commandError_InvalidKanFormat = "Un kan est mal déclaré: {0}";
+        public const string commandError_TooManyTiles = "Trop de tuiles: {0}";
+
+
+        //League
+        public const string kandoraLeague_roleName = "Ligue Kandora";
     }
 }

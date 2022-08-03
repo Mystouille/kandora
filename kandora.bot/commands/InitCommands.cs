@@ -20,7 +20,6 @@ namespace kandora.bot.commands
                 ctx,
                 getRegisterServerAction(ctx),
                 serverMustBeRegistered: false,
-                userMustBeInChannel: false,
                 userMustBeRegistered: false
             );
         }
@@ -41,27 +40,6 @@ namespace kandora.bot.commands
                 }
                 ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name, roleId.ToString(), roleName, leagueConfigId);
                 await ctx.RespondAsync($"A Riichi league has started on {ctx.Guild.Name}!! \n");
-            });
-        }
-
-        [Command("setTargetChannel"), Description("Set bot to listen to the current channel")]
-        public async Task SetTargetChannel(CommandContext ctx)
-        {
-            await executeCommand(
-                ctx,
-                getSetTargetChannelAction(ctx),
-                userMustBeInChannel: false,
-                userMustBeRegistered: false
-            );
-        }
-
-        private Func<Task> getSetTargetChannelAction(CommandContext ctx)
-        {
-            return new Func<Task>(async () =>
-            {
-                var serverDiscordId = ctx.Guild.Id.ToString();
-                ServerDbService.SetTargetChannel(serverDiscordId, ctx.Channel.Id.ToString());
-                await ctx.RespondAsync($"<#{ctx.Channel.Id}> has been registered as scoring channel");
             });
         }
 
@@ -90,7 +68,7 @@ namespace kandora.bot.commands
                     UserDbService.CreateUser(discordId, serverId, config);
                 }
                 if (!server.Users.Select(x => x.Id).Contains(discordId)){
-                    ServerDbService.AddUserToServer(discordId, serverId, false, false);
+                    ServerDbService.AddUserToServer(discordId, serverId, false);
                 }
                 else
                 {
@@ -129,9 +107,9 @@ namespace kandora.bot.commands
                 UserDbService.CreateUser(heatiro, serverDiscordId, config);
                 UserDbService.CreateUser(clubapero, serverDiscordId, config);
                 UserDbService.CreateUser(Neral, serverDiscordId, config);
-                ServerDbService.AddUserToServer(heatiro, serverDiscordId, false, false); //Heatiro
-                ServerDbService.AddUserToServer(clubapero, serverDiscordId, false, false); //clubapero
-                ServerDbService.AddUserToServer(Neral, serverDiscordId, false, false); //Neral
+                ServerDbService.AddUserToServer(heatiro, serverDiscordId, false); //Heatiro
+                ServerDbService.AddUserToServer(clubapero, serverDiscordId, false); //clubapero
+                ServerDbService.AddUserToServer(Neral, serverDiscordId, false); //Neral
                 UserDbService.SetMahjsoulName(heatiro, "heairo");
                 UserDbService.SetMahjsoulName(Neral, "Neral");
                 UserDbService.SetMahjsoulName(clubapero, "clubapero");

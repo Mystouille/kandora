@@ -45,59 +45,6 @@ namespace kandora.bot.commands
             });
         }
 
-        [Command("setOwner"), Description("set user as server owner")]
-        public async Task SetOwner(CommandContext ctx, [Description("Target user")] DiscordUser user, [Description("YES or NO")] string flag)
-        {
-            if (flag.ToLower() != "yes" && flag.ToLower() != "no")
-            {
-                throw new Exception("wrong flag value. Required: YES / NO");
-            }
-            await executeCommand(
-                ctx,
-                getSetOwnerAction(ctx, user, flag.ToLower() == "yes")
-            );
-        }
-        private Func<Task> getSetOwnerAction(CommandContext ctx, DiscordUser targetDiscordUser, bool flag)
-        {
-            return new Func<Task>(async () =>
-            {
-                var allUsers = UserDbService.GetUsers();
-                var allServers = ServerDbService.GetServers(allUsers);
-                var serverId = ctx.Guild.Id.ToString();
-                var server = allServers[serverId];
-                var userId = ctx.Member.Id.ToString();
-                if (!server.Owners.Contains(allUsers[userId]))
-                {
-                    throw new Exception("You are not a owner of this bot");
-                }
-                var targetId = targetDiscordUser.Id.ToString();
-
-                ServerDbService.SetIsOwner(serverId, targetId, flag);
-                await Task.FromResult(false);
-            });
-        }
-
-        [Command("setTargetChannel"), Description("Set bot to listen to the current channel")]
-        public async Task SetTargetChannel(CommandContext ctx)
-        {
-            await executeCommand(
-                ctx,
-                getSetTargetChannelAction(ctx),
-                userMustBeInChannel: false,
-                userMustBeRegistered: false
-            );
-        }
-
-        private Func<Task> getSetTargetChannelAction(CommandContext ctx)
-        {
-            return new Func<Task>(async () =>
-            {
-                var serverDiscordId = ctx.Guild.Id.ToString();
-                ServerDbService.SetTargetChannel(serverDiscordId, ctx.Channel.Id.ToString());
-                await ctx.RespondAsync($"<#{ctx.Channel.Id}> has been registered as scoring channel");
-            });
-        }
-
         [Command("register"), Description("Register yourself in the local riichi league")]
         public async Task RegisterUser(CommandContext ctx)
         {
@@ -117,7 +64,7 @@ namespace kandora.bot.commands
                 var server = ServerDbService.GetServer(serverDiscordId);
                 var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
                 UserDbService.CreateUser(discordId, serverDiscordId, config);
-                ServerDbService.AddUserToServer(discordId, serverDiscordId, false, false);
+                ServerDbService.AddUserToServer(discordId, serverDiscordId, false);
                 ulong roleId = Convert.ToUInt64(server.LeagueRoleId);
                 if (!ctx.Guild.Roles.ContainsKey(roleId)) {
                     throw new Exception("Error: League role not found");
@@ -151,9 +98,9 @@ namespace kandora.bot.commands
                 UserDbService.CreateUser(heatiro, serverDiscordId, config);
                 UserDbService.CreateUser(clubapero, serverDiscordId, config);
                 UserDbService.CreateUser(Neral, serverDiscordId, config);
-                ServerDbService.AddUserToServer(heatiro, serverDiscordId, false, false); //Heatiro
-                ServerDbService.AddUserToServer(clubapero, serverDiscordId, false, false); //clubapero
-                ServerDbService.AddUserToServer(Neral, serverDiscordId, false, false); //Neral
+                ServerDbService.AddUserToServer(heatiro, serverDiscordId, false); //Heatiro
+                ServerDbService.AddUserToServer(clubapero, serverDiscordId, false); //clubapero
+                ServerDbService.AddUserToServer(Neral, serverDiscordId, false); //Neral
                 UserDbService.SetMahjsoulName(heatiro, "heairo");
                 UserDbService.SetMahjsoulName(Neral, "Neral");
                 UserDbService.SetMahjsoulName(clubapero, "clubapero");
