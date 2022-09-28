@@ -30,7 +30,11 @@ namespace kandora.bot.commands.slash
             catch(Exception e2)
             {
                 // when the response has already been posted and code failed after (like when creating reactions)
-                await ctx.DeleteResponseAsync().ConfigureAwait(true);
+                try
+                {
+                    await ctx.DeleteResponseAsync().ConfigureAwait(true);
+                }
+                catch (Exception e3) { }
 
             }
         }

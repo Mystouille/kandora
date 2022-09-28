@@ -1,4 +1,6 @@
-﻿namespace kandora.bot.resources
+﻿using kandora.bot.models;
+
+namespace kandora.bot.resources
 {
     class Resources
     {
@@ -13,6 +15,34 @@
         public const string admin_endLeague_leagueEnded = "La ligue de mahjong a été supprimée!";
         public const string admin_testLeague_description = "Supprime la ligue actuelle et en crée une composée de 4 joueurs";
         public const string admin_testLeague_testLeagueStarted = "Une ligue de test a été créée avec ces joueurs:\n{0}";
+        public const string admin_showLeagueConfig_description = "Affiche les paramètres actuels de la ligue";
+        //League commands
+        public const string league_logInfo_description = "Affiche les infos d'une partie à partir de son ID";
+        public const string league_option_gameId = "id";
+        public const string league_option_gameId_description = "L'ID de la partie (tenhou ou mahjsoul)";
+        public const string league_title = "Titre"; 
+        public const string league_date = "Date";
+        public const string league_results = "Résultats"; 
+        public const string league_bestHand = "Meilleure main:  {0}({1}) (manche {2}) avec {3} pour un total de {4} ";
+
+        public const string league_submitResult_description = "Enregistre une partie comptant dans le classement";
+        public const string league_option_player1 = "Joueur1";
+        public const string league_option_player2 = "Joueur2";
+        public const string league_option_player3 = "Joueur3";
+        public const string league_option_player4 = "Joueur4";
+        public const string league_option_player1Score = "Score1";
+        public const string league_option_player2Score = "Score2";
+        public const string league_option_player3Score = "Score3";
+        public const string league_option_player4Score = "Score4";
+        public const string league_option_anyPlayer_description = "Mention (@) du joueur";
+        public const string league_option_anyScore_description = "Score final sans uma (ex: 44300)";
+        public const string league_submitResult_voteMessage = "Tous les joueurs doivent :o: pour valider ou :x: pour annuler l'enregistrement de la partie.";
+        public const string league_submitResult_canceledMessage = "Tous les joueurs ont voté {0}, cette partie ne sera pas enregistrée";
+        public const string league_submitResult_validatedMessage = "Tous les joueurs ont voté {0}, cette partie a été enregistrée!";
+
+        public const string league_seeRanking_description = "Affiche le classement actuel de la ligue";
+        public const string league_seeRanking_youAreHere = "Tu es là";
+
         //Quizz commands
         public const string quizz_groupDescription = "Commence un quizz";
         public const string quizz_fullflush_description = "Commence un quizz de main pure";
@@ -80,6 +110,13 @@
         public const string commandError_title = "Une erreur s'est produite";
         public const string commandError_InvalidKanFormat = "Un kan est mal déclaré: {0}";
         public const string commandError_TooManyTiles = "Trop de tuiles: {0}";
+        public const string commandError_CouldNotFindGameUser = "<@{0}> n'est pas inscrit dans la ligue";
+        public const string commandError_LeagueConfigRequiresScore = "La configuration actuelle de la ligue nécessite les scores des joueurs pour enregistrer une partie.";
+        public const string commandError_sanmaNotAllowed = "La configuration actuelle de la ligue n'accepte pas le sanma";
+        public const string commandError_badPlayerNumber = "La configuration actuelle de la ligue n'accepte pas les parties a {0} joueurs";
+        public const string commandError_badDistinctPlayerNumber = "Il n'y a que {0} joueurs distincts mentionés";
+
+
 
 
         //League

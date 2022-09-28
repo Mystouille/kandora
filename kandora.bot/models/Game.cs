@@ -9,6 +9,7 @@ namespace kandora.bot.models
         Tenhou,
         IRL,
     }
+
     public partial class Game
     {
 
@@ -30,6 +31,22 @@ namespace kandora.bot.models
         public string Id { get; set; }
         public Server Server { get; set; }
         public GameType Platform { get; set; }
+        public string PlatformStr
+        {
+            get
+            {
+                switch (this.Platform)
+                {
+                    case GameType.Mahjsoul:
+                        return "Mahjsoul";
+                    case GameType.Tenhou:
+                        return "Tenhou";
+                    case GameType.IRL:
+                        return "IRL";
+                    default: return "IRL";
+                }
+            }
+        }
         public string User1Id { get; set; }
         public int? User1Score { get; set; }
         public string User2Id { get; set; }

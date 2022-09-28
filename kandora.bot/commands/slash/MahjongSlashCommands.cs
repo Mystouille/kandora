@@ -32,9 +32,8 @@ namespace kandora.bot.commands.slash
                     throw new Exception("invalid hand");
                 }
 
-                var commandStr = $"Input: `/mjg img {Resources.mahjong_option_handstr}:{handStr}`";
                 stream = ImageToolbox.GetImageFromTiles(handStr);
-                var rb = new DiscordInteractionResponseBuilder().WithContent(commandStr).AddFile(stream);
+                var rb = new DiscordInteractionResponseBuilder().AddFile(stream);
 
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ContinueWith(precedent => stream.Dispose()).ConfigureAwait(true);
 
@@ -63,11 +62,8 @@ namespace kandora.bot.commands.slash
                 var basicHand = HandParser.GetSimpleHand(handStr);
                 var hand34 = TilesConverter.FromStringTo34Count(basicHand);
 
-                var commandStr = $"Input: `/mjg info {Resources.mahjong_option_handstr}:{handStr}`";
-
                 var shantenCalc = new ShantenCalculator();
                 var sb = new StringBuilder();
-                sb.AppendLine(commandStr);
                 sb.Append(shantenCalc.GetNbShantenStr(hand34));
                 stream = ImageToolbox.GetImageFromTiles(handStr);
                 var rb = new DiscordInteractionResponseBuilder().WithContent(sb.ToString()).AddFile(stream);
@@ -114,35 +110,26 @@ namespace kandora.bot.commands.slash
                 var nbTiles = hand34.Sum();
                 var sb = new StringBuilder();
                 var context = new List<string>();
-                var command = new List<string>();
-                command.Add($"Input: `/mjg nanikiru {Resources.mahjong_option_handstr}:{handStr}");
                 if(discards != "")
                 {
                     optionsEmoji = HandParser.GetHandEmojiCodes(discards, ctx.Client).Distinct();
-                    command.Add($"{Resources.mahjong_option_potentialDiscards}:{discards}");
                 }
                 if(seat != "")
                 {
                     context.Add(string.Format(Resources.mahjong_nanikiru_seat, seat));
-                    command.Add($"{Resources.mahjong_option_seat}:{seat}");
                 }
                 if (round != "")
                 {
                     context.Add(string.Format(Resources.mahjong_nanikiru_round, this.RoundToString(round)));
-                    command.Add($"{Resources.mahjong_option_round}:{round}");
                 }
                 if (turn != "")
                 {
                     context.Add(string.Format(Resources.mahjong_nanikiru_turn, turn));
-                    command.Add($"{Resources.mahjong_option_turn}:{turn}");
                 }
                 if (doras != "")
                 {
                     context.Add(string.Format(Resources.mahjong_nanikiru_dora, string.Join(',',dorasEmoji)));
-                    command.Add($"{Resources.mahjong_option_doras}:{doras}");
                 }
-                sb.Append(string.Join(" ", command));
-                sb.AppendLine("`");
                 if (seat != "" || round != "" || turn != "" || doras != "")
                 {
                     sb.AppendLine(string.Join(" | ", context));

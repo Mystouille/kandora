@@ -50,13 +50,18 @@ namespace kandora.bot
             commands.RegisterCommands<InitCommands>();
 
             ulong guildId = 984913976544616479; //KandoraHome discord guild id
-            slashCommands.RegisterCommands<QuizzSlashCommands>(guildId);
-            slashCommands.RegisterCommands<MahjongSlashCommands>(guildId);
+            //slashCommands.RegisterCommands<QuizzSlashCommands>(guildId);
+            //slashCommands.RegisterCommands<MahjongSlashCommands>(guildId);
             slashCommands.RegisterCommands<AdminSlashCommands>(guildId);
+            slashCommands.RegisterCommands<LeagueSlashCommands>(guildId);
 
             ulong tntGuildId = 665504390181945344; //TNT discord guild
-            slashCommands.RegisterCommands<MahjongSlashCommands>(tntGuildId);
-            slashCommands.RegisterCommands<QuizzSlashCommands>(tntGuildId);
+            //slashCommands.RegisterCommands<MahjongSlashCommands>(tntGuildId);
+            //slashCommands.RegisterCommands<QuizzSlashCommands>(tntGuildId);
+
+            ulong antreTuilesId = 625098212432412682; //Antre des tuiles
+            //slashCommands.RegisterCommands<MahjongSlashCommands>(antreTuilesId);
+            //slashCommands.RegisterCommands<QuizzSlashCommands>(antreTuilesId); 
 
             client.MessageReactionAdded += ReactionListener.OnReactionAdded;
             client.MessageReactionRemoved += ReactionListener.OnReactionRemoved;

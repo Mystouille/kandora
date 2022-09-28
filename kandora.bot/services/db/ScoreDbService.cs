@@ -45,7 +45,7 @@ namespace kandora.bot.services
 
                 var scoreColumns = scores == null
                     ? ""
-                    : $"{User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}{(scores.Length > 3 ? $", {User3ScoreCol}" : "")}";
+                    : $", {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}{(scores.Length > 3 ? $", {User4ScoreCol}" : "")}";
 
                 var scoreValues = scores == null
                     ? ""
@@ -62,7 +62,7 @@ namespace kandora.bot.services
                 {
                     for (int i = 0; i < scores.Length && i < 4; i++)
                     {
-                        command.Parameters.AddWithValue($"@score{i + 1}", NpgsqlDbType.Double, scores[i]);
+                        command.Parameters.AddWithValue($"@score{i + 1}", NpgsqlDbType.Integer, scores[i]);
                     }
                 }
                 command.ExecuteNonQuery();

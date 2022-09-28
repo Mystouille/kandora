@@ -3,6 +3,7 @@ using DSharpPlus.Entities;
 using kandora.bot.commands.regular;
 using kandora.bot.http;
 using kandora.bot.models;
+using kandora.bot.resources;
 using kandora.bot.services.db;
 using kandora.bot.utils;
 using System;
@@ -99,7 +100,7 @@ namespace kandora.bot.services.discord
             }
             if (game.IsCancelled)
             {
-                await msg.ModifyAsync($"All players have voted {noEmoji}, this log won't be recorded");
+                await msg.ModifyAsync(String.Format(Resources.league_submitResult_canceledMessage,noEmoji));
                 kanContext.PendingGames.Remove(msgId);
             }
             if (game.IsValidated)
@@ -123,11 +124,11 @@ namespace kandora.bot.services.discord
                         ScoreDbService.RecordOnlineGame(game.Log, server);
                     }
                     kanContext.PendingGames.Remove(msgId);
-                    await msg.RespondAsync($"All players have voted {okEmoji}, this log has been recorded!");
-                    await msg.DeleteReactionsEmojiAsync(okEmoji);
-                    await msg.DeleteReactionsEmojiAsync(noEmoji);
 
                     DbService.Commit("recordgame");
+                    await msg.ModifyAsync($"{msg.Content.ToString()}\n{String.Format(Resources.league_submitResult_canceledMessage, noEmoji)}");
+                    await msg.DeleteReactionsEmojiAsync(okEmoji);
+                    await msg.DeleteReactionsEmojiAsync(noEmoji);
                 }
                 catch (Exception e)
                 {

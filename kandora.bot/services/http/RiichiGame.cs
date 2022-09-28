@@ -11,6 +11,23 @@ namespace kandora.bot.http
     public class RiichiGame
     {
         public GameType GameType { get; set; }
+        
+        public string GameTypeStr
+        {
+            get
+            {
+                switch (this.GameType)
+                {
+                    case GameType.Mahjsoul:
+                        return "Mahjsoul";
+                    case GameType.Tenhou:
+                        return "Tenhou";
+                    case GameType.IRL:
+                        return "IRL";
+                    default: return "IRL";
+                }
+            }
+        }
         public string Ver { get; set; }
         public string Ref { get; set; }
         public List<Round> Rounds { get; set; }
