@@ -58,6 +58,10 @@ namespace kandora.bot.resources
         public const string admin_setLeagueConfig_backfillInProgress = "La configuration de la ligue a changé.\n{0}\n\n :bangbang: Kandora recalcule le classement à partir du début... ";
         public const string admin_setLeagueConfig_backfillFinished = "La configuration de la ligue a changé.\n{0}\n\n :white_check_mark: Kandora a fini de recalculer le classement! ";
 
+        public const string admin_addGuest_description = "Inscrit un utilisateur n'étant pas sur le serveur à la ligue";
+        public const string admin_addGuest_nickname = "nom";
+        public const string admin_addGuest_nickname_description = "Le nom du joueur";
+
         //League commands
         public const string league_register_description = "S'inscrire à la ligue ou modifier ses infos";
         public const string league_register_mahjsoulName = "mahjsoulname";
@@ -67,7 +71,7 @@ namespace kandora.bot.resources
         public const string league_register_tenhouName = "tenhouname";
         public const string league_register_tenhouName_description = "Ton pseudo Tenhou";
         public const string league_register_response_newUser = "Tu fais maintenant partie de la ligue de ce serveur";
-        public const string league_register_response_newRanking = "Tu fais maintenant partie de la ligue de ce serveur. Attention, tes pseudo Tenhou et Mahjong Soul sont communs avec les ligues d'autres serveurs";
+        public const string league_register_response_newRanking = "Tu fais maintenant partie de la ligue de ce serveur. Attention, tes pseudos Tenhou et Mahjong Soul sont communs avec les ligues d'autres serveurs";
         public const string league_register_response_userAlreadyRegistered = "Les nouvelles infos ont été prise en compte";
 
         public const string league_logInfo_description = "Affiche les infos d'une partie à partir de son ID";
@@ -177,6 +181,8 @@ namespace kandora.bot.resources
         public const string commandError_unknownLogFormat = "Cet ID de log n'a pas l'air d'être au format tenhou ou mahjsoul";
         public const string commandError_mahjsoulUserNameChanged = "Le pseudo mahjsoul de <@{0}> semble avoir changé. Il vient d'être automatiquement mis à jour de {1} vers {2}. De rien ;)";
         public const string commandError_gameAlreadyExists = "La partie ayant pour id: {0} existe déjà. Une partie ne peut être enregistrée qu'une fois, et que dans une seule ligue à la fois.";
+        public const string commandError_UserNicknameAlreadyExists = "Un utilisateur avec ce nom existe déja.";
+        public const string commandError_ValueAlreadyExists = "Un joueur ayant comme {0}: {1} existe déjà! Contacte un admin si nécessaire.";
 
 
 

@@ -57,9 +57,13 @@ namespace kandora.bot.resources
         public const string admin_setLeagueConfig_backfillInProgress = "The league config has been changed.\n{0}\n\n :bangbang: Kandora is recomputing the rankings... ";
         public const string admin_setLeagueConfig_backfillFinished = "The league config has been changed.\n{0}\n\n :white_check_mark: Kandora has finished recomputing the rankings! ";
 
+        public const string admin_addGuest_description = "Register a user not on this server";
+        public const string admin_addGuest_nickname = "name";
+        public const string admin_addGuest_nickname_description = "The player's name";
+
         //League commands
         public const string league_register_description = "Register to the league or change your info";
-        public const string league_register_mahjsoulId = "mahjsoulid";
+        public const string league_register_mahjsoulName = "mahjsoulname";
         public const string league_register_mahjsoulName_description = "Your Mahjong Soul nickname";
         public const string league_register_mahjsoulFriendId = "mahjsoulid";
         public const string league_register_mahjsoulFriendId_description = "Your Mahjong Soul ID";
@@ -175,6 +179,8 @@ namespace kandora.bot.resources
         public const string commandError_unknownLogFormat = "This log ID doesn't seem to be a mahjsoul or tenhou format";
         public const string commandError_mahjsoulUserNameChanged = "Detected old user name for <@{0}>. Automatically updated from {1} to {2}, don't thank me ;)";
         public const string commandError_gameAlreadyExists = "The game with ID: {0} already exists. A game can be recorded only once, and contribute to only one league.";
+        public const string commandError_UserNicknameAlreadyExists = "A user with this name already exists.";
+        public const string commandError_ValueAlreadyExists = "A user with {0} {1} exists already! Contact the admin if you want to fix that.";
 
 
         //League

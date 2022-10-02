@@ -30,13 +30,7 @@ namespace kandora.bot.commands.slash
                 }
                 var leagueConfigId = LeagueConfigDbService.CreateLeague();
                 var roleName = Resources.kandoraLeague_roleName;
-                ulong roleId = ctx.Guild.Roles.Where(x => x.Value.Name == roleName).Select(x => x.Key).FirstOrDefault();
-                if (roleId == 0)
-                {
-                    var role = await ctx.Guild.CreateRoleAsync(name: roleName, mentionable: true);
-                    roleId = role.Id;
-                }
-                ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name, roleId.ToString(), roleName, leagueConfigId);
+                ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name, "dummyRoleId", roleName, leagueConfigId);
                 var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_startLeague_leagueStarted, ctx.Guild.Name));
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
@@ -269,6 +263,43 @@ namespace kandora.bot.commands.slash
             }
         }
 
+        [SlashCommand("addGuestPlayer", Resources.admin_addGuest_description)]
+        public async Task AddGuestPlayer(InteractionContext ctx,
+            [Option(Resources.admin_addGuest_nickname, Resources.admin_addGuest_nickname_description)] string nickname,
+            [Option(Resources.league_register_mahjsoulName, Resources.league_register_mahjsoulName_description)] string mahjsoulName = "",
+            [Option(Resources.league_register_tenhouName, Resources.league_register_tenhouName_description)] string tenhouName = ""
+            )
+        {
+            try
+            {
+                var serverDiscordId = ctx.Guild.Id.ToString();
+                var users = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(users);
+
+                if (UserDbService.IsUserInDb(nickname))
+                {
+                    throw (new Exception(Resources.commandError_UserNicknameAlreadyExists));
+                }
+
+                var server = servers[serverDiscordId];
+                ServerDbService.AddUserToServer(nickname, serverDiscordId);
+                if (mahjsoulName.Length == 0)
+                {
+                    UserDbService.SetMahjsoulName(nickname, mahjsoulName);
+                }
+                if (tenhouName.Length == 0)
+                {
+                    UserDbService.SetTenhouName(nickname, tenhouName);
+                }
+
+                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_startLeague_leagueStarted, ctx.Guild.Name));
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
+            }
+            catch (Exception e)
+            {
+                replyWithException(ctx, e);
+            }
+        }
         enum CfgPrm
         {
             server,

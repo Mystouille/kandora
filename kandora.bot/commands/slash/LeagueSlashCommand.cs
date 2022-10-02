@@ -31,8 +31,31 @@ namespace kandora.bot.commands.slash
                 var allUsers = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(allUsers);
                 var server = servers[serverId];
-                var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
                 var userId = ctx.User.Id.ToString();
+
+                if (mahjsoulName.Length > 0)
+                {
+                    if(UserDbService.MahjsoulNameExistAlready(userId, serverId, mahjsoulName))
+                    {
+                        throw new Exception(String.Format(Resources.commandError_ValueAlreadyExists, Resources.league_register_mahjsoulName, mahjsoulName));
+                    }
+                }
+                if (mahjsoulFriendId.Length > 0)
+                {
+                    if (UserDbService.MahjsoulFriendIdExistAlready(userId, serverId, mahjsoulFriendId))
+                    {
+                        throw new Exception(String.Format(Resources.commandError_ValueAlreadyExists, Resources.league_register_mahjsoulFriendId, mahjsoulFriendId));
+                    }
+                }
+                if (tenhouName.Length > 0)
+                {
+                    if (UserDbService.TenhouNameExistAlready(userId, serverId, tenhouName))
+                    {
+                        throw new Exception(String.Format(Resources.commandError_ValueAlreadyExists, Resources.league_register_tenhouName, tenhouName));
+                    }
+                }
+
+                var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
                 var responseMessage = "";
                 if (UserDbService.IsUserInDb(userId))
                 {
@@ -58,7 +81,7 @@ namespace kandora.bot.commands.slash
                 }
                 if (mahjsoulFriendId.Length > 0)
                 {
-                    UserDbService.SetMahjsoulFriendId(userId, mahjsoulName);
+                    UserDbService.SetMahjsoulFriendId(userId, mahjsoulFriendId);
                 }
                 if (tenhouName.Length > 0)
                 {
@@ -94,22 +117,30 @@ namespace kandora.bot.commands.slash
 
         [SlashCommand("submitIRL", Resources.league_submitResult_description)]
         public async Task SubmitIRL(InteractionContext ctx,
-            [Option(Resources.league_option_player1, Resources.league_option_anyPlayer_description)] DiscordUser player1,
+            [Option(Resources.league_option_player1, Resources.league_option_anyPlayer_description)] string player1,
             [Option(Resources.league_option_player1Score, Resources.league_option_anyScore_description)] string score1,
-            [Option(Resources.league_option_player2, Resources.league_option_anyPlayer_description)] DiscordUser player2,
+            [Option(Resources.league_option_player2, Resources.league_option_anyPlayer_description)] string player2,
             [Option(Resources.league_option_player2Score, Resources.league_option_anyScore_description)] string score2,
-            [Option(Resources.league_option_player3, Resources.league_option_anyPlayer_description)] DiscordUser player3,
+            [Option(Resources.league_option_player3, Resources.league_option_anyPlayer_description)] string player3,
             [Option(Resources.league_option_player3Score, Resources.league_option_anyScore_description)] string score3,
-            [Option(Resources.league_option_player4, Resources.league_option_anyPlayer_description)] DiscordUser player4,
+            [Option(Resources.league_option_player4, Resources.league_option_anyPlayer_description)] string player4,
             [Option(Resources.league_option_player4Score, Resources.league_option_anyScore_description)] string score4)
         {
             try
             {
-                var usersScores = new (DiscordUser, string)[] { (player1, score1), (player2, score2), (player3, score3), (player4, score4) };
+                var allUsers = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(allUsers);
+                var player1Id = getIdFromPlayerParam(player1);
+                var player2Id = getIdFromPlayerParam(player2);
+                var player3Id = getIdFromPlayerParam(player3);
+                var player4Id = getIdFromPlayerParam(player4);
+
+                var usersScores = new (string, string)[] { (player1Id, score1), (player2Id, score2), (player3Id, score3), (player4Id, score4) };
+
                 var sortedScores = usersScores.ToList();
                 sortedScores.Sort((tuple1, tuple2) => tuple2.Item2.CompareTo(tuple1.Item2));
 
-                var userIds = sortedScores.Select(x => x.Item1.Id.ToString()).ToArray();
+                var userIds = sortedScores.Select(x => x.Item1).ToArray();
                 var scoresStr = sortedScores.Select(x => x.Item2).ToArray();
 
                 float[] scores = null;
@@ -120,8 +151,7 @@ namespace kandora.bot.commands.slash
                 var serverId = ctx.Guild.Id.ToString();
                 var userId = ctx.Member.Id.ToString();
                 var channelDiscordId = ctx.Channel.Id.ToString();
-                var allUsers = UserDbService.GetUsers();
-                var servers = ServerDbService.GetServers(allUsers);
+
                 var server = servers[serverId];
                 foreach (var id in userIds)
                 {
@@ -158,6 +188,15 @@ namespace kandora.bot.commands.slash
             {
                 replyWithException(ctx, e);
             }
+        }
+
+        private string getIdFromPlayerParam(string playerStr)
+        {
+            if (playerStr.StartsWith("<@") && playerStr.EndsWith(">"))
+            {
+                return playerStr.Substring(2, playerStr.Length - 3);
+            }
+            return playerStr;
         }
 
         [SlashCommand("submit", Resources.league_submitOnlineResult_description)]

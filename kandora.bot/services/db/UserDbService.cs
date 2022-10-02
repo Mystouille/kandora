@@ -110,5 +110,43 @@ namespace kandora.bot.services
         {
             UpdateFieldInTable(tableName, tenhouNameCol, userId, value);
         }
+
+        public static bool MahjsoulNameExistAlready(string userId, string serverId, string value)
+        {
+            return ValueExistAlready(userId, serverId, mahjsoulNameCol, value);
+        }
+
+        public static bool MahjsoulFriendIdExistAlready(string userId, string serverId, string value)
+        {
+            return ValueExistAlready(userId, serverId, mahjsoulFriendIdCol, value);
+        }
+
+        public static bool TenhouNameExistAlready(string userId, string serverId, string value)
+        {
+            return ValueExistAlready(userId, serverId, tenhouNameCol, value);
+        }
+
+        private static bool ValueExistAlready(string userId, string serverId, string columnName, string value)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.Connection = dbCon.Connection;
+                command.CommandText = $"SELECT {idCol} FROM {tableName} WHERE {columnName} = \'{value}\' AND {idCol} != \'{userId}\'";
+                command.CommandType = CommandType.Text;
+
+                var reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    reader.Close();
+                    return true;
+                }
+                reader.Close();
+                return false;
+            }
+            throw (new DbConnectionException());
+        }
     }
 }
