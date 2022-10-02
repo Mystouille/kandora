@@ -19,24 +19,6 @@ namespace kandora.bot.commands.regular
         public object Tiles { get; private set; }
         public object Divider { get; private set; }
 
-        [Command("problem"), Description(""), Aliases("p")]
-        public async Task Problem(
-            CommandContext ctx,
-            string suit=""
-        )
-        {
-
-        }
-
-        [Command("problem2"), Description(""), Aliases("p2")]
-        public async Task Problems(
-            CommandContext ctx,
-            string suit = ""
-        )
-        {
-
-        }
-
         [Command("image"), Description(""), Aliases("i")]
         public async Task Image(
             CommandContext ctx,

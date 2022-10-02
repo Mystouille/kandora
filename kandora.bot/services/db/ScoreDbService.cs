@@ -249,7 +249,7 @@ namespace kandora.bot.services
                 var game = GetGameFromLogId(logId, server);
                 return true;
             }
-            catch(Exception e)
+            catch (Exception)
             {
                 return false;
             }

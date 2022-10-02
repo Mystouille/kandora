@@ -9,7 +9,7 @@ namespace kandora.bot.services.discord
 {
     public sealed class KandoraContext
     {
-         private static readonly KandoraContext instance = new KandoraContext();
+         private static readonly KandoraContext instance = new();
 
 
         static KandoraContext()
@@ -42,32 +42,7 @@ namespace kandora.bot.services.discord
             }).ContinueWith(x =>
             {
                 PendingGames.Add(msg.Id, game);
-            });
+            }).ConfigureAwait(true);
         }
-
-        public async Task AddOngoingProblem(DiscordClient client, DiscordMessage msg, ISet<int> answer, string options, int timeout = 0)
-        {
-            /**
-            var optionsEmoji = HandParser.GetHandEmojiCodes(options, client);
-            var problem = new OngoingProblem(answer, hasTimer: timeout>0);
-            foreach (var emoji in optionsEmoji)
-            {
-                await msg.CreateReactionAsync(emoji);
-                problem.Options.Add(emoji.Id);
-            }
-            OngoingProblems.Add(msg.Id, problem);
-
-            if (timeout > 0)
-            {
-                await Task.Delay(10000).ContinueWith(parent => {
-                    _ = problem.OnProblemTimeout(client, msg);
-                    OngoingProblems.Remove(msg.Id);
-                });
-            }
-            */
-
-        }
-
-
     }
 }

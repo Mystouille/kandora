@@ -27,14 +27,14 @@ namespace kandora.bot.commands.slash
 
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
-            catch(Exception e2)
+            catch(Exception)
             {
                 // when the response has already been posted and code failed after (like when creating reactions)
                 try
                 {
                     await ctx.DeleteResponseAsync().ConfigureAwait(true);
                 }
-                catch (Exception e3) { }
+                catch (Exception) { }
 
             }
         }

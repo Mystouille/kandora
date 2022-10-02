@@ -1,12 +1,9 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using System.Threading;
 using System.Threading.Tasks;
 using kandora.bot.resources;
 using System;
-using kandora.bot.services.discord.problems;
-using kandora.bot.commands.slash.attributes;
 using System.Collections.Generic;
 using kandora.bot.utils;
 using System.Linq;
