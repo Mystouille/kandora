@@ -38,9 +38,9 @@ namespace kandora.bot.commands
                 var servers = ServerDbService.GetServers(allUsers);
                 var server = servers[serverId];
                 var serverUsers = server.Users;
-                var log = await LogService.Instance.GetLog(gameId, 2);
+                var log = await LogService.Instance.GetLog(gameId, 2).ConfigureAwait(true);
 
-                var users = await GetUsersFromLog(log, serverUsers, ctx);
+                var users = await GetUsersFromLog(log, serverUsers, ctx).ConfigureAwait(true);
                 var gameResult = PrintGameResult(log, ctx.Client, users);
                 var gameMsg = await ctx.RespondAsync($"I need all players to :o: or :x: to record or cancel this game\n{gameResult}");
                 await context.AddPendingGame(ctx, gameMsg, new PendingGame(users.Select(x=>x.Id.ToString()).ToArray(), server, log));

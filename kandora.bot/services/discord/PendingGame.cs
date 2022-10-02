@@ -79,7 +79,7 @@ namespace kandora.bot.services.discord
 
         public async static Task OnPendingGameReaction(DiscordClient sender, DiscordMessage msg, DiscordEmoji emoji, DiscordUser user, bool added)
         {
-            var kanContext = KandoraContext.Instance;
+            var kanContext = KandoraSlashContext.Instance;
             var msgId = msg.Id;
             var userId = user.Id.ToString();
             var game = kanContext.PendingGames[msgId];
@@ -126,14 +126,14 @@ namespace kandora.bot.services.discord
                     kanContext.PendingGames.Remove(msgId);
 
                     DbService.Commit("recordgame");
-                    await msg.ModifyAsync($"{msg.Content.ToString()}\n{String.Format(Resources.league_submitResult_canceledMessage, noEmoji)}");
+                    await msg.ModifyAsync($"{msg.Content.ToString()}\n{String.Format(Resources.league_submitResult_validatedMessage, okEmoji)}");
                     await msg.DeleteReactionsEmojiAsync(okEmoji);
                     await msg.DeleteReactionsEmojiAsync(noEmoji);
                 }
                 catch (Exception e)
                 {
                     DbService.Rollback("recordgame");
-                    await msg.RespondAsync(e.Message);
+                    await msg.RespondAsync(e.Message + "\n" + e.StackTrace);
                 }
             }
         }

@@ -64,20 +64,14 @@ namespace kandora.bot.services.discord
             }
         }
 
-        public async Task AddPendingGame(InteractionContext ctx, DiscordMessage msg, PendingGame game)
+        public async Task AddPendingGame(InteractionContext ctx, string gameInfo, PendingGame game)
         {
-            await ctx.CreateResponseAsync(
-                InteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder()
-                    .WithContent(DiscordEmoji.FromName(ctx.Client, Reactions.OK))
-            ).ContinueWith(x => {
-                ctx.CreateResponseAsync(
-                InteractionResponseType.ChannelMessageWithSource,
-                new DiscordInteractionResponseBuilder()
-                    .WithContent(DiscordEmoji.FromName(ctx.Client, Reactions.NO)));
-            }).ContinueWith(x => {
-                PendingGames.Add(msg.Id, game);
-            });
+            var rb = new DiscordInteractionResponseBuilder().WithContent(gameInfo);
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
+            var response = await ctx.GetOriginalResponseAsync();
+            await response.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, Reactions.OK));
+            await response.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, Reactions.NO));
+            PendingGames.Add(response.Id, game);
         }
 
         public async Task StartProblemSeries(InteractionContext ctx, IQuizzGenerator generator, int nbProblems, int timeout, string startMsgContent, string threadNameRes)

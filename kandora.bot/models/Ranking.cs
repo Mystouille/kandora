@@ -66,7 +66,14 @@ namespace kandora.bot.models
             Position = position;
             GameId = gameId;
             ServerId = serverId;
-            OldRank = userOldRks.LastOrDefault().NewRank;
+            if(userOldRks.Count > 0)
+            {
+                OldRank = userOldRks.Last().NewRank;
+            }
+            else
+            {
+                OldRank = config.InitialElo;
+            }
             NewRank = getNewElo(userOldRks, position, new Ranking[] { oldRk2, oldRk3, oldRk4 }, config);
         }
 
@@ -81,7 +88,7 @@ namespace kandora.bot.models
                 ? new double[] { cf.Uma4p1, cf.Uma4p2, cf.Uma4p3, cf.Uma4p4 }
                 : new double[] { cf.Uma3p1, cf.Uma3p2, cf.Uma3p3 };
 
-            //Rank affected by score
+            //Rank affected by score (UMA count also for ELO system, since they are the base ELO variation)
             double basePts =
                 UMA[ownPosition - 1] //UMA
                 + (ownPosition == 1 ? cf.Oka * nbOpponents : -cf.Oka) //OKA
@@ -100,7 +107,7 @@ namespace kandora.bot.models
             }
 
             //Moderating the whole rank change
-            double currentDeltaRatio = cf.EloChangeStartRatio + (cf.EloChangeEndRatio - cf.EloChangeStartRatio) * (Math.Max(nbTotalGames, cf.TrialPeriodDuration) / cf.TrialPeriodDuration);
+            double currentDeltaRatio = cf.EloChangeStartRatio + (cf.EloChangeEndRatio - cf.EloChangeStartRatio) * (Convert.ToDouble(Math.Min(nbTotalGames, cf.TrialPeriodDuration)) / Convert.ToDouble(cf.TrialPeriodDuration));
             double finalRankChange = rankChange * currentDeltaRatio;
 
             var newRank = oldRank + finalRankChange;

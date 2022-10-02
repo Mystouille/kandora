@@ -16,7 +16,60 @@ namespace kandora.bot.resources
         public const string admin_testLeague_description = "Supprime la ligue actuelle et en crée une composée de 4 joueurs";
         public const string admin_testLeague_testLeagueStarted = "Une ligue de test a été créée avec ces joueurs:\n{0}";
         public const string admin_showLeagueConfig_description = "Affiche les paramètres actuels de la ligue";
+        public const string admin_setLeagueConfig_description = "Configure la ligue";
+        public const string admin_setLeagueConfig_allowSanma = "allowSanma";
+        public const string admin_setLeagueConfig_allowSanma_description = "Accepte les parties à 3 joueurs";
+        public const string admin_setLeagueConfig_countPoints = "countPoints";
+        public const string admin_setLeagueConfig_countPoints_description = "Prend en compte les points";
+        public const string admin_setLeagueConfig_useEloSystem = "useEloSystem";
+        public const string admin_setLeagueConfig_useEloSystem_description = "Active l'utilisation d'un système de ELO";
+        public const string admin_setLeagueConfig_startingPoints = "startingPoints";
+        public const string admin_setLeagueConfig_startingPoints_description = "Points de chaque joueur en début de partie";
+        public const string admin_setLeagueConfig_uma3p1 = "uma3p1";
+        public const string admin_setLeagueConfig_uma3p1_description = "Uma du premier joueur en sanma";
+        public const string admin_setLeagueConfig_uma3p2 = "uma3p2";
+        public const string admin_setLeagueConfig_uma3p2_description = "Uma du deuxième joueur en sanma";
+        public const string admin_setLeagueConfig_uma3p3 = "uma3p3";
+        public const string admin_setLeagueConfig_uma3p3_description = "Uma du dernier joueur en sanma";
+        public const string admin_setLeagueConfig_uma4p1 = "uma4p1";
+        public const string admin_setLeagueConfig_uma4p1_description = "Uma du premier joueur";
+        public const string admin_setLeagueConfig_uma4p2 = "uma4p2";
+        public const string admin_setLeagueConfig_uma4p2_description = "Uma du deuxième joueur";
+        public const string admin_setLeagueConfig_uma4p3 = "uma4p3";
+        public const string admin_setLeagueConfig_uma4p3_description = "Uma du troisième joueur";
+        public const string admin_setLeagueConfig_uma4p4 = "uma4p4";
+        public const string admin_setLeagueConfig_uma4p4_description = "Uma du dernier joueur";
+        public const string admin_setLeagueConfig_oka = "oka";
+        public const string admin_setLeagueConfig_oka_description = "Oka";
+        public const string admin_setLeagueConfig_penaltyLast = "penaltyLast";
+        public const string admin_setLeagueConfig_penaltyLast_description = "Pénalité de dernière place";
+        public const string admin_setLeagueConfig_initialElo = "initialElo";
+        public const string admin_setLeagueConfig_initialElo_description = "ELO initial";
+        public const string admin_setLeagueConfig_minElo = "minElo";
+        public const string admin_setLeagueConfig_minElo_description = "ELO minimum";
+        public const string admin_setLeagueConfig_eloChangeDampening = "eloChangeDampening";
+        public const string admin_setLeagueConfig_eloChangeDampening_description = "amortissement de la variation de ELO";
+        public const string admin_setLeagueConfig_eloChangeStartRatio = "eloChangeStartRatio";
+        public const string admin_setLeagueConfig_eloChangeStartRatio_description = "amortissement de départ";
+        public const string admin_setLeagueConfig_eloChangeEndRatio = "eloChangeEndRatio";
+        public const string admin_setLeagueConfig_eloChangeEndRatio_description = "amortissement final";
+        public const string admin_setLeagueConfig_trialPeriodDuration = "trialPeriodDuration";
+        public const string admin_setLeagueConfig_trialPeriodDuration_description = "Nombre de parties avec un faible amortissement";
+        public const string admin_setLeagueConfig_backfillInProgress = "La configuration de la ligue a changé.\n{0}\n\n :bangbang: Kandora recalcule le classement à partir du début... ";
+        public const string admin_setLeagueConfig_backfillFinished = "La configuration de la ligue a changé.\n{0}\n\n :white_check_mark: Kandora a fini de recalculer le classement! ";
+
         //League commands
+        public const string league_register_description = "S'inscrire à la ligue ou modifier ses infos";
+        public const string league_register_mahjsoulName = "mahjsoulname";
+        public const string league_register_mahjsoulName_description = "Ton pseudo Mahjong Soul";
+        public const string league_register_mahjsoulFriendId = "mahjsoulid";
+        public const string league_register_mahjsoulFriendId_description = "Ton ID Mahjong Soul";
+        public const string league_register_tenhouName = "tenhouname";
+        public const string league_register_tenhouName_description = "Ton pseudo Tenhou";
+        public const string league_register_response_newUser = "Tu fais maintenant partie de la ligue de ce serveur";
+        public const string league_register_response_newRanking = "Tu fais maintenant partie de la ligue de ce serveur. Attention, tes pseudo Tenhou et Mahjong Soul sont communs avec les ligues d'autres serveurs";
+        public const string league_register_response_userAlreadyRegistered = "Les nouvelles infos ont été prise en compte";
+
         public const string league_logInfo_description = "Affiche les infos d'une partie à partir de son ID";
         public const string league_option_gameId = "id";
         public const string league_option_gameId_description = "L'ID de la partie (tenhou ou mahjsoul)";
@@ -39,6 +92,11 @@ namespace kandora.bot.resources
         public const string league_submitResult_voteMessage = "Tous les joueurs doivent :o: pour valider ou :x: pour annuler l'enregistrement de la partie.";
         public const string league_submitResult_canceledMessage = "Tous les joueurs ont voté {0}, cette partie ne sera pas enregistrée";
         public const string league_submitResult_validatedMessage = "Tous les joueurs ont voté {0}, cette partie a été enregistrée!";
+
+        public const string league_submitOnlineResult_description = "Enregistre une partie mahjsoul ou tenhou comptant dans le classement";
+        public const string league_submitOnlineResult_gameId = "gameId";
+        public const string league_submitOnlineResult_gameId_description = "L'ID de la partie Mahjsoul ou Tenhou";
+
 
         public const string league_seeRanking_description = "Affiche le classement actuel de la ligue";
         public const string league_seeRanking_youAreHere = "Tu es là";
@@ -115,6 +173,10 @@ namespace kandora.bot.resources
         public const string commandError_sanmaNotAllowed = "La configuration actuelle de la ligue n'accepte pas le sanma";
         public const string commandError_badPlayerNumber = "La configuration actuelle de la ligue n'accepte pas les parties a {0} joueurs";
         public const string commandError_badDistinctPlayerNumber = "Il n'y a que {0} joueurs distincts mentionés";
+        public const string commandError_unknownOnlinePlayerName = "Ce log contient des joueurs qui ne sont pas présent dans la ligue: {0}";
+        public const string commandError_unknownLogFormat = "Cet ID de log n'a pas l'air d'être au format tenhou ou mahjsoul";
+        public const string commandError_mahjsoulUserNameChanged = "Le pseudo mahjsoul de <@{0}> semble avoir changé. Il vient d'être automatiquement mis à jour de {1} vers {2}. De rien ;)";
+        public const string commandError_gameAlreadyExists = "La partie ayant pour id: {0} existe déjà. Une partie ne peut être enregistrée qu'une fois, et que dans une seule ligue à la fois.";
 
 
 

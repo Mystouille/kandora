@@ -29,12 +29,7 @@ namespace kandora.bot.services
             List<Ranking> rkList3 = GetUserRankingHistory(game.User3Id, game.Server.Id);
             List<Ranking> rkList4 = GetUserRankingHistory(game.User4Id, game.Server.Id);
 
-            if (!rkList1.Any() || !rkList2.Any() || !rkList3.Any() || !rkList4.Any())
-            {
-                throw new Exception("Missing one of the player's rank to compute new rank");
-            }
-
-            List<Ranking> newRkList = new List<Ranking>
+            List<Ranking> newRkList = new()
             {
                 new Ranking(game.User1Id, rkList1, rkList2.First(), rkList3.First(), rkList4.First(), 1, game.Id, game.Server.Id, config),
                 new Ranking(game.User2Id, rkList2, rkList1.First(), rkList3.First(), rkList4.First(), 2, game.Id, game.Server.Id, config),
@@ -47,6 +42,18 @@ namespace kandora.bot.services
                 AddRanking(ranking);
             }
             return newRkList;
+        }
+
+        public static bool BackfillRankings(Server server, LeagueConfig config)
+        {
+
+            DeleteRankings(server.Id);
+            var games = ScoreDbService.GetLastNRecordedGame(server);
+            foreach(Game game in games)
+            {
+                UpdateRankings(game, config);
+            }
+            return true;
         }
 
         private static bool AddRanking(Ranking rk)
@@ -102,7 +109,8 @@ namespace kandora.bot.services
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.CommandText = $"DELETE FROM  {tableName} WHERE {serverIdCol} = \'{serverId}\';";
+                command.CommandText = $"DELETE FROM  {tableName} WHERE {serverIdCol} = \'{serverId}\' AND {oldEloCol} IS NOT NULL;";
+                command.ExecuteNonQuery();
                 return;
             }
             throw (new DbConnectionException());

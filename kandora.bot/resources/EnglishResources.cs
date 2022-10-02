@@ -15,7 +15,60 @@ namespace kandora.bot.resources
         public const string admin_testLeague_description = "Delete the current mahjong league and create one with 4 existing players";
         public const string admin_testLeague_testLeagueStarted = "A test league got created with these players:\n{0}";
         public const string admin_showLeagueConfig_description = "Display the league's current parameters";
+        public const string admin_setLeagueConfig_description = "Configure the league";
+        public const string admin_setLeagueConfig_allowSanma = "allowSanma";
+        public const string admin_setLeagueConfig_allowSanma_description = "Allow 3 player games";
+        public const string admin_setLeagueConfig_countPoints = "countPoints";
+        public const string admin_setLeagueConfig_countPoints_description = "Take players points into account";
+        public const string admin_setLeagueConfig_useEloSystem = "useEloSystem";
+        public const string admin_setLeagueConfig_useEloSystem_description = "Activate ELO system";
+        public const string admin_setLeagueConfig_startingPoints = "startingPoints";
+        public const string admin_setLeagueConfig_startingPoints_description = "Player's starting points";
+        public const string admin_setLeagueConfig_uma3p1 = "uma3p1";
+        public const string admin_setLeagueConfig_uma3p1_description = "First player's uma (if sanma and points are activated)";
+        public const string admin_setLeagueConfig_uma3p2 = "uma3p2";
+        public const string admin_setLeagueConfig_uma3p2_description = "Second player's uma (if sanma and points are activated)";
+        public const string admin_setLeagueConfig_uma3p3 = "uma3p3";
+        public const string admin_setLeagueConfig_uma3p3_description = "Last player's uma (if sanma and points are activated)";
+        public const string admin_setLeagueConfig_uma4p1 = "uma4p1";
+        public const string admin_setLeagueConfig_uma4p1_description = "First player's uma (if points are activated)";
+        public const string admin_setLeagueConfig_uma4p2 = "uma4p2";
+        public const string admin_setLeagueConfig_uma4p2_description = "Second player's uma (if points are activated)";
+        public const string admin_setLeagueConfig_uma4p3 = "uma4p3";
+        public const string admin_setLeagueConfig_uma4p3_description = "Third player's uma (if points are activated)";
+        public const string admin_setLeagueConfig_uma4p4 = "uma4p4";
+        public const string admin_setLeagueConfig_uma4p4_description = "Last player's uma (if points are activated)";
+        public const string admin_setLeagueConfig_oka = "oka";
+        public const string admin_setLeagueConfig_oka_description = "Oka (payment to the first player, if points are activated)";
+        public const string admin_setLeagueConfig_penaltyLast = "penaltyLast";
+        public const string admin_setLeagueConfig_penaltyLast_description = "Last place penalty (if points are activated)";
+        public const string admin_setLeagueConfig_initialElo = "initialElo";
+        public const string admin_setLeagueConfig_initialElo_description = "Initial ELO (if ELO is activated)";
+        public const string admin_setLeagueConfig_minElo = "minElo";
+        public const string admin_setLeagueConfig_minElo_description = "Minimum ELO (if ELO is activated)";
+        public const string admin_setLeagueConfig_eloChangeDampening = "eloChangeDampening";
+        public const string admin_setLeagueConfig_eloChangeDampening_description = "ELO change dampening (if ELO is activated)";
+        public const string admin_setLeagueConfig_eloChangeStartRatio = "eloChangeStartRatio";
+        public const string admin_setLeagueConfig_eloChangeStartRatio_description = "ELO/Points change dampening at first game (if ELO or points are activated)";
+        public const string admin_setLeagueConfig_eloChangeEndRatio = "eloChangeEndRatio";
+        public const string admin_setLeagueConfig_eloChangeEndRatio_description = "ELO/Points change dampening after trial period (if ELO or points are activated)";
+        public const string admin_setLeagueConfig_trialPeriodDuration = "trialPeriodDuration";
+        public const string admin_setLeagueConfig_trialPeriodDuration_description = "Number of game during which the ELO/points dampening changes (if ELO or points are activated)";
+        public const string admin_setLeagueConfig_backfillInProgress = "The league config has been changed.\n{0}\n\n :bangbang: Kandora is recomputing the rankings... ";
+        public const string admin_setLeagueConfig_backfillFinished = "The league config has been changed.\n{0}\n\n :white_check_mark: Kandora has finished recomputing the rankings! ";
+
         //League commands
+        public const string league_register_description = "Register to the league or change your info";
+        public const string league_register_mahjsoulId = "mahjsoulid";
+        public const string league_register_mahjsoulName_description = "Your Mahjong Soul nickname";
+        public const string league_register_mahjsoulFriendId = "mahjsoulid";
+        public const string league_register_mahjsoulFriendId_description = "Your Mahjong Soul ID";
+        public const string league_register_tenhouName = "tenhouname";
+        public const string league_register_tenhouName_description = "Your Tenhou nickname";
+        public const string league_register_response_newUser = "You are now registered to this server's league";
+        public const string league_register_response_newRanking = "You are now registered to this server's league. Your tenhou and mahjsoul names are shared between other servers leagues";
+        public const string league_register_response_userAlreadyRegistered = "Your new info has been recorded";
+
         public const string league_logInfo_description = "Display a game's info from its ID";
         public const string league_option_gameId = "id";
         public const string league_option_gameId_description = "The game's ID (tenhou or mahjsoul)";
@@ -38,6 +91,10 @@ namespace kandora.bot.resources
         public const string league_submitResult_voteMessage = "All players must :o: to confirm or :x: to cancel the game recording";
         public const string league_submitResult_canceledMessage = "All players have voted {0}, this game won't be recorded";
         public const string league_submitResult_validatedMessage = "All players have voted {0}, this game has been recorded!";
+
+        public const string league_submitOnlineResult_description = "Record a mahjsoul or tenhou game for the league";
+        public const string league_submitOnlineResult_gameId = "gameId";
+        public const string league_submitOnlineResult_gameId_description = "The tenhou or mahjsoul game id";
 
         public const string league_seeRanking_description = "Affiche le classement actuel de la ligue";
         public const string league_seeRanking_youAreHere = "You are here";
@@ -114,6 +171,11 @@ namespace kandora.bot.resources
         public const string commandError_sanmaNotAllowed = "The current league configuration doesn't accept sanma games";
         public const string commandError_badPlayerNumber = "The current league configuration does not support {0} player games";
         public const string commandError_badDistinctPlayerNumber = "There are only {0} distinct players mentioned";
+        public const string commandError_unknownOnlinePlayerName = "The log has players that do not match with any current league members: {0}";
+        public const string commandError_unknownLogFormat = "This log ID doesn't seem to be a mahjsoul or tenhou format";
+        public const string commandError_mahjsoulUserNameChanged = "Detected old user name for <@{0}>. Automatically updated from {1} to {2}, don't thank me ;)";
+        public const string commandError_gameAlreadyExists = "The game with ID: {0} already exists. A game can be recorded only once, and contribute to only one league.";
+
 
         //League
         public const string kandoraLeague_roleName = "Kandora League";

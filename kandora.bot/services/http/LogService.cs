@@ -40,15 +40,15 @@ namespace kandora.bot.services.http
 
         public async Task<RiichiGame> GetLog(string logId, int lang)
         {
-            string log;
+            string logIdSanitized = logId.Replace(" ", "");
             if (tenhouRegex.IsMatch(logId))
             {
-                log = await this.GetTenhouLog(logId);
+                var log = await GetTenhouLog(logId);
                 return TenhouLogParser.ParseTenhouFormatGame(log, GameType.Tenhou);
             }
             else
             {
-                log = await this.GetMahjsoulLogAsTenhou(logId, lang);
+                var log = await GetMahjsoulLogAsTenhou(logId, lang);
                 return TenhouLogParser.ParseTenhouFormatGame(log, GameType.Mahjsoul);
             }
         }

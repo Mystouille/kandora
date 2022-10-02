@@ -1,9 +1,11 @@
 ﻿using kandora.bot.exceptions;
 using kandora.bot.models;
 using kandora.bot.services.db;
+using kandora.bot.utils;
 using Npgsql;
 using NpgsqlTypes;
 using System;
+using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -89,24 +91,46 @@ namespace kandora.bot.services
 
         public static int CreateLeague()
         {
-            var leagueId = CreateLeague(countPoints: false, useEloSystem: true);
-            SetConfigValue(startingPointsCol, leagueId, 0);
-            SetConfigValue(allowSanmaCol, leagueId, false);
-            SetConfigValue(uma3p1Col, leagueId, (double)20);
-            SetConfigValue(uma3p2Col, leagueId, (double)0);
-            SetConfigValue(uma3p3Col, leagueId, (double)(-20));
-            SetConfigValue(uma4p1Col, leagueId, (double)30);
-            SetConfigValue(uma4p2Col, leagueId, (double)10);
-            SetConfigValue(uma4p3Col, leagueId, (double)(-10));
-            SetConfigValue(uma4p4Col, leagueId, (double)(-30));
-            SetConfigValue(okaCol, leagueId, (double)0);
-            SetConfigValue(penaltyLastCol, leagueId, (double)0);
-            SetConfigValue(initialEloCol, leagueId, (double)1500);
-            SetConfigValue(minEloCol, leagueId, (double)1200);
-            SetConfigValue(baseEloChangeDampeningCol, leagueId, (double)10);
-            SetConfigValue(eloChangeStartRatioCol, leagueId, (double)1);
-            SetConfigValue(eloChangeEndRatioCol, leagueId, (double)0.2);
-            SetConfigValue(trialPeriodDurationCol, leagueId, 80);
+
+            var settings = ConfigurationManager.AppSettings;
+            var countPoints = bool.Parse(settings.Get("countPoints"));
+            var useEloSystem = bool.Parse(settings.Get("useEloSystem"));
+            var startingPoints = Double.Parse(settings.Get("startingPoints"));
+            var allowSanma = Boolean.Parse(settings.Get("allowSanma"));
+            var uma3p1 = Double.Parse(settings.Get("uma3p1"));
+            var uma3p2 = Double.Parse(settings.Get("uma3p2"));
+            var uma3p3 = Double.Parse(settings.Get("uma3p3"));
+            var uma4p1 = Double.Parse(settings.Get("uma4p1"));
+            var uma4p2 = Double.Parse(settings.Get("uma4p2"));
+            var uma4p3 = Double.Parse(settings.Get("uma4p3"));
+            var uma4p4 = Double.Parse(settings.Get("uma4p4"));
+            var oka = Double.Parse(settings.Get("oka"));
+            var penaltyLast = Double.Parse(settings.Get("penaltyLast"));
+            var initialElo = Double.Parse(settings.Get("initialElo"));
+            var minElo = Double.Parse(settings.Get("minElo"));
+            var baseEloChangeDampening = Double.Parse(settings.Get("baseEloChangeDampening"));
+            var eloChangeStartRatio = Double.Parse(settings.Get("eloChangeStartRatio"));
+            var eloChangeEndRatio = Double.Parse(settings.Get("eloChangeEndRatio"));
+            var trialPeriodDuration = Double.Parse(settings.Get("trialPeriodDuration"));
+
+            var leagueId = CreateLeague(countPoints, useEloSystem);
+            SetConfigValue(startingPointsCol, leagueId, startingPoints);
+            SetConfigValue(allowSanmaCol, leagueId, allowSanma);
+            SetConfigValue(uma3p1Col, leagueId, uma3p1);
+            SetConfigValue(uma3p2Col, leagueId, uma3p2);
+            SetConfigValue(uma3p3Col, leagueId, uma3p3);
+            SetConfigValue(uma4p1Col, leagueId, uma4p1);
+            SetConfigValue(uma4p2Col, leagueId, uma4p2);
+            SetConfigValue(uma4p3Col, leagueId, uma4p3);
+            SetConfigValue(uma4p4Col, leagueId, uma4p4);
+            SetConfigValue(okaCol, leagueId, oka);
+            SetConfigValue(penaltyLastCol, leagueId, penaltyLast);
+            SetConfigValue(initialEloCol, leagueId, initialElo);
+            SetConfigValue(minEloCol, leagueId, minElo);
+            SetConfigValue(baseEloChangeDampeningCol, leagueId, baseEloChangeDampening);
+            SetConfigValue(eloChangeStartRatioCol, leagueId, eloChangeStartRatio);
+            SetConfigValue(eloChangeEndRatioCol, leagueId, eloChangeEndRatio);
+            SetConfigValue(trialPeriodDurationCol, leagueId, trialPeriodDuration);
 
             return leagueId;
         }

@@ -30,7 +30,7 @@ namespace kandora.bot.services
         private const string ServerIdCol = "serverId";
         private const string FullLogIdCol = "fullLog";
         private const string TimestampCol = "timestamp";
-        
+
 
         public static (Game, List<Ranking>) RecordIRLGame(string[] members, float[] scores, Server server, LeagueConfig leagueConfig)
         {
@@ -86,7 +86,7 @@ namespace kandora.bot.services
             var playerMjIds = gameLog.UserIds; //mahjongsoul internal Ids
             var scores = gameLog.FinalScores;
             var userList = serverWithUsers.Users;
-            var platform = gameLog.GameType;
+            var platform = gameLog.GameTypeStr;
 
             // TODO feed timestamp from game data
             if (playerNames.Length < 4)
@@ -94,26 +94,26 @@ namespace kandora.bot.services
                 throw new Exception("No sanma allowed");
             }
 
-            var nameIdScorePos = new List<(string,string,int,int)>(); //0=start east, 1=start south,...
-            for(int i=0; i<4; i++)
+            var nameIdScorePos = new List<(string, string, int, int)>(); //0=start east, 1=start south,...
+            for (int i = 0; i < 4; i++)
             {
-                nameIdScorePos.Add((playerNames[i], playerMjIds[i], scores[i],i));
+                nameIdScorePos.Add((playerNames[i], playerMjIds[i], scores[i], i));
             }
             // We sort them by comparing their scores minus their initial pos, since initPos<<<score it's ok, I guess?
-            nameIdScorePos.Sort((tuple1, tuple2) => (tuple2.Item3- tuple2.Item4).CompareTo((tuple1.Item3 - tuple1.Item4)));
+            nameIdScorePos.Sort((tuple1, tuple2) => (tuple2.Item3 - tuple2.Item4).CompareTo((tuple1.Item3 - tuple1.Item4)));
             int[] sortedScores = nameIdScorePos.Select(x => x.Item3).ToArray();
             string[] sortedNames = nameIdScorePos.Select(x => x.Item1).ToArray();
             string[] sortedMjIds = nameIdScorePos.Select(x => x.Item2).ToArray();
             string[] sortedPlayerIds = new string[4];
 
             List<int> toRecordMjId = new List<int>();
-            for(int i = 0; i<4; i++)
+            for (int i = 0; i < 4; i++)
             {
                 User user = null;
                 switch (gameType)
                 {
                     //Get the User objects from the Name or Ids present in the log
-                    case GameType.Mahjsoul: 
+                    case GameType.Mahjsoul:
                         user = userList.Find(x => x.MahjsoulUserId == sortedMjIds[i]);
                         if (user == null)
                         {
@@ -152,7 +152,7 @@ namespace kandora.bot.services
                 command.ExecuteNonQuery();
 
                 //Add the majsouldID to the new users:
-                foreach(var idx in toRecordMjId)
+                foreach (var idx in toRecordMjId)
                 {
                     UserDbService.SetMahjsoulUserId(sortedPlayerIds[idx], sortedMjIds[idx]);
                 }
@@ -168,9 +168,9 @@ namespace kandora.bot.services
 
         private static string GetIRLLogId()
         {
-            string maxId = $"{GetMaxId()}".PadLeft(4,'0');
+            string maxId = $"{GetMaxId()}".PadLeft(4, '0');
             maxId = maxId.Substring(maxId.Length - 3);
-            return DateTime.Now.ToString($"yyyyMMdd-HHmm-"+maxId);
+            return DateTime.Now.ToString($"yyyyMMdd-HHmm-" + maxId);
         }
 
         private static int GetMaxId()
@@ -178,7 +178,7 @@ namespace kandora.bot.services
             return GetMaxValueFromCol(GameTableName, IdCol);
         }
 
-         public static void DeleteGamesFromServer(string serverId)
+        public static void DeleteGamesFromServer(string serverId)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -192,9 +192,10 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static Game GetLastRecordedGame(Server server)
+        public static List<Game> GetLastNRecordedGame(Server server, int numberOfGames = -1)
         {
             var dbCon = DBConnection.Instance();
+            var games = new List<Game>();
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
@@ -207,7 +208,8 @@ namespace kandora.bot.services
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, server.Id);
 
                 Reader = command.ExecuteReader();
-                while (Reader.Read())
+                var idx = 0;
+                while (Reader.Read() && (numberOfGames < 0 || idx < numberOfGames))
                 {
                     string id = Reader.GetString(0);
                     string user1Id = Reader.GetString(1);
@@ -223,16 +225,34 @@ namespace kandora.bot.services
                     DateTime timestamp = Reader.GetDateTime(11);
                     GameType platform = (GameType)Enum.Parse(typeof(GameType), platformStr);
 
-                    Reader.Close();
                     var game = new Game(id, server, user1Id, user2Id, user3Id, user4Id, platform, timestamp);
                     game.FullLog = fullLog;
                     game.User1Score = user1Score;
                     game.User2Score = user2Score;
                     game.User3Score = user3Score;
                     game.User4Score = user4Score;
+
+                    games = games.Prepend(game).ToList();
+                    idx++;
                 }
+
+                Reader.Close();
             }
+            return games;
             throw (new DbConnectionException());
+        }
+
+        public static bool DoesGameExist(string logId, Server server)
+        {
+            try
+            {
+                var game = GetGameFromLogId(logId, server);
+                return true;
+            }
+            catch(Exception e)
+            {
+                return false;
+            }
         }
 
         public static Game GetGameFromLogId(string logId, Server server)
@@ -276,8 +296,8 @@ namespace kandora.bot.services
                     game.User4Score = user4Score;
                     game.FullLog = fullLog;
                     return game;
-
                 }
+                Reader.Close();
                 throw (new Exception($"Game with logId:{logId} was not found"));
             }
             throw (new DbConnectionException());

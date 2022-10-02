@@ -1,5 +1,4 @@
 ﻿using DSharpPlus;
-using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using kandora.bot.http;
@@ -20,6 +19,61 @@ namespace kandora.bot.commands.slash
     [SlashCommandGroup("league", Resources.admin_groupDescription, defaultPermission: false)]
     class LeagueSlashCommands : KandoraSlashCommandModule
     {
+        [SlashCommand("register", Resources.league_register_description)]
+        public async Task GetLogInfo(InteractionContext ctx,
+             [Option(Resources.league_register_mahjsoulName, Resources.league_register_mahjsoulName_description)] string mahjsoulName = "",
+             [Option(Resources.league_register_mahjsoulFriendId, Resources.league_register_mahjsoulFriendId_description)] string mahjsoulFriendId = "",
+             [Option(Resources.league_register_tenhouName, Resources.league_register_tenhouName_description)] string tenhouName = "")
+        {
+            try
+            {
+                var serverId = ctx.Guild.Id.ToString();
+                var allUsers = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(allUsers);
+                var server = servers[serverId];
+                var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+                var userId = ctx.User.Id.ToString();
+                var responseMessage = "";
+                if (UserDbService.IsUserInDb(userId))
+                {
+                    if(RankingDbService.GetUserRankingHistory(userId, serverId, latest: true).Count == 0)
+                    {
+                        RankingDbService.InitUserRanking(userId, serverId, config);
+                        responseMessage = Resources.league_register_response_newRanking;
+                    }
+                    else
+                    {
+                        responseMessage = Resources.league_register_response_userAlreadyRegistered;
+                    }
+                }
+                else
+                {
+                    UserDbService.CreateUser(ctx.User.Id.ToString(), serverId, config);
+                    responseMessage = Resources.league_register_response_newUser;
+                }
+
+                if (mahjsoulName.Length > 0)
+                {
+                    UserDbService.SetMahjsoulName(userId, mahjsoulName);
+                }
+                if (mahjsoulFriendId.Length > 0)
+                {
+                    UserDbService.SetMahjsoulFriendId(userId, mahjsoulName);
+                }
+                if (tenhouName.Length > 0)
+                {
+                    UserDbService.SetTenhouName(userId, tenhouName);
+                }
+                var rb = new DiscordInteractionResponseBuilder().WithContent(responseMessage).AsEphemeral();
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
+
+            }
+            catch (Exception e)
+            {
+                replyWithException(ctx, e);
+            }
+        }
+
         [SlashCommand("getLogInfo", Resources.league_logInfo_description)]
         public async Task GetLogInfo(InteractionContext ctx,
              [Option(Resources.league_option_gameId, Resources.league_option_gameId_description)] string gameId)
@@ -38,8 +92,8 @@ namespace kandora.bot.commands.slash
             }
         }
 
-        [SlashCommand("submitResult", Resources.league_submitResult_description)]
-        public async Task SubmitResult(InteractionContext ctx,
+        [SlashCommand("submitIRL", Resources.league_submitResult_description)]
+        public async Task SubmitIRL(InteractionContext ctx,
             [Option(Resources.league_option_player1, Resources.league_option_anyPlayer_description)] DiscordUser player1,
             [Option(Resources.league_option_player1Score, Resources.league_option_anyScore_description)] string score1,
             [Option(Resources.league_option_player2, Resources.league_option_anyPlayer_description)] DiscordUser player2,
@@ -55,9 +109,84 @@ namespace kandora.bot.commands.slash
                 var sortedScores = usersScores.ToList();
                 sortedScores.Sort((tuple1, tuple2) => tuple2.Item2.CompareTo(tuple1.Item2));
 
-                var usersIds = sortedScores.Select(x => x.Item1.Id.ToString()).ToArray();
-                var scores = sortedScores.Select(x => x.Item2).ToArray();
-                await scoreIrlMatch(ctx, usersIds, scores);
+                var userIds = sortedScores.Select(x => x.Item1.Id.ToString()).ToArray();
+                var scoresStr = sortedScores.Select(x => x.Item2).ToArray();
+
+                float[] scores = null;
+                if (scoresStr != null)
+                {
+                    scores = scoresStr.Select(x => float.Parse(x)).ToArray();
+                }
+                var serverId = ctx.Guild.Id.ToString();
+                var userId = ctx.Member.Id.ToString();
+                var channelDiscordId = ctx.Channel.Id.ToString();
+                var allUsers = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(allUsers);
+                var server = servers[serverId];
+                foreach (var id in userIds)
+                {
+                    if (server.Users.Where(x => x.Id == id).Count() == 0)
+                    {
+                        throw new Exception($"{String.Format(Resources.commandError_CouldNotFindGameUser, id)}");
+                    }
+                }
+                var leagueConfig = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+                if (leagueConfig.CountPoints && scores == null)
+                {
+                    throw new Exception(Resources.commandError_LeagueConfigRequiresScore);
+                }
+                if (!leagueConfig.AllowSanma && userIds.Length == 3)
+                {
+                    throw new Exception(Resources.commandError_sanmaNotAllowed);
+                }
+                if (userIds.Length < 3 || userIds.Length > 4)
+                {
+                    throw new Exception(String.Format(Resources.commandError_badPlayerNumber, userIds.Length));
+                }
+                var distinctUsers = userIds.Distinct();
+                if (distinctUsers.Count() < userIds.Length)
+                {
+                    throw new Exception(String.Format(Resources.commandError_badDistinctPlayerNumber, distinctUsers.Count()));
+                }
+
+                var gameResult = PrintGameResult(ctx.Client, userIds, scores);
+
+                var gameMsg = $"{Resources.league_submitResult_voteMessage}\n{gameResult}";
+                await kandoraContext.AddPendingGame(ctx, gameMsg, new PendingGame(userIds, scores, server));
+            }
+            catch (Exception e)
+            {
+                replyWithException(ctx, e);
+            }
+        }
+
+        [SlashCommand("submit", Resources.league_submitOnlineResult_description)]
+        public async Task Submit(InteractionContext ctx,
+            [Option(Resources.league_submitOnlineResult_gameId, Resources.league_submitOnlineResult_gameId_description)] string gameId)
+        {
+            try
+            {
+                var serverId = ctx.Guild.Id.ToString();
+                var allUsers = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(allUsers);
+                var server = servers[serverId];
+                var serverUsers = server.Users;
+                var log = await LogService.Instance.GetLog(gameId, 2);
+
+                var gameExists = ScoreDbService.DoesGameExist(log.Ref, server);
+
+                if (gameExists)
+                {
+                    var rb = new DiscordInteractionResponseBuilder().WithContent(String.Format(Resources.commandError_gameAlreadyExists, log.Ref)).AsEphemeral();
+                    await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
+                    return;
+                }
+
+                var users = await GetUsersFromLog(log, serverUsers, ctx);
+                var gameResult = PrintGameResult(log, ctx.Client, users);
+
+                var gameMsg = $"{Resources.league_submitResult_voteMessage}\n{gameResult}";
+                await kandoraContext.AddPendingGame(ctx, gameMsg, new PendingGame(users.Select(x => x.Id.ToString()).ToArray(), server, log));
             }
             catch (Exception e)
             {
@@ -86,13 +215,13 @@ namespace kandora.bot.commands.slash
 
                 List<Ranking> sortedRanks = latestUserRankings.Values.ToList();
                 sortedRanks.Sort((val1, val2) => val2.NewRank.CompareTo(val1.NewRank));
-
                 StringBuilder sb = new StringBuilder();
                 int i = 1;
                 sb.AppendLine(":partying_face:");
                 foreach (var rank in sortedRanks)
                 {
-                    sb.Append($"{i}: <@{rank.UserId}> ({rank.NewRank}) {(rank.UserId == userId ? $"<<< {Resources.league_seeRanking_youAreHere}" : "")}\n");
+                    var rankValue = Convert.ToInt32(rank.NewRank);
+                    sb.Append($"{i}: <@{rank.UserId}> ({rankValue}) {(rank.UserId == userId ? $"<<< {Resources.league_seeRanking_youAreHere}" : "")}\n");
                     i++;
                 }
                 var leaderboard = sb.ToString();
@@ -103,6 +232,70 @@ namespace kandora.bot.commands.slash
             {
                 replyWithException(ctx, e);
             }
+        }
+
+        //Checks if a log has all its player in the league and return them
+        private async Task<List<User>> GetUsersFromLog(RiichiGame log, List<User> users, InteractionContext ctx)
+        {
+            int nbPlayers = log.Names.Length;
+            List<string> notFound = new List<string>();
+            List<User> foundUsers = new List<User>();
+            for (int i = 0; i < nbPlayers; i++)
+            {
+                User foundUser = null;
+                foreach (var user in users)
+                {
+                    switch (log.GameType)
+                    {
+                        case GameType.Mahjsoul:
+                            bool matchName = user.MahjsoulName != null && user.MahjsoulName == log.Names[i];
+                            bool matchId = user.MahjsoulUserId != null && user.MahjsoulUserId == log.UserIds[i];
+                            if (matchId && !matchName)
+                            {
+                                UserDbService.SetMahjsoulName(user.Id, log.Names[i]);
+                                var notification = String.Format(Resources.commandError_mahjsoulUserNameChanged, user.Id, user.MahjsoulName, log.Names[i]);
+                                var rb = new DiscordInteractionResponseBuilder().WithContent(notification);
+                                await ctx.Channel.SendMessageAsync(notification).ConfigureAwait(true);
+                            }
+                            if (matchName && !matchId)
+                            {
+                                UserDbService.SetMahjsoulUserId(user.Id, log.UserIds[i]);
+                            }
+                            if (matchName || matchId)
+                            {
+                                foundUser = user;
+                            }
+                            break;
+                        case GameType.Tenhou:
+                            if (user.TenhouName != null && user.TenhouName == log.Names[i])
+                            {
+                                foundUser = user;
+                            }
+                            break;
+                        default:
+                            throw new Exception(Resources.commandError_unknownLogFormat);
+                    }
+                    if (foundUser != null)
+                    {
+                        break;
+                    }
+                }
+                if (foundUser == null)
+                {
+                    notFound.Add(log.Names[i]);
+                }
+                else
+                {
+                    foundUsers.Add(foundUser);
+                }
+            }
+            if (notFound.Count > 0)
+            {
+                {
+                    throw new Exception(String.Format(Resources.commandError_unknownOnlinePlayerName, string.Join(", ", notFound)));
+                }
+            }
+            return foundUsers;
         }
 
         private async Task scoreIrlMatch(InteractionContext ctx, string[] userIds, string[] scoresStr = null)
@@ -147,10 +340,7 @@ namespace kandora.bot.commands.slash
             var gameResult = PrintGameResult(ctx.Client, userIds, scores);
 
             var gameMsg = $"{Resources.league_submitResult_voteMessage}\n{gameResult}";
-            var rb = new DiscordInteractionResponseBuilder().WithContent(gameMsg);
-            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
-            var response = await ctx.GetOriginalResponseAsync();
-            await kandoraContext.AddPendingGame(ctx, response, new PendingGame(userIds, scores, server));
+            await kandoraContext.AddPendingGame(ctx, gameMsg, new PendingGame(userIds, scores, server));
         }
 
         private static string PrintGameResult(RiichiGame game, DiscordClient client, List<User> users = null)
