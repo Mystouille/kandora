@@ -74,7 +74,7 @@ namespace kandora.bot.commands.slash
             }
         }
 
-        [SlashCommand("getLogInfo", Resources.league_logInfo_description)]
+        [SlashCommand("seeLog", Resources.league_logInfo_description)]
         public async Task GetLogInfo(InteractionContext ctx,
              [Option(Resources.league_option_gameId, Resources.league_option_gameId_description)] string gameId)
         {
@@ -296,51 +296,6 @@ namespace kandora.bot.commands.slash
                 }
             }
             return foundUsers;
-        }
-
-        private async Task scoreIrlMatch(InteractionContext ctx, string[] userIds, string[] scoresStr = null)
-        {
-            float[] scores = null;
-            if (scoresStr != null)
-            {
-                scores = scoresStr.Select(x => float.Parse(x)).ToArray();
-            }
-            var serverId = ctx.Guild.Id.ToString();
-            var userId = ctx.Member.Id.ToString();
-            var channelDiscordId = ctx.Channel.Id.ToString();
-            var allUsers = UserDbService.GetUsers();
-            var servers = ServerDbService.GetServers(allUsers);
-            var server = servers[serverId];
-            foreach (var id in userIds)
-            {
-                if (server.Users.Where(x => x.Id == id).Count() == 0)
-                {
-                    throw new Exception($"{String.Format(Resources.commandError_CouldNotFindGameUser, id)}");
-                }
-            }
-            var leagueConfig = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
-            if (leagueConfig.CountPoints && scores == null)
-            {
-                throw new Exception(Resources.commandError_LeagueConfigRequiresScore);
-            }
-            if (!leagueConfig.AllowSanma && userIds.Length == 3)
-            {
-                throw new Exception(Resources.commandError_sanmaNotAllowed);
-            }
-            if (userIds.Length < 3 || userIds.Length > 4)
-            {
-                throw new Exception(String.Format(Resources.commandError_badPlayerNumber, userIds.Length));
-            }
-            var distinctUsers = userIds.Distinct();
-            if (distinctUsers.Count() < userIds.Length)
-            {
-                throw new Exception(String.Format(Resources.commandError_badDistinctPlayerNumber, distinctUsers.Count()));
-            }
-
-            var gameResult = PrintGameResult(ctx.Client, userIds, scores);
-
-            var gameMsg = $"{Resources.league_submitResult_voteMessage}\n{gameResult}";
-            await kandoraContext.AddPendingGame(ctx, gameMsg, new PendingGame(userIds, scores, server));
         }
 
         private static string PrintGameResult(RiichiGame game, DiscordClient client, List<User> users = null)
