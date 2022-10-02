@@ -76,7 +76,7 @@ namespace kandora.bot.commands.slash
             }
         }
 
-        [SlashCommand("showLeagueConfig", Resources.admin_showLeagueConfig_description)]
+        [SlashCommand("seeConfig", Resources.admin_showLeagueConfig_description)]
         public async Task ShowLeagueConfig(InteractionContext ctx)
         {
             try
@@ -123,7 +123,7 @@ namespace kandora.bot.commands.slash
             return sb.ToString();
         }
 
-        [SlashCommand("setLeagueConfig", Resources.admin_setLeagueConfig_description)]
+        [SlashCommand("setConfig", Resources.admin_setLeagueConfig_description)]
         public async Task SetLeagueConfig(InteractionContext ctx,
             [Option(Resources.admin_setLeagueConfig_allowSanma, Resources.admin_setLeagueConfig_allowSanma_description)] bool allowSanma,
             [Option(Resources.admin_setLeagueConfig_countPoints, Resources.admin_setLeagueConfig_countPoints_description)] bool countPoints,

@@ -18,7 +18,6 @@ namespace kandora.bot.services
         public static string mahjsoulFriendIdCol = "mahjsoulFriendId";
         public static string mahjsoulUserIdCol = "mahjsoulUserId";
         public static string tenhouNameCol = "tenhouName";
-        public static string leaguePasswordCol = "leaguePassword";
         
         public static string isAdminCol = "isAdmin";
 
@@ -30,7 +29,7 @@ namespace kandora.bot.services
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {idCol}, {mahjsoulNameCol}, {mahjsoulFriendIdCol}, {mahjsoulUserIdCol}, {tenhouNameCol}, {leaguePasswordCol} FROM {tableName}";
+                command.CommandText = $"SELECT {idCol}, {mahjsoulNameCol}, {mahjsoulFriendIdCol}, {mahjsoulUserIdCol}, {tenhouNameCol} FROM {tableName}";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();
@@ -43,7 +42,6 @@ namespace kandora.bot.services
                     user.MahjsoulFriendId = reader.IsDBNull(2) ? null : reader.GetString(2);
                     user.MahjsoulUserId = reader.IsDBNull(3) ? null : reader.GetString(3);
                     user.TenhouName = reader.IsDBNull(4) ? null : reader.GetString(4);
-                    user.LeaguePassword = reader.IsDBNull(5) ? null : reader.GetString(5);
 
                     users.Add(id, user);
                 }
@@ -112,12 +110,5 @@ namespace kandora.bot.services
         {
             UpdateFieldInTable(tableName, tenhouNameCol, userId, value);
         }
-        public static void SetLeaguePassword(string userId, string value)
-        {
-            var hashedPass = BCrypt.Net.BCrypt.HashPassword(value, workFactor: 13);
-            UpdateFieldInTable(tableName, leaguePasswordCol, userId, hashedPass);
-        }
-
-
     }
 }

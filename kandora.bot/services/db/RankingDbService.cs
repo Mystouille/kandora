@@ -47,7 +47,7 @@ namespace kandora.bot.services
         public static bool BackfillRankings(Server server, LeagueConfig config)
         {
 
-            DeleteRankings(server.Id);
+            DeleteRankings(server.Id, butNotTheInitial: true);
             var games = ScoreDbService.GetLastNRecordedGame(server);
             foreach(Game game in games)
             {
@@ -103,13 +103,20 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        internal static void DeleteRankings(string serverId)
+        internal static void DeleteRankings(string serverId, bool butNotTheInitial = false)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.CommandText = $"DELETE FROM  {tableName} WHERE {serverIdCol} = \'{serverId}\' AND {oldEloCol} IS NOT NULL;";
+                if (butNotTheInitial)
+                {
+                    command.CommandText = $"DELETE FROM  {tableName} WHERE {serverIdCol} = \'{serverId}\' AND {oldEloCol} IS NOT NULL;";
+                }
+                else
+                {
+                    command.CommandText = $"DELETE FROM  {tableName} WHERE {serverIdCol} = \'{serverId}\'";
+                }
                 command.ExecuteNonQuery();
                 return;
             }
