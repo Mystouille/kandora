@@ -67,33 +67,29 @@ namespace kandora.bot.utils
 
 
         //Recursively builds the hand
-        private static List<string> SplitTiles(string hand)
+        public static List<string> SplitTiles(string hand, bool isUnique = false)
         {
-            var tileNames = new List<string>();
+            var tiles = new List<string>();
+
             int i = 0;
+            int k = 0;
             while (i < hand.Length)
             {
-                if (SUIT_NAMES.Contains(hand[i])) break;
+                if (SUIT_NAMES.Contains(hand[i]))
+                {
+                    char fixedChar = hand[i];
+                    for (int j = k; j < i; j++)
+                    {
+                        string tileToAdd = $"{hand[j]}{fixedChar}";
+
+                        if (!(isUnique && tiles.Contains(tileToAdd)))
+                            tiles.Add(tileToAdd);
+                    }
+                    k = i + 1; // char after the letter for the next iteration
+                }
                 i++;
             }
-            if (i == hand.Length)
-            {
-                return tileNames;
-            }
-            var subHandValues = hand.Substring(0, i);
-            foreach (char c in subHandValues)
-            {
-                if (c == ' ') continue;
-                tileNames.Add($"{c}{hand[i]}");
-            }
-            if (i == hand.Length - 1)
-            {
-                return tileNames;
-            }
-            var restHand = hand.Substring(i + 1);
-            tileNames.AddRange(SplitTiles(restHand));
-
-            return tileNames;
+            return tiles;
         }
 
         //input: RRRg output: 7z,7z,7z
