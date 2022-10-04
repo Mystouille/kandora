@@ -67,7 +67,7 @@ namespace kandora.bot.utils
 
 
         //Recursively builds the hand
-        private static List<string> SplitTiles(string hand)
+        public static List<string> SplitTiles(string hand, bool isUnique = false)
         {
             var tiles = new List<string>();
 
@@ -81,7 +81,6 @@ namespace kandora.bot.utils
                     for (int j = k; j < i; j++)
                     {
                         string tileToAdd = $"{hand[j]}{fixedChar}";
-                        tileToAdd = Simplified(tileToAdd);
 
                         if (!(isUnique && tiles.Contains(tileToAdd)))
                             tiles.Add(tileToAdd);
