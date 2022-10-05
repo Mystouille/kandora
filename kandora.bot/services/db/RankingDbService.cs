@@ -29,6 +29,27 @@ namespace kandora.bot.services
             List<Ranking> rkList3 = GetUserRankingHistory(game.User3Id, game.Server.Id);
             List<Ranking> rkList4 = GetUserRankingHistory(game.User4Id, game.Server.Id);
 
+            if (rkList1.Count() == 0)
+            {
+                InitUserRanking(game.User1Id, game.Server.Id, config);
+                rkList1 = GetUserRankingHistory(game.User1Id, game.Server.Id);
+            }
+            if (rkList2.Count() == 0)
+            {
+                InitUserRanking(game.User2Id, game.Server.Id, config);
+                rkList2 = GetUserRankingHistory(game.User2Id, game.Server.Id);
+            }
+            if (rkList3.Count() == 0)
+            {
+                InitUserRanking(game.User3Id, game.Server.Id, config);
+                rkList3 = GetUserRankingHistory(game.User3Id, game.Server.Id);
+            }
+            if (rkList4.Count() == 0)
+            {
+                InitUserRanking(game.User4Id, game.Server.Id, config);
+                rkList4 = GetUserRankingHistory(game.User4Id, game.Server.Id);
+            }
+
             List<Ranking> newRkList = new()
             {
                 new Ranking(game.User1Id, rkList1, rkList2.First(), rkList3.First(), rkList4.First(), 1, game.Id, game.Server.Id, config),

@@ -259,6 +259,12 @@ namespace kandora.bot.commands.slash
                 sb.AppendLine(":partying_face:");
                 foreach (var rank in sortedRanks)
                 {
+                    var userStr = $"<@{rank.UserId}>";
+                    long parseResult;
+                    if (!long.TryParse(rank.UserId, out parseResult))
+                    {
+                        userStr = rank.UserId;
+                    }
                     var rankValue = Convert.ToInt32(rank.NewRank);
                     sb.Append($"{i}: <@{rank.UserId}> ({rankValue}) {(rank.UserId == userId ? $"<<< {Resources.league_seeRanking_youAreHere}" : "")}\n");
                     i++;

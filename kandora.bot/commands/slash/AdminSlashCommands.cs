@@ -31,7 +31,7 @@ namespace kandora.bot.commands.slash
                 var leagueConfigId = LeagueConfigDbService.CreateLeague();
                 var roleName = Resources.kandoraLeague_roleName;
                 ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name, "dummyRoleId", roleName, leagueConfigId);
-                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_startLeague_leagueStarted, ctx.Guild.Name));
+                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_startLeague_leagueStarted, ctx.Guild.Name)).AsEphemeral();
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
             catch (Exception e)
@@ -282,6 +282,9 @@ namespace kandora.bot.commands.slash
                 }
 
                 var server = servers[serverDiscordId];
+                var configId = server.LeagueConfigId;
+                var config = LeagueConfigDbService.GetLeagueConfig(configId);
+                UserDbService.CreateUser(nickname, server.Id, config);
                 ServerDbService.AddUserToServer(nickname, serverDiscordId);
                 if (mahjsoulName.Length == 0)
                 {
