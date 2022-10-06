@@ -23,7 +23,7 @@ namespace kandora.bot.commands.slash
             FileStream stream = null;
             try
             {
-                var basicHand = HandParser.SimpleTiles(handStr).Where(x => x.Length == 2).ToList();
+                var basicHand = HandParser.SplitTiles(handStr);
                 if (basicHand.Count == 0)
                 {
                     throw new Exception("invalid hand");

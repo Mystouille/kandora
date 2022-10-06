@@ -1,7 +1,5 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
-using kandora.bot.resources;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -50,7 +48,7 @@ namespace kandora.bot.utils
         public static IEnumerable<DiscordEmoji> GetHandEmojiCodes(string hand, DiscordClient client, bool sorted = false)
         {
             StringBuilder sb = new StringBuilder();
-            var tileList = SplitTiles(hand);
+            var tileList = SplitTiles(hand, true); // We want unique emotes
             if (sorted)
             {
                 tileList.Sort(new TileComparer());
@@ -58,15 +56,9 @@ namespace kandora.bot.utils
             return tileList.Select(x => GetEmojiCode(x, client));
         }
 
-        //input: RRRg output: 777z
-        public static string GetSimpleHand(string hand)
-        {
-            var tileList = string.Join("", SimpleTiles(hand));
-            return tileList;
-        }
-
-
-        //Recursively builds the hand
+        // Builds the hand
+        // ex. 123456m556677p99s -> 1m2m3m4m5m6m5p5p6p6p7p7p9s9s
+        // ex. unique : 11123455s -> 1s2s3s4s5s
         public static List<string> SplitTiles(string hand, bool isUnique = false)
         {
             var tiles = new List<string>();
@@ -80,7 +72,7 @@ namespace kandora.bot.utils
                     char fixedChar = hand[i];
                     for (int j = k; j < i; j++)
                     {
-                        string tileToAdd = $"{hand[j]}{fixedChar}";
+                        string tileToAdd = SimplifyTile($"{hand[j]}{fixedChar}");
 
                         if (!(isUnique && tiles.Contains(tileToAdd)))
                             tiles.Add(tileToAdd);
@@ -92,85 +84,16 @@ namespace kandora.bot.utils
             return tiles;
         }
 
-        //input: RRRg output: 7z,7z,7z
-        public static List<string> SimpleTiles(string handWithMelds)
+        // Joins the SplitTiles return in one string 
+        public static string GetSimpleHand(string hand)
         {
-            var tileNames = new List<string>();
-            int i = 0;
-            var hand = handWithMelds.Replace("'", string.Empty).Replace("k", string.Empty);
-            while (i < hand.Length)
-            {
-                if (SUIT_NAMES.Contains(hand[i])) break;
-                i++;
-            }
-            if (i == hand.Length)
-            {
-                return tileNames;
-            }
-            var suit = hand[i];
-            var newSuit = suit;
-            var subHandValues = hand.Substring(0, i);
-            foreach (char c in subHandValues)
-            {
-                if (c == ' ') continue;
-                var tile = $"{c}{suit}";
-                if (ALTERNATIVE_IDS.ContainsKey(tile))
-                {
-                    tile = ALTERNATIVE_IDS[tile];
-                    newSuit = tile[1];
-                    tile = tile[0].ToString();
-                }
-                tileNames.Add(tile);
-            }
-            tileNames.Add(newSuit.ToString());
-            if (i == hand.Length - 1)
-            {
-                return tileNames;
-            }
-            var restHand = hand.Substring(i + 1);
-            tileNames.AddRange(SimpleTiles(restHand));
-
-            return tileNames;
+            var tileList = string.Join("", SplitTiles(hand));
+            return tileList;
         }
 
-        //input: RRRg output: 7z,7z,7z
-        public static List<string> VisualTiles(string hand)
+        public static string SimplifyTile(string tile)
         {
-            var tileNames = new List<string>();
-            int i = 0;
-            while (i < hand.Length)
-            {
-                if (SUIT_NAMES.Contains(hand[i])) break;
-                i++;
-            }
-            if (i == hand.Length)
-            {
-                return tileNames;
-            }
-            var suit = hand[i];
-            var subHandValues = hand.Substring(0, i);
-            foreach (char c in subHandValues)
-            {
-                if (c == ' ') continue;
-                var tile = $"{c}{suit}";
-                if (ALTERNATIVE_IDS.ContainsKey(tile))
-                {
-                    tile = ALTERNATIVE_IDS[tile];
-                    suit = tile[1];
-                    tile = tile[0].ToString();
-                }
-                tileNames.Add(tile);
-            }
-            tileNames.Add(suit.ToString());
-            if (i == hand.Length - 1)
-            {
-                return tileNames;
-            }
-            var restHand = hand.Substring(i + 1);
-            tileNames.AddRange(VisualTiles(restHand));
-
-            return tileNames;
+            return ALTERNATIVE_IDS.ContainsKey(tile) ? ALTERNATIVE_IDS[tile] : tile;
         }
     }
-
 }
