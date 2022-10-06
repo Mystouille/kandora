@@ -27,7 +27,7 @@ namespace kandora.bot.commands.regular
         {
             try
             {
-                List<string> basicHand = HandParser.SimpleTiles(hand).Where(x => x.Length == 2).ToList();
+                List<string> basicHand = HandParser.SplitTiles(hand);
                 if (basicHand.Count == 0)
                 {
                     throw new Exception("invalid hand");

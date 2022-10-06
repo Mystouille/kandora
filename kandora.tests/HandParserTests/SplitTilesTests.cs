@@ -13,6 +13,8 @@ public class SplitTileTests
     [InlineData("123sp45z123s", "1s2s3s4z5z")]
     [InlineData("123s123k", "1s2s3s")]
     [InlineData("123k", "")]
+    [InlineData("123d222w154sEEEw", "5z6z7z2z1s5s4s1z")]
+    [InlineData("RRRd", "7z")]
     public void WhenMethodUsedWithUnique_ShouldReturnHandParsed(string hand, string expectedOutput)
     {
         List<string> tiles = HandParser.SplitTiles(hand, true);
@@ -38,6 +40,9 @@ public class SplitTileTests
     [InlineData("123sp45z123s", "1s2s3s4z5z1s2s3s")]
     [InlineData("123s123k", "1s2s3s")]
     [InlineData("123k", "")]
+    [InlineData("123s", "1s2s3s")]
+    [InlineData("123d222w154sEEEw", "5z6z7z2z2z2z1s5s4s1z1z1z")]
+    [InlineData("RRRd", "7z7z7z")]
     public void WhenMethodUsedWithoutUnique_ShouldReturnHandParsed(string hand, string expectedOutput)
     {
         List<string> tiles = HandParser.SplitTiles(hand, false);

@@ -46,7 +46,7 @@ namespace kandora.bot.utils
 
         public static FileStream GetImageFromTiles(string hand, bool separateLastTile=false)
         {
-            List<string> tiles = HandParser.SimpleTiles(hand).Where(x => x.Length == 2).ToList();
+            List<string> tiles = HandParser.SplitTiles(hand);
             var shouldSeparateLastTile = separateLastTile && tiles.Count == 14;
             var outputFilePath = string.Join(dirChar, new string[] { outputDirPath, GetFileName(hand, shouldSeparateLastTile) });
             if (!ImageExists(hand, shouldSeparateLastTile))
