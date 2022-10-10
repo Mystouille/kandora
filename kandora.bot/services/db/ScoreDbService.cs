@@ -25,11 +25,10 @@ namespace kandora.bot.services
         private const string User3ScoreCol = "user3Score";
         private const string User4ScoreCol = "user4Score";
         private const string PlatformCol = "platform";
-        private const string Timestamp = "timestamp";
+        private const string TimestampCol = "timestamp";
         private const string IdCol = "Id";
         private const string ServerIdCol = "serverId";
         private const string FullLogIdCol = "fullLog";
-        private const string TimestampCol = "timestamp";
 
 
         public static (Game, List<Ranking>) RecordIRLGame(string[] members, float[] scores, Server server, LeagueConfig leagueConfig)
@@ -202,7 +201,7 @@ namespace kandora.bot.services
                 command.CommandText = $"SELECT {IdCol}, {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {FullLogIdCol}, {PlatformCol}, {TimestampCol}" +
                     $" FROM {GameTableName}" +
                     $" WHERE {ServerIdCol} = @serverId" +
-                    $" ORDER BY {Timestamp} DESC;";
+                    $" ORDER BY {TimestampCol} ASC, {IdCol} ASC;";
                 command.CommandType = CommandType.Text;
 
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, server.Id);
@@ -232,7 +231,7 @@ namespace kandora.bot.services
                     game.User3Score = user3Score;
                     game.User4Score = user4Score;
 
-                    games = games.Prepend(game).ToList();
+                    games = games.Append(game).ToList();
                     idx++;
                 }
 

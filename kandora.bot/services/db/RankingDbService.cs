@@ -50,12 +50,14 @@ namespace kandora.bot.services
                 rkList4 = GetUserRankingHistory(game.User4Id, game.Server.Id);
             }
 
+            
+
             List<Ranking> newRkList = new()
             {
-                new Ranking(game.User1Id, rkList1, rkList2.First(), rkList3.First(), rkList4.First(), 1, game.Id, game.Server.Id, config),
-                new Ranking(game.User2Id, rkList2, rkList1.First(), rkList3.First(), rkList4.First(), 2, game.Id, game.Server.Id, config),
-                new Ranking(game.User3Id, rkList3, rkList2.First(), rkList1.First(), rkList4.First(), 3, game.Id, game.Server.Id, config),
-                new Ranking(game.User4Id, rkList4, rkList2.First(), rkList3.First(), rkList1.First(), 4, game.Id, game.Server.Id, config)
+                new Ranking(game.User1Id, rkList1, rkList2.Last(), rkList3.Last(), rkList4.Last(), game.User1Placement, game.Id, game.Server.Id, config),
+                new Ranking(game.User2Id, rkList2, rkList1.Last(), rkList3.Last(), rkList4.Last(), game.User2Placement, game.Id, game.Server.Id, config),
+                new Ranking(game.User3Id, rkList3, rkList2.Last(), rkList1.Last(), rkList4.Last(), game.User3Placement, game.Id, game.Server.Id, config),
+                new Ranking(game.User4Id, rkList4, rkList2.Last(), rkList3.Last(), rkList1.Last(), game.User4Placement, game.Id, game.Server.Id, config)
             };
 
             foreach (var ranking in newRkList)
@@ -64,6 +66,7 @@ namespace kandora.bot.services
             }
             return newRkList;
         }
+
 
         public static bool BackfillRankings(Server server, LeagueConfig config)
         {
@@ -153,7 +156,7 @@ namespace kandora.bot.services
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.CommandText = $"SELECT {idCol}, {oldEloCol}, {newEloCol}, {positionCol}, {timeStampCol} , {gameIdCol} FROM {tableName} " +
                     $"WHERE {userIdCol} = @userId AND {serverIdCol} = @serverId " +
-                    $"ORDER BY {idCol} DESC";
+                    $"ORDER BY {idCol} ASC";
                 command.CommandType = CommandType.Text;
 
                 command.Parameters.AddWithValue("@userId", NpgsqlDbType.Varchar, userId);

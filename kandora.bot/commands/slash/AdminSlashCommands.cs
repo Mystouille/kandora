@@ -94,8 +94,8 @@ namespace kandora.bot.commands.slash
             var config = LeagueConfigDbService.GetLeagueConfig(configId);
             var sb = new StringBuilder();
             sb.AppendLine($"countPoints: {(config.CountPoints ? "Yes" : "No")}");
-            sb.AppendLine($"startingPoints: {config.StartingPoints}");
             sb.AppendLine($"allowSanma: {(config.AllowSanma ? "Yes" : "No")}");
+            sb.AppendLine($"useEloSystem: {(config.UseEloSystem ? "Yes" : "No")}");
             sb.AppendLine($"startingPoints: {config.StartingPoints}");
             sb.AppendLine($"uma3p1: {config.Uma3p1}");
             sb.AppendLine($"uma3p2: {config.Uma3p2}");
@@ -106,8 +106,6 @@ namespace kandora.bot.commands.slash
             sb.AppendLine($"uma4p4: {config.Uma4p4}");
             sb.AppendLine($"oka: {config.Oka}");
             sb.AppendLine($"penaltyLast: {config.PenaltyLast}");
-
-            sb.AppendLine($"useEloSystem: {(config.UseEloSystem ? "Yes" : "No")}");
             sb.AppendLine($"initialElo: {config.InitialElo}");
             sb.AppendLine($"minElo: {config.MinElo}");
             sb.AppendLine($"baseEloChangeDampening: {config.BaseEloChangeDampening}");
@@ -123,15 +121,15 @@ namespace kandora.bot.commands.slash
             [Option(Resources.admin_setLeagueConfig_countPoints, Resources.admin_setLeagueConfig_countPoints_description)] bool countPoints,
             [Option(Resources.admin_setLeagueConfig_useEloSystem, Resources.admin_setLeagueConfig_useEloSystem_description)] bool useEloSystem,
             [Option(Resources.admin_setLeagueConfig_startingPoints, Resources.admin_setLeagueConfig_startingPoints_description)] long startingPoints = -1,
-            [Option(Resources.admin_setLeagueConfig_uma3p1, Resources.admin_setLeagueConfig_uma3p1_description)] long uma3p1 = -1,
-            [Option(Resources.admin_setLeagueConfig_uma3p2, Resources.admin_setLeagueConfig_uma3p2_description)] long uma3p2 = -1,
-            [Option(Resources.admin_setLeagueConfig_uma3p3, Resources.admin_setLeagueConfig_uma3p3_description)] long uma3p3 = -1,
-            [Option(Resources.admin_setLeagueConfig_uma4p1, Resources.admin_setLeagueConfig_uma4p1_description)] long uma4p1 = -1,
-            [Option(Resources.admin_setLeagueConfig_uma4p2, Resources.admin_setLeagueConfig_uma4p2_description)] long uma4p2 = -1,
-            [Option(Resources.admin_setLeagueConfig_uma4p3, Resources.admin_setLeagueConfig_uma4p3_description)] long uma4p3 = -1,
-            [Option(Resources.admin_setLeagueConfig_uma4p4, Resources.admin_setLeagueConfig_uma4p4_description)] long uma4p4 = -1,
-            [Option(Resources.admin_setLeagueConfig_oka, Resources.admin_setLeagueConfig_oka_description)] long oka = -1,
-            [Option(Resources.admin_setLeagueConfig_penaltyLast, Resources.admin_setLeagueConfig_penaltyLast_description)] long penaltyLast = -1,
+            [Option(Resources.admin_setLeagueConfig_uma3p1, Resources.admin_setLeagueConfig_uma3p1_description)] double uma3p1 = -1,
+            [Option(Resources.admin_setLeagueConfig_uma3p2, Resources.admin_setLeagueConfig_uma3p2_description)] double uma3p2 = -1,
+            [Option(Resources.admin_setLeagueConfig_uma3p3, Resources.admin_setLeagueConfig_uma3p3_description)] double uma3p3 = -1,
+            [Option(Resources.admin_setLeagueConfig_uma4p1, Resources.admin_setLeagueConfig_uma4p1_description)] double uma4p1 = -1,
+            [Option(Resources.admin_setLeagueConfig_uma4p2, Resources.admin_setLeagueConfig_uma4p2_description)] double uma4p2 = -1,
+            [Option(Resources.admin_setLeagueConfig_uma4p3, Resources.admin_setLeagueConfig_uma4p3_description)] double uma4p3 = -1,
+            [Option(Resources.admin_setLeagueConfig_uma4p4, Resources.admin_setLeagueConfig_uma4p4_description)] double uma4p4 = -1,
+            [Option(Resources.admin_setLeagueConfig_oka, Resources.admin_setLeagueConfig_oka_description)] double oka = -1,
+            [Option(Resources.admin_setLeagueConfig_penaltyLast, Resources.admin_setLeagueConfig_penaltyLast_description)] double penaltyLast = -1,
             [Option(Resources.admin_setLeagueConfig_initialElo, Resources.admin_setLeagueConfig_initialElo_description)] long initialElo = -1,
             [Option(Resources.admin_setLeagueConfig_minElo, Resources.admin_setLeagueConfig_minElo_description)] long minElo = -1,
             [Option(Resources.admin_setLeagueConfig_eloChangeDampening, Resources.admin_setLeagueConfig_eloChangeDampening_description)] double eloChangeDampening = -1,
@@ -153,33 +151,33 @@ namespace kandora.bot.commands.slash
                 if (allowSanma)
                 {
                     LeagueConfigDbService.SetConfigValue("allowSanma", configId, true);
-                    if (uma3p1 >= 0)
+                    if (uma3p1 != -1)
                     {
                         LeagueConfigDbService.SetConfigValue("uma3p1", configId, uma3p1);
                     }
-                    if (uma3p2 >= 0)
+                    if (uma3p2 != -1)
                     {
                         LeagueConfigDbService.SetConfigValue("uma3p2", configId, uma3p2);
                     }
-                    if (uma3p3 >= 0)
+                    if (uma3p3 != -1)
                     {
                         LeagueConfigDbService.SetConfigValue("uma3p3", configId, uma3p3);
                     }
                 }
 
-                if (uma4p1 >= 0)
+                if (uma4p1 != -1)
                 {
                     LeagueConfigDbService.SetConfigValue("uma4p1", configId, uma4p1);
                 }
-                if (uma4p2 >= 0)
+                if (uma4p2 != -1)
                 {
                     LeagueConfigDbService.SetConfigValue("uma4p2", configId, uma4p2);
                 }
-                if (uma4p3 >= 0)
+                if (uma4p3 != -1)
                 {
                     LeagueConfigDbService.SetConfigValue("uma4p3", configId, uma4p3);
                 }
-                if (uma4p3 >= 0)
+                if (uma4p3 != -1)
                 {
                     LeagueConfigDbService.SetConfigValue("uma4p4", configId, uma4p4);
                 }
@@ -187,16 +185,16 @@ namespace kandora.bot.commands.slash
                 if (countPoints)
                 {
                     LeagueConfigDbService.SetConfigValue("countPoints", configId, true);
-                    if( startingPoints >= 0)
+                    if( startingPoints != -1)
                     {
                         LeagueConfigDbService.SetConfigValue("startingPoints", configId, startingPoints);
                     }
 
-                    if (oka >= 0)
+                    if (oka != -1)
                     {
                         LeagueConfigDbService.SetConfigValue("oka", configId, oka);
                     }
-                    if (penaltyLast >= 0)
+                    if (penaltyLast != -1)
                     {
                         LeagueConfigDbService.SetConfigValue("penaltyLast", configId, penaltyLast);
                     }
@@ -204,27 +202,27 @@ namespace kandora.bot.commands.slash
                 if (useEloSystem)
                 {
                     LeagueConfigDbService.SetConfigValue("useEloSystem", configId, useEloSystem);
-                    if (initialElo >= 0)
+                    if (initialElo != -1)
                     {
                         LeagueConfigDbService.SetConfigValue("initialElo", configId, initialElo);
                     }
-                    if (minElo >= 0)
+                    if (minElo != -1)
                     {
                         LeagueConfigDbService.SetConfigValue("minElo", configId, minElo);
                     }
-                    if (eloChangeDampening >= 0)
+                    if (eloChangeDampening != -1)
                     {
                         LeagueConfigDbService.SetConfigValue("baseEloChangeDampening", configId, eloChangeDampening);
                     }
-                    if (eloChangeStartRatio >= 0)
+                    if (eloChangeStartRatio != -1)
                     {
                         LeagueConfigDbService.SetConfigValue("eloChangeStartRatio", configId, eloChangeStartRatio);
                     }
-                    if (eloChangeEndRatio >= 0)
+                    if (eloChangeEndRatio != -1)
                     {
                         LeagueConfigDbService.SetConfigValue("eloChangeEndRatio", configId, eloChangeEndRatio);
                     }
-                    if (trialPeriodDuration >= 0)
+                    if (trialPeriodDuration != -1)
                     {
                         LeagueConfigDbService.SetConfigValue("trialPeriodDuration", configId, trialPeriodDuration);
                     }

@@ -80,7 +80,7 @@ namespace kandora.bot.models
         private double getNewElo(List<Ranking> ownRankingHistory, int ownPosition, Ranking[] otherPlayerRankings, LeagueConfig cf, double ownScore = (double)0)
         {
 
-            double oldRank = OldRank.HasValue ? cf.InitialElo : OldRank.Value;
+            double oldRank = OldRank.HasValue ? OldRank.Value : cf.InitialElo;
             int nbOpponents = otherPlayerRankings.Length;
             int nbTotalGames = ownRankingHistory.Count;
             double avgOpponentRk = (otherPlayerRankings.Sum(x=>x.NewRank)) / nbOpponents;

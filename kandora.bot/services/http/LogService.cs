@@ -26,8 +26,10 @@ namespace kandora.bot.services.http
         private LogService()
         {
             tenhouLogClient = new HttpClient();
+            tenhouLogClient.Timeout = new TimeSpan(0,0,6);
             tenhouLogClient.DefaultRequestHeaders.Add("Referer", "https://tenhou.net/");
             mahjsoulLogClient = new HttpClient();
+            mahjsoulLogClient.Timeout = new TimeSpan(0, 0, 6);
         }
 
         public static LogService Instance
@@ -49,6 +51,7 @@ namespace kandora.bot.services.http
             else
             {
                 var log = await GetMahjsoulLogAsTenhou(logId, lang);
+
                 return TenhouLogParser.ParseTenhouFormatGame(log, GameType.Mahjsoul);
             }
         }
@@ -72,7 +75,7 @@ namespace kandora.bot.services.http
             {
                 return await response.Content.ReadAsStringAsync();
             }
-            return null;
+            throw new Exception($"statusCode:{response.StatusCode}, reason:{response.ReasonPhrase}, content:{response.Content}");
         }
     }
 }
