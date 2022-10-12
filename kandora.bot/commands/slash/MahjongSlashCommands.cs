@@ -56,7 +56,7 @@ namespace kandora.bot.commands.slash
             try
             {
 
-                var basicHand = HandParser.GetSimpleHand(handStr);
+                var basicHand = HandParser.GetSimpleHand(handStr)[0];
                 var hand34 = TilesConverter.FromStringTo34Count(basicHand);
 
                 var shantenCalc = new ShantenCalculator();
@@ -98,11 +98,13 @@ namespace kandora.bot.commands.slash
             try
             {
                 var basicHand = HandParser.GetSimpleHand(handStr);
+                var closedHand = basicHand[0];
+                var melds = basicHand[1];
                 var dorasEmoji = HandParser.GetHandEmojiCodes(doras, ctx.Client);
-                var handEmoji = HandParser.GetHandEmojiCodes(handStr, ctx.Client);
+                var handEmoji = HandParser.GetHandEmojiCodes(closedHand, ctx.Client);
                 var optionsEmoji = handEmoji;
 
-                var hand34 = TilesConverter.FromStringTo34Count(basicHand);
+                var hand34 = TilesConverter.FromStringTo34Count(closedHand);
                 var shantenCalc = new ShantenCalculator();
                 var nbTiles = hand34.Sum();
                 var sb = new StringBuilder();
@@ -134,7 +136,7 @@ namespace kandora.bot.commands.slash
 
                 //sb.AppendLine(Resources.mahjong_nanikiru_wwyd);
 
-                var stream = ImageToolbox.GetImageFromTiles(handStr, separateLastTile: true);
+                var stream = ImageToolbox.GetImageFromTiles(closedHand, melds, separateLastTile: true);
                 var rb = new DiscordInteractionResponseBuilder().WithContent(sb.ToString());
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb.AddFile(stream)).ContinueWith(precedent => stream.Dispose()).ConfigureAwait(true);
                 var msg = await ctx.Interaction.GetOriginalResponseAsync().ConfigureAwait(true);

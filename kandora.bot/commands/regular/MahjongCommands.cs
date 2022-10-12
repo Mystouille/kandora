@@ -69,7 +69,7 @@ namespace kandora.bot.commands.regular
 
         private async Task computeHand(CommandContext ctx, string hand, string options)
         {
-            var basicHand = HandParser.GetSimpleHand(hand);
+            var basicHand = HandParser.GetSimpleHand(hand)[0];
             var handEmoji = HandParser.GetHandEmojiCodes(hand, ctx.Client);
             var optionsEmoji = options == "all"
                 ? handEmoji
@@ -140,8 +140,8 @@ namespace kandora.bot.commands.regular
 
         private async Task computeHandWithAgari(CommandContext ctx,  string hand, string agari)
         {
-            var basicHand = HandParser.GetSimpleHand(hand);
-            var basicAgari = HandParser.GetSimpleHand(agari);
+            var basicHand = HandParser.GetSimpleHand(hand)[0];
+            var basicAgari = HandParser.GetSimpleHand(agari)[0];
             var handEmoji = HandParser.GetHandEmojiCodes(hand, ctx.Client);
             string suitOrder = U.GetSuitOrder(basicHand);
 
@@ -252,7 +252,7 @@ namespace kandora.bot.commands.regular
         ) {
             try
             {
-                var basicHand = HandParser.GetSimpleHand(hand);
+                var basicHand = HandParser.GetSimpleHand(hand)[0];
                 var handEmoji = HandParser.GetHandEmojiCodes(hand, ctx.Client);
                 var optionsEmoji = options == "all" 
                     ? handEmoji

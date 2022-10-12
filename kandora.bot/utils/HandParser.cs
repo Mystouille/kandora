@@ -9,40 +9,11 @@ namespace kandora.bot.utils
 {
     public static class HandParser
     {
-        private static readonly HashSet<char> SUIT_NAMES = new HashSet<char>() { 'p', 'm', 's', 'z', 'w', 'd' };
-
-        private static Dictionary<string, string> ALTERNATIVE_IDS = new Dictionary<string, string>()
-            {
-            {"Ew","1z"},
-            {"Sw","2z"},
-            {"Ww","3z"},
-            {"Nw","4z"},
-            {"1w","1z"},
-            {"2w","2z"},
-            {"3w","3z"},
-            {"4w","4z"},
-            {"Wd","5z"},
-            {"Gd","6z"},
-            {"Rd","7z"},
-            {"1d","5z"},
-            {"2d","6z"},
-            {"3d","7z"}
-        };
+        private static readonly HashSet<char> SUIT_NAMES = new HashSet<char>() { 'p', 'm', 's', 'z' };
 
         public static DiscordEmoji GetEmojiCode(string tileName, DiscordClient client)
         {
-            try
-            {
-                return DiscordEmoji.FromName(client, ":" + tileName + ":");
-            }
-            catch
-            {
-                if (ALTERNATIVE_IDS.ContainsKey(tileName))
-                {
-                    return GetEmojiCode(ALTERNATIVE_IDS.GetValueOrDefault(tileName), client);
-                }
-                return null;
-            }
+            return DiscordEmoji.FromName(client, ":" + tileName + ":");
         }
 
         public static IEnumerable<DiscordEmoji> GetHandEmojiCodes(string hand, DiscordClient client, bool sorted = false)
@@ -57,7 +28,7 @@ namespace kandora.bot.utils
         }
 
         // Builds the hand
-        // ex. 123456m556677p99s -> 1m2m3m4m5m6m5p5p6p6p7p7p9s9s
+        // ex. 12345'6m556677'p99s -> 1m2m3m4m5m'6m5p5p6p6p7p7p'9s9s
         // ex. unique : 11123455s -> 1s2s3s4s5s
         public static List<string> SplitTiles(string hand, bool isUnique = false)
         {
@@ -72,12 +43,27 @@ namespace kandora.bot.utils
                     char fixedChar = hand[i];
                     for (int j = k; j < i; j++)
                     {
-                        string tileToAdd = SimplifyTile($"{hand[j]}{fixedChar}");
+                        var tileNumber = hand[j];
+                        if (!char.IsDigit(tileNumber))
+                        {
+                            continue;
+                        }
+                        var called = "";
+                        if (hand[j + 1] == '\'')
+                        {
+                            called += '\'';
+                            j++;
+                        }
+                        string tileToAdd = $"{tileNumber}{called}{fixedChar}";
 
                         if (!(isUnique && tiles.Contains(tileToAdd)))
                             tiles.Add(tileToAdd);
                     }
                     k = i + 1; // char after the letter for the next iteration
+                }
+                else if (!char.IsDigit(hand[i]) && hand[i]!= '\'')
+                {
+                    k = i + 1;
                 }
                 i++;
             }
@@ -85,15 +71,15 @@ namespace kandora.bot.utils
         }
 
         // Joins the SplitTiles return in one string 
-        public static string GetSimpleHand(string hand)
+        public static string[] GetSimpleHand(string hand)
         {
-            var tileList = string.Join("", SplitTiles(hand));
-            return tileList;
-        }
+            var handAndMeld = hand.Split(' ');
+            var closedHand = handAndMeld[0];
+            var splitClosedHand = string.Join("", SplitTiles(closedHand));
+            var melds = handAndMeld.Count() > 1 ? handAndMeld[1]: "";
+            var splitMelds = string.Join("", SplitTiles(melds));
 
-        public static string SimplifyTile(string tile)
-        {
-            return ALTERNATIVE_IDS.ContainsKey(tile) ? ALTERNATIVE_IDS[tile] : tile;
+            return new[] { splitClosedHand, splitMelds} ;
         }
     }
 }

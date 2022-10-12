@@ -20,6 +20,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Remove="resources\tiles.png" />
+    <None Remove="resources\tilesCalled.png" />
     <None Remove="resources\tiles_hon.png" />
     <None Remove="resources\tiles_man.png" />
     <None Remove="resources\tiles_pin.png" />
@@ -27,6 +28,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="resources\tiles.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="resources\tilesCalled.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="resources\tiles_hon.png">

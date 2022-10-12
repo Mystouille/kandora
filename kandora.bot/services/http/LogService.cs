@@ -46,11 +46,21 @@ namespace kandora.bot.services.http
             if (tenhouRegex.IsMatch(logId))
             {
                 var log = await GetTenhouLog(logId);
+                // retry once just in case there where login issues
+                if(log == null)
+                {
+                    log = await GetTenhouLog(logId);
+                }
                 return TenhouLogParser.ParseTenhouFormatGame(log, GameType.Tenhou);
             }
             else
             {
                 var log = await GetMahjsoulLogAsTenhou(logId, lang);
+                // retry once just in case there where login issues
+                if (log == null)
+                {
+                    log = await GetMahjsoulLogAsTenhou(logId, lang);
+                }
 
                 return TenhouLogParser.ParseTenhouFormatGame(log, GameType.Mahjsoul);
             }
