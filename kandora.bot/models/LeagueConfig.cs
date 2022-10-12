@@ -6,11 +6,11 @@ namespace kandora.bot.models
 {
     public partial class LeagueConfig
     {
-        public LeagueConfig(int id, bool countPoints, bool useEloSystem)
+        public LeagueConfig(int id, bool countPoints, string eloSystem)
         {
             Id = id;
             CountPoints = countPoints;
-            UseEloSystem = useEloSystem;
+            EloSystem = eloSystem;
         }
 
         public int Id { get; set; }
@@ -26,7 +26,7 @@ namespace kandora.bot.models
         public double Uma4p4 { get; set; }
         public double Oka { get; set; }
         public double PenaltyLast { get; set; }
-        public bool UseEloSystem { get; set; }
+        public string EloSystem { get; set; }
         public double InitialElo { get; set; }
         public double MinElo { get; set; }
         public double BaseEloChangeDampening { get; set; }

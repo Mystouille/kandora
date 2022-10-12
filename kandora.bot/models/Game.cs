@@ -18,7 +18,7 @@ namespace kandora.bot.models
             this.Server = server;
         }
 
-        public Game(string logId, Server server, string user1Id, string user2Id, string user3Id, string user4Id, GameType platform, DateTime timestamp) : this(server)
+        public Game(string logId, Server server, string user1Id, string user2Id, string user3Id, string user4Id, GameType platform, DateTime timestamp, bool isSanma ) : this(server)
         {
             Id = logId;
             User1Id = user1Id;
@@ -27,10 +27,12 @@ namespace kandora.bot.models
             User4Id = user4Id;
             Platform = platform;
             Timestamp = timestamp;
+            IsSanma = isSanma;
         }
         public string Id { get; set; }
         public Server Server { get; set; }
         public GameType Platform { get; set; }
+        public bool IsSanma { get; set; }   
         public string PlatformStr
         {
             get
@@ -47,9 +49,22 @@ namespace kandora.bot.models
                 }
             }
         }
+        private string getMissingPreplaces()
+        {
+            var places = User4Score == null ? "123" : "1234";
+            places.Replace(User1Score.ToString(), "");
+            places.Replace(User2Score.ToString(), "");
+            places.Replace(User3Score.ToString(), "");
+            if (!IsSanma)
+            {
+                places.Replace(User4Score.ToString(), "");
+            }
+            return places;
+        }
+
         public string User1Id { get; set; }
         public int? User1Score { get; set; }
-        public int User1Placement { get {
+        private int User1PrePlace { get {
                 var i = 1;
                 if(User1Score.HasValue && User2Score.HasValue && User1Score < User2Score)
                 {
@@ -65,14 +80,39 @@ namespace kandora.bot.models
                 }
                 return i;
             } }
+        public string User1Placement
+        {
+            get
+            {
+                var place = "";
+                int i = 0;
+                if (User1PrePlace == User2PrePlace)
+                {
+                    i++;
+                }
+                if (User1PrePlace == User3PrePlace)
+                {
+                    i++;
+                }
+                if (User1PrePlace == User4PrePlace)
+                {
+                    i++;
+                }
+                for(int a = User1PrePlace; a <= User1PrePlace+i; a++)
+                {
+                    place += a.ToString();
+                }
+                return place;
+            }
+        }
         public string User2Id { get; set; }
         public int? User2Score { get; set; }
-        public int User2Placement
+        private int User2PrePlace
         {
             get
             {
                 var i = 1;
-                if (User2Score.HasValue && User1Score.HasValue && User2Score < User2Score)
+                if (User2Score.HasValue && User1Score.HasValue && User2Score < User1Score)
                 {
                     i++;
                 }
@@ -87,9 +127,34 @@ namespace kandora.bot.models
                 return i;
             }
         }
+        public string User2Placement
+        {
+            get
+            {
+                var place = "";
+                int i = 0;
+                if (User2PrePlace == User1PrePlace)
+                {
+                    i++;
+                }
+                if (User2PrePlace == User3PrePlace)
+                {
+                    i++;
+                }
+                if (User2PrePlace == User4PrePlace)
+                {
+                    i++;
+                }
+                for (int a = User2PrePlace; a <= User2PrePlace + i; a++)
+                {
+                    place += a.ToString();
+                }
+                return place;
+            }
+        }
         public string User3Id { get; set; }
         public int? User3Score { get; set; }
-        public int User3Placement
+        private int User3PrePlace
         {
             get
             {
@@ -109,9 +174,34 @@ namespace kandora.bot.models
                 return i;
             }
         }
+        public string User3Placement
+        {
+            get
+            {
+                var place = "";
+                int i = 0;
+                if (User3PrePlace == User1PrePlace)
+                {
+                    i++;
+                }
+                if (User3PrePlace == User2PrePlace)
+                {
+                    i++;
+                }
+                if (User3PrePlace == User4PrePlace)
+                {
+                    i++;
+                }
+                for (int a = User3PrePlace; a <= User3PrePlace + i; a++)
+                {
+                    place += a.ToString();
+                }
+                return place;
+            }
+        }
         public string User4Id { get; set; }
         public int? User4Score { get; set; }
-        public int User4Placement
+        private int User4PrePlace
         {
             get
             {
@@ -129,6 +219,31 @@ namespace kandora.bot.models
                     i++;
                 }
                 return i;
+            }
+        }
+        public string User4Placement
+        {
+            get
+            {
+                var place = "";
+                int i = 0;
+                if (User4PrePlace == User1PrePlace)
+                {
+                    i++;
+                }
+                if (User4PrePlace == User3PrePlace)
+                {
+                    i++;
+                }
+                if (User4PrePlace == User2PrePlace)
+                {
+                    i++;
+                }
+                for (int a = User4PrePlace; a <= User4PrePlace + i; a++)
+                {
+                    place += a.ToString();
+                }
+                return place;
             }
         }
         public DateTime Timestamp { get; set; }

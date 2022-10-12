@@ -93,25 +93,31 @@ namespace kandora.bot.commands.slash
             var configId = server.LeagueConfigId;
             var config = LeagueConfigDbService.GetLeagueConfig(configId);
             var sb = new StringBuilder();
-            sb.AppendLine($"countPoints: {(config.CountPoints ? "Yes" : "No")}");
-            sb.AppendLine($"allowSanma: {(config.AllowSanma ? "Yes" : "No")}");
-            sb.AppendLine($"useEloSystem: {(config.UseEloSystem ? "Yes" : "No")}");
-            sb.AppendLine($"startingPoints: {config.StartingPoints}");
-            sb.AppendLine($"uma3p1: {config.Uma3p1}");
-            sb.AppendLine($"uma3p2: {config.Uma3p2}");
-            sb.AppendLine($"uma3p3: {config.Uma3p3}");
-            sb.AppendLine($"uma4p1: {config.Uma4p1}");
-            sb.AppendLine($"uma4p2: {config.Uma4p2}");
-            sb.AppendLine($"uma4p3: {config.Uma4p3}");
-            sb.AppendLine($"uma4p4: {config.Uma4p4}");
-            sb.AppendLine($"oka: {config.Oka}");
-            sb.AppendLine($"penaltyLast: {config.PenaltyLast}");
-            sb.AppendLine($"initialElo: {config.InitialElo}");
-            sb.AppendLine($"minElo: {config.MinElo}");
-            sb.AppendLine($"baseEloChangeDampening: {config.BaseEloChangeDampening}");
-            sb.AppendLine($"eloChangeStartRatio: {config.EloChangeStartRatio}");
-            sb.AppendLine($"eloChangeEndRatio: {config.EloChangeEndRatio}");
-            sb.AppendLine($"trialPeriodDuration: {config.TrialPeriodDuration}");
+            var mod = "**";
+            sb.AppendLine($"{mod}countPoints: {(config.CountPoints ? "Yes" : "No")}{mod}");
+            sb.AppendLine($"{mod}allowSanma: {(config.AllowSanma ? "Yes" : "No")}{mod}");
+            sb.AppendLine($"{mod}EloSystem: {config.EloSystem}{mod}");
+            mod = config.CountPoints ? "**" : "*";
+            sb.AppendLine($"{mod}startingPoints: {config.StartingPoints}{mod}");
+            mod = config.AllowSanma ? "**" : "*";
+            sb.AppendLine($"{mod}uma3p1: {config.Uma3p1}{mod}");
+            sb.AppendLine($"{mod}uma3p2: {config.Uma3p2}{mod}");
+            sb.AppendLine($"{mod}uma3p3: {config.Uma3p3}{mod}");
+            mod = "**";
+            sb.AppendLine($"{mod}uma4p1: {config.Uma4p1}{mod}");
+            sb.AppendLine($"{mod}uma4p2: {config.Uma4p2}{mod}");
+            sb.AppendLine($"{mod}uma4p3: {config.Uma4p3}{mod}");
+            sb.AppendLine($"{mod}uma4p4: {config.Uma4p4}{mod}");
+            sb.AppendLine($"{mod}oka: {config.Oka}{mod}");
+            sb.AppendLine($"{mod}penaltyLast: {config.PenaltyLast}{mod}");
+            mod = config.EloSystem != "None" ? "**" : "*";
+            sb.AppendLine($"{mod}baseEloChangeDampening: {config.BaseEloChangeDampening}{mod}");
+            mod = config.EloSystem == "Full" ? "**" : "*";
+            sb.AppendLine($"{mod}initialElo: {config.InitialElo}{mod}");
+            sb.AppendLine($"{mod}minElo: {config.MinElo}{mod}");
+            sb.AppendLine($"{mod}eloChangeStartRatio: {config.EloChangeStartRatio}{mod}");
+            sb.AppendLine($"{mod}eloChangeEndRatio: {config.EloChangeEndRatio}{mod}");
+            sb.AppendLine($"{mod}trialPeriodDuration: {config.TrialPeriodDuration}{mod}");
             return sb.ToString();
         }
 
@@ -119,7 +125,10 @@ namespace kandora.bot.commands.slash
         public async Task SetLeagueConfig(InteractionContext ctx,
             [Option(Resources.admin_setLeagueConfig_allowSanma, Resources.admin_setLeagueConfig_allowSanma_description)] bool allowSanma,
             [Option(Resources.admin_setLeagueConfig_countPoints, Resources.admin_setLeagueConfig_countPoints_description)] bool countPoints,
-            [Option(Resources.admin_setLeagueConfig_useEloSystem, Resources.admin_setLeagueConfig_useEloSystem_description)] bool useEloSystem,
+            [Choice(Resources.admin_setLeagueConfig_eloSystem_None,"None")]
+            [Choice(Resources.admin_setLeagueConfig_eloSystem_Simple,"Simple")]
+            [Choice(Resources.admin_setLeagueConfig_eloSystem_Full,"Full")]
+            [Option(Resources.admin_setLeagueConfig_eloSystem, Resources.admin_setLeagueConfig_eloSystem_description)] string eloSystem,
             [Option(Resources.admin_setLeagueConfig_startingPoints, Resources.admin_setLeagueConfig_startingPoints_description)] long startingPoints = -1,
             [Option(Resources.admin_setLeagueConfig_uma3p1, Resources.admin_setLeagueConfig_uma3p1_description)] double uma3p1 = -1,
             [Option(Resources.admin_setLeagueConfig_uma3p2, Resources.admin_setLeagueConfig_uma3p2_description)] double uma3p2 = -1,
@@ -199,32 +208,36 @@ namespace kandora.bot.commands.slash
                         LeagueConfigDbService.SetConfigValue("penaltyLast", configId, penaltyLast);
                     }
                 }
-                if (useEloSystem)
+                LeagueConfigDbService.SetConfigValue("eloSystem", configId, eloSystem);
+
+                if (eloSystem == "Full" || eloSystem == "Simple")
                 {
-                    LeagueConfigDbService.SetConfigValue("useEloSystem", configId, useEloSystem);
                     if (initialElo != -1)
                     {
                         LeagueConfigDbService.SetConfigValue("initialElo", configId, initialElo);
-                    }
-                    if (minElo != -1)
-                    {
-                        LeagueConfigDbService.SetConfigValue("minElo", configId, minElo);
                     }
                     if (eloChangeDampening != -1)
                     {
                         LeagueConfigDbService.SetConfigValue("baseEloChangeDampening", configId, eloChangeDampening);
                     }
-                    if (eloChangeStartRatio != -1)
+                    if (eloSystem == "Full")
                     {
-                        LeagueConfigDbService.SetConfigValue("eloChangeStartRatio", configId, eloChangeStartRatio);
-                    }
-                    if (eloChangeEndRatio != -1)
-                    {
-                        LeagueConfigDbService.SetConfigValue("eloChangeEndRatio", configId, eloChangeEndRatio);
-                    }
-                    if (trialPeriodDuration != -1)
-                    {
-                        LeagueConfigDbService.SetConfigValue("trialPeriodDuration", configId, trialPeriodDuration);
+                        if (minElo != -1)
+                        {
+                            LeagueConfigDbService.SetConfigValue("minElo", configId, minElo);
+                        }
+                        if (eloChangeStartRatio != -1)
+                        {
+                            LeagueConfigDbService.SetConfigValue("eloChangeStartRatio", configId, eloChangeStartRatio);
+                        }
+                        if (eloChangeEndRatio != -1)
+                        {
+                            LeagueConfigDbService.SetConfigValue("eloChangeEndRatio", configId, eloChangeEndRatio);
+                        }
+                        if (trialPeriodDuration != -1)
+                        {
+                            LeagueConfigDbService.SetConfigValue("trialPeriodDuration", configId, trialPeriodDuration);
+                        }
                     }
                 }
                 var configStr = GetLeagueConfig(ctx);

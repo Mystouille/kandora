@@ -20,9 +20,12 @@ namespace kandora.bot.resources
         public const string admin_setLeagueConfig_allowSanma = "allowSanma";
         public const string admin_setLeagueConfig_allowSanma_description = "Accepte les parties à 3 joueurs";
         public const string admin_setLeagueConfig_countPoints = "countPoints";
+        public const string admin_setLeagueConfig_eloSystem_None = "Aucun";
+        public const string admin_setLeagueConfig_eloSystem_Simple = "Simple";
+        public const string admin_setLeagueConfig_eloSystem_Full = "Complet";
         public const string admin_setLeagueConfig_countPoints_description = "Prend en compte les points";
-        public const string admin_setLeagueConfig_useEloSystem = "useEloSystem";
-        public const string admin_setLeagueConfig_useEloSystem_description = "Active l'utilisation d'un système de ELO";
+        public const string admin_setLeagueConfig_eloSystem = "eloSystem";
+        public const string admin_setLeagueConfig_eloSystem_description = "Selectione le systèle de ELO";
         public const string admin_setLeagueConfig_startingPoints = "startingPoints";
         public const string admin_setLeagueConfig_startingPoints_description = "Points de chaque joueur en début de partie";
         public const string admin_setLeagueConfig_uma3p1 = "uma3p1";

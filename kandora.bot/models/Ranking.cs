@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace kandora.bot.models
 {
@@ -43,12 +44,13 @@ namespace kandora.bot.models
         public string UserId { get; set; }
         public double? OldRank { get; set; }
         public double NewRank { get; set; }
-        public int? Position { get; set; }
+        public string Position { get; set; }
+        public int? Score { get; set; }
         public DateTime Timestamp { get; set; }
         public string GameId { get; set; }
         public string ServerId { get; set; }
 
-        public Ranking(int id, string userId, float oldRank, float newRank, int position, DateTime timestamp, string gameId, string serverId)
+        public Ranking(int id, string userId, float oldRank, float newRank, string position, DateTime timestamp, string gameId, string serverId, int score = 0)
         {
             Id = id;
             UserId = userId;
@@ -58,26 +60,28 @@ namespace kandora.bot.models
             Timestamp = timestamp;
             GameId = gameId;
             ServerId = serverId;
+            Score = score;
         }
 
-        public Ranking(string userId, List<Ranking> userOldRks, Ranking oldRk2, Ranking oldRk3, Ranking oldRk4, int position, string gameId, string serverId, LeagueConfig config)
+        public Ranking(string userId, List<Ranking> userOldRks, Ranking oldRk2, Ranking oldRk3, Ranking oldRk4, string position, string gameId, string serverId, LeagueConfig config, int score = 0)
         {
             UserId = userId;
             Position = position;
             GameId = gameId;
+            Score = score;
             ServerId = serverId;
-            if(userOldRks.Count > 0)
+            if (userOldRks.Count > 0)
             {
                 OldRank = userOldRks.Last().NewRank;
             }
             else
             {
-                OldRank = config.InitialElo;
+                OldRank = config.EloSystem == "Full" ? config.InitialElo : 0;
             }
-            NewRank = getNewElo(userOldRks, position, new Ranking[] { oldRk2, oldRk3, oldRk4 }, config);
+            NewRank = getNewElo(userOldRks, position, new Ranking[] { oldRk2, oldRk3, oldRk4 }, config, score);
         }
 
-        private double getNewElo(List<Ranking> ownRankingHistory, int ownPosition, Ranking[] otherPlayerRankings, LeagueConfig cf, double ownScore = (double)0)
+        private double getNewElo(List<Ranking> ownRankingHistory, string ownPosition, Ranking[] otherPlayerRankings, LeagueConfig cf, int ownScore = 0)
         {
 
             double oldRank = OldRank.HasValue ? OldRank.Value : cf.InitialElo;
@@ -89,30 +93,53 @@ namespace kandora.bot.models
                 : new double[] { cf.Uma3p1, cf.Uma3p2, cf.Uma3p3 };
 
             //Rank affected by score (UMA count also for ELO system, since they are the base ELO variation)
-            double basePts =
-                UMA[ownPosition - 1] //UMA
-                + (ownPosition == 1 ? cf.Oka * nbOpponents : -cf.Oka) //OKA
-                - (ownPosition == nbOpponents+1 ? cf.PenaltyLast : 0); //PENALTY
-            basePts += cf.CountPoints ? (ownScore - cf.StartingPoints) : 0; //SCORE
+
+            double basePts = 0;
+            if (ownPosition.Contains("1"))
+            {
+                basePts += (UMA[0] + cf.Oka*nbOpponents)/ownPosition.Length;
+            }
+            if (ownPosition.Contains("2"))
+            {
+                basePts += (UMA[1] - cf.Oka) / ownPosition.Length;
+            }
+            if (ownPosition.Contains("3"))
+            {
+                basePts += (UMA[2] - cf.Oka) / ownPosition.Length;
+                if(nbOpponents == 3)
+                {
+                    basePts -= cf.PenaltyLast / ownPosition.Length;
+                }
+            }
+            if (ownPosition.Contains("4"))
+            {
+                basePts += (UMA[3] - cf.Oka- cf.PenaltyLast) / ownPosition.Length;
+            }
+            basePts += cf.CountPoints ? (ownScore - cf.StartingPoints)/1000 : 0; //SCORE
 
             double rankChange = basePts;
+            var newRank = oldRank;
             //ELO bonus/penalty depending on opponents average ELO
-            if (cf.UseEloSystem)
+            if (cf.EloSystem == "Full")
             {
                 double baseEloChange = avgOpponentRk - oldRank;
                 double dampenedEloChange = (baseEloChange / cf.BaseEloChangeDampening); //Moderating the bonus
                 double finalEloChange = Math.Max(dampenedEloChange, -1 * (UMA[0] + 3 * cf.Oka)); //First player cannot lose more than his UMA+OK
                 finalEloChange = Math.Min(finalEloChange, -1 * (UMA[nbOpponents] - cf.PenaltyLast)); //Last player cannot win more than his UMA+PENALTY
                 rankChange += finalEloChange;
+                //Moderating the whole rank change
+                double currentDeltaRatio = cf.EloChangeStartRatio + (cf.EloChangeEndRatio - cf.EloChangeStartRatio) * (Convert.ToDouble(Math.Min(nbTotalGames, cf.TrialPeriodDuration)) / Convert.ToDouble(cf.TrialPeriodDuration));
+                double finalRankChange = rankChange * currentDeltaRatio;
+
+                newRank = oldRank + finalRankChange;
+            } else if(cf.EloSystem == "Simple")
+            {
+                double expectedGain = oldRank - avgOpponentRk;
+                rankChange *= 1000;
+                rankChange -= expectedGain;
+                newRank = oldRank + rankChange/cf.BaseEloChangeDampening;
             }
-
-            //Moderating the whole rank change
-            double currentDeltaRatio = cf.EloChangeStartRatio + (cf.EloChangeEndRatio - cf.EloChangeStartRatio) * (Convert.ToDouble(Math.Min(nbTotalGames, cf.TrialPeriodDuration)) / Convert.ToDouble(cf.TrialPeriodDuration));
-            double finalRankChange = rankChange * currentDeltaRatio;
-
-            var newRank = oldRank + finalRankChange;
-
-            if (cf.UseEloSystem)
+            if (cf.EloSystem == "Full" && cf.MinElo != -1)
             {
                 newRank = Math.Max(cf.MinElo, newRank);
             }

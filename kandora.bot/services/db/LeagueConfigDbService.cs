@@ -27,7 +27,7 @@ namespace kandora.bot.services
         public static string uma4p4Col = "uma4p4";
         public static string okaCol = "oka";
         public static string penaltyLastCol = "penaltyLast";
-        public static string useEloSystemCol = "useEloSystem";
+        public static string EloSystemCol = "EloSystem";
         public static string initialEloCol = "initialElo";
         public static string minEloCol = "minElo";
         public static string baseEloChangeDampeningCol = "baseEloChangeDampening";
@@ -43,7 +43,7 @@ namespace kandora.bot.services
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.CommandText = $"SELECT {idCol}, {countPointsCol}, {startingPointsCol}, " //0-2
                     + $"{uma3p1Col}, {uma3p2Col}, {uma3p3Col}, {uma4p1Col}, {uma4p2Col}, {uma4p3Col}, {uma4p4Col}, " // 3-9
-                    + $"{okaCol}, {penaltyLastCol}, {useEloSystemCol}, {initialEloCol}, {minEloCol}, {baseEloChangeDampeningCol}, " //10-15
+                    + $"{okaCol}, {penaltyLastCol}, {EloSystemCol}, {initialEloCol}, {minEloCol}, {baseEloChangeDampeningCol}, " //10-15
                     + $"{eloChangeStartRatioCol}, {eloChangeEndRatioCol}, {trialPeriodDurationCol}, {allowSanmaCol} " //16-19
                     + $"FROM {tableName} "
                     + $"WHERE {idCol} = @leagueId";
@@ -56,8 +56,8 @@ namespace kandora.bot.services
                 {
                     var id = reader.GetInt32(0);
                     var countPoints = reader.GetBoolean(1);
-                    var useEloSystem = reader.GetBoolean(12);
-                    var league = new LeagueConfig(id, countPoints, useEloSystem); ;
+                    var eloSystem = reader.GetString(12);
+                    var league = new LeagueConfig(id, countPoints, eloSystem); ;
 
                     league.StartingPoints = reader.GetDouble(2);
 
@@ -94,7 +94,7 @@ namespace kandora.bot.services
 
             var settings = ConfigurationManager.AppSettings;
             var countPoints = bool.Parse(settings.Get("countPoints"));
-            var useEloSystem = bool.Parse(settings.Get("useEloSystem"));
+            var eloSystem = settings.Get("eloSystem");
             var startingPoints = Double.Parse(settings.Get("startingPoints"));
             var allowSanma = Boolean.Parse(settings.Get("allowSanma"));
             var uma3p1 = Double.Parse(settings.Get("uma3p1"));
@@ -113,7 +113,7 @@ namespace kandora.bot.services
             var eloChangeEndRatio = Double.Parse(settings.Get("eloChangeEndRatio"));
             var trialPeriodDuration = Double.Parse(settings.Get("trialPeriodDuration"));
 
-            var leagueId = CreateLeague(countPoints, useEloSystem);
+            var leagueId = CreateLeague(countPoints, eloSystem);
             SetConfigValue(startingPointsCol, leagueId, startingPoints);
             SetConfigValue(allowSanmaCol, leagueId, allowSanma);
             SetConfigValue(uma3p1Col, leagueId, uma3p1);
@@ -149,18 +149,18 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        private static int CreateLeague(bool countPoints, bool useEloSystem)
+        private static int CreateLeague(bool countPoints, string eloSystem)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.CommandText = $"INSERT INTO {tableName} ({countPointsCol}, {useEloSystemCol}) "
-                + $"VALUES (@countPoints, @useElo) "
+                command.CommandText = $"INSERT INTO {tableName} ({countPointsCol}, {EloSystemCol}) "
+                + $"VALUES (@countPoints, @EloSystem) "
                 + $"RETURNING {idCol} ";
 
                 command.Parameters.AddWithValue("@countPoints", NpgsqlDbType.Boolean, countPoints);
-                command.Parameters.AddWithValue("@useElo", NpgsqlDbType.Boolean, useEloSystem);
+                command.Parameters.AddWithValue("@EloSystem", NpgsqlDbType.Varchar, eloSystem);
                 command.CommandType = CommandType.Text;
                 var reader = command.ExecuteReader();
 

@@ -32,7 +32,7 @@ public class SplitTileTests
     }
 
     [Theory]
-    [InlineData("111'22233'3p4'4455s", "1p1p1p'2p2p2p3p3p'3p4s'4s4s5s5s")]
+    [InlineData("111'22233'3p4'4455s", "1p1p1'p2p2p2p3p3'p3p4's4s4s5s5s")]
     public void WhenMethodUsedWithoutUnique_ShouldReturnHandParsed(string hand, string expectedOutput)
     {
         List<string> tiles = HandParser.SplitTiles(hand, false);

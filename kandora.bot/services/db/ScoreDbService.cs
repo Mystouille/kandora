@@ -29,6 +29,7 @@ namespace kandora.bot.services
         private const string IdCol = "Id";
         private const string ServerIdCol = "serverId";
         private const string FullLogIdCol = "fullLog";
+        private const string IsSanmaCol = "isSanma";
 
 
         public static (Game, List<Ranking>) RecordIRLGame(string[] members, float[] scores, Server server, LeagueConfig leagueConfig)
@@ -50,13 +51,14 @@ namespace kandora.bot.services
                     ? ""
                     : $", @score1, @score2, @score3{(scores.Length > 3 ? $", @score4" : "")}";
 
-                command.CommandText = $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {IdCol}, {PlatformCol}, {ServerIdCol}{scoreColumns}) " +
-                    $"VALUES (\'{members[0]}\', \'{members[1]}\', \'{members[2]}\', \'{members[3]}\', @logId, @gameType, @serverId{scoreValues});";
+                command.CommandText = $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {IdCol}, {PlatformCol}, {IsSanmaCol}, {ServerIdCol}{scoreColumns}) " +
+                    $"VALUES (\'{members[0]}\', \'{members[1]}\', \'{members[2]}\', \'{members[3]}\', @logId, @gameType, @isSanma, @serverId{scoreValues});";
                 command.CommandType = CommandType.Text;
 
                 command.Parameters.AddWithValue("@logId", NpgsqlDbType.Varchar, logId);
                 command.Parameters.AddWithValue("@gameType", NpgsqlDbType.Varchar, GameType.IRL.ToString());
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, server.Id);
+                command.Parameters.AddWithValue("@isSanma", NpgsqlDbType.Boolean, members.Length==3);
                 if (scores != null)
                 {
                     for (int i = 0; i < scores.Length && i < 4; i++)
@@ -88,72 +90,71 @@ namespace kandora.bot.services
             var platform = gameLog.GameTypeStr;
 
             // TODO feed timestamp from game data
-            if (playerNames.Length < 4)
+            if (playerNames.Length < 3)
             {
-                throw new Exception("No sanma allowed");
+                throw new Exception("Not enough players");
             }
 
             var nameIdScorePos = new List<(string, string, int, int)>(); //0=start east, 1=start south,...
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < playerNames.Length; i++)
             {
                 nameIdScorePos.Add((playerNames[i], playerMjIds[i], scores[i], i));
             }
             // We sort them by comparing their scores minus their initial pos, since initPos<<<score it's ok, I guess?
             nameIdScorePos.Sort((tuple1, tuple2) => (tuple2.Item3 - tuple2.Item4).CompareTo((tuple1.Item3 - tuple1.Item4)));
-            int[] sortedScores = nameIdScorePos.Select(x => x.Item3).ToArray();
-            string[] sortedNames = nameIdScorePos.Select(x => x.Item1).ToArray();
-            string[] sortedMjIds = nameIdScorePos.Select(x => x.Item2).ToArray();
-            string[] sortedPlayerIds = new string[4];
+
+            var playerIds = new string[playerNames.Length];
 
             List<int> toRecordMjId = new List<int>();
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < playerNames.Length; i++)
             {
                 User user = null;
                 switch (gameType)
                 {
                     //Get the User objects from the Name or Ids present in the log
                     case GameType.Mahjsoul:
-                        user = userList.Find(x => x.MahjsoulUserId == sortedMjIds[i]);
+                        user = userList.Find(x => x.MahjsoulUserId == playerMjIds[i]);
                         if (user == null)
                         {
-                            user = userList.Find(x => x.MahjsoulName == sortedNames[i]);
+                            user = userList.Find(x => x.MahjsoulName == playerNames[i]);
                             toRecordMjId.Add(i);
                         }
                         break;
                     case GameType.Tenhou:
-                        user = userList.Find(x => x.TenhouName == sortedNames[i]);
+                        user = userList.Find(x => x.TenhouName == playerNames[i]);
                         break;
                     default:
                         throw (new Exception("Bad game type, can't record"));
                 }
                 if (user == null)
                 {
-                    throw (new Exception($"couldn't find player with this name on the server: {sortedNames[i]}"));
+                    throw (new Exception($"couldn't find player with this name on the server: {playerNames[i]}"));
                 }
-                sortedPlayerIds[i] = user.Id;
+                playerIds[i] = user.Id;
             }
 
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.CommandText = $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {IdCol}, {FullLogIdCol}, {PlatformCol}, {ServerIdCol}) " +
-                    $"VALUES (@playerId1, @playerId2, @playerId3, @playerId4, {sortedScores[0]}, {sortedScores[1]}, {sortedScores[2]}, {sortedScores[3]}, @logId, @fullLog, @platform, @serverId);";
+                command.CommandText = $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {IdCol}, {FullLogIdCol}, {PlatformCol}, {ServerIdCol}, {IsSanmaCol}) " +
+                    $"VALUES (@playerId1, @playerId2, @playerId3, @playerId4, {scores[0]}, {scores[1]}, {scores[2]}, {scores[3]}, @logId, @fullLog, @platform, @serverId, @isSanma);";
                 command.CommandType = CommandType.Text;
 
-                command.Parameters.AddWithValue("@playerId1", NpgsqlDbType.Varchar, sortedPlayerIds[0]);
-                command.Parameters.AddWithValue("@playerId2", NpgsqlDbType.Varchar, sortedPlayerIds[1]);
-                command.Parameters.AddWithValue("@playerId3", NpgsqlDbType.Varchar, sortedPlayerIds[2]);
-                command.Parameters.AddWithValue("@playerId4", NpgsqlDbType.Varchar, sortedPlayerIds[3]);
+                command.Parameters.AddWithValue("@playerId1", NpgsqlDbType.Varchar, playerIds[0]);
+                command.Parameters.AddWithValue("@playerId2", NpgsqlDbType.Varchar, playerIds[1]);
+                command.Parameters.AddWithValue("@playerId3", NpgsqlDbType.Varchar, playerIds[2]);
+                command.Parameters.AddWithValue("@playerId4", NpgsqlDbType.Varchar, playerIds[3]);
                 command.Parameters.AddWithValue("@fullLog", NpgsqlDbType.Varchar, fullLog);
                 command.Parameters.AddWithValue("@logId", NpgsqlDbType.Varchar, logId);
                 command.Parameters.AddWithValue("@platform", NpgsqlDbType.Varchar, platform);
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverWithUsers.Id);
+                command.Parameters.AddWithValue("@isSanma", NpgsqlDbType.Boolean, playerIds.Length == 3);
                 command.ExecuteNonQuery();
 
                 //Add the majsouldID to the new users:
                 foreach (var idx in toRecordMjId)
                 {
-                    UserDbService.SetMahjsoulUserId(sortedPlayerIds[idx], sortedMjIds[idx]);
+                    UserDbService.SetMahjsoulUserId(playerIds[idx], playerMjIds[idx]);
                 }
                 var config = LeagueConfigDbService.GetLeagueConfig(serverWithUsers.LeagueConfigId);
                 var game = GetGameFromLogId(logId, serverWithUsers);
@@ -198,7 +199,7 @@ namespace kandora.bot.services
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.CommandText = $"SELECT {IdCol}, {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {FullLogIdCol}, {PlatformCol}, {TimestampCol}" +
+                command.CommandText = $"SELECT {IdCol}, {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {FullLogIdCol}, {PlatformCol}, {TimestampCol}, {IsSanmaCol}" +
                     $" FROM {GameTableName}" +
                     $" WHERE {ServerIdCol} = @serverId" +
                     $" ORDER BY {TimestampCol} ASC, {IdCol} ASC;";
@@ -222,9 +223,10 @@ namespace kandora.bot.services
                     string fullLog = Reader.IsDBNull(9) ? null : Reader.GetString(9);
                     string platformStr = Reader.GetString(10);
                     DateTime timestamp = Reader.GetDateTime(11);
+                    bool isSanma = Reader.GetBoolean(12);
                     GameType platform = (GameType)Enum.Parse(typeof(GameType), platformStr);
 
-                    var game = new Game(id, server, user1Id, user2Id, user3Id, user4Id, platform, timestamp);
+                    var game = new Game(id, server, user1Id, user2Id, user3Id, user4Id, platform, timestamp, isSanma);
                     game.FullLog = fullLog;
                     game.User1Score = user1Score;
                     game.User2Score = user2Score;
@@ -260,7 +262,7 @@ namespace kandora.bot.services
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.CommandText = $"SELECT {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {ServerIdCol}, {PlatformCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {TimestampCol}, {FullLogIdCol}" +
+                command.CommandText = $"SELECT {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {ServerIdCol}, {PlatformCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {TimestampCol}, {FullLogIdCol}, {IsSanmaCol}" +
                     $" FROM {GameTableName}" +
                     $" WHERE {IdCol} = @logId";
 
@@ -282,13 +284,14 @@ namespace kandora.bot.services
                     int user4Score = Reader.IsDBNull(9) ? 0 : Reader.GetInt32(9);
                     DateTime timestamp = Reader.GetDateTime(10);
                     string fullLog = Reader.IsDBNull(11) ? null : Reader.GetString(11);
+                    bool isSanma = Reader.IsDBNull(12) ? false : Reader.GetBoolean(12);
 
                     Reader.Close();
                     if (serverId != server.Id)
                     {
                         throw new Exception($"Game with logId:{logId} has been recorded on another server");
                     }
-                    var game = new Game(logId, server, user1Id, user2Id, user3Id, user4Id, platform, timestamp);
+                    var game = new Game(logId, server, user1Id, user2Id, user3Id, user4Id, platform, timestamp, isSanma);
                     game.User1Score = user1Score;
                     game.User2Score = user2Score;
                     game.User3Score = user3Score;
