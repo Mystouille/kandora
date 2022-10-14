@@ -86,7 +86,7 @@ namespace kandora.bot.models
 
             double oldRank = OldRank.HasValue ? OldRank.Value : cf.InitialElo;
             int nbOpponents = otherPlayerRankings.Length;
-            int nbTotalGames = ownRankingHistory.Count;
+            int nbTotalGames = ownRankingHistory.Where(x=> x.OldRank != null).Count();
             double avgOpponentRk = (otherPlayerRankings.Sum(x=>x.NewRank)) / nbOpponents;
             double[] UMA = nbOpponents == 3
                 ? new double[] { cf.Uma4p1, cf.Uma4p2, cf.Uma4p3, cf.Uma4p4 }
@@ -132,12 +132,21 @@ namespace kandora.bot.models
                 double finalRankChange = rankChange * currentDeltaRatio;
 
                 newRank = oldRank + finalRankChange;
-            } else if(cf.EloSystem == "Simple")
+            }
+            else if (cf.EloSystem == "Simple")
             {
                 double expectedGain = oldRank - avgOpponentRk;
                 rankChange *= 1000;
                 rankChange -= expectedGain;
-                newRank = oldRank + rankChange/cf.BaseEloChangeDampening;
+                newRank = oldRank + rankChange / cf.BaseEloChangeDampening;
+            }
+            else if (cf.EloSystem == "Average")
+            {
+                newRank = ((double)nbTotalGames * oldRank + basePts) / (double)(nbTotalGames + 1);
+            }
+            else if (cf.EloSystem == "None")
+            {
+                newRank += basePts;
             }
             if (cf.EloSystem == "Full" && cf.MinElo != -1)
             {

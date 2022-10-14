@@ -110,7 +110,7 @@ namespace kandora.bot.commands.slash
             sb.AppendLine($"{mod}uma4p4: {config.Uma4p4}{mod}");
             sb.AppendLine($"{mod}oka: {config.Oka}{mod}");
             sb.AppendLine($"{mod}penaltyLast: {config.PenaltyLast}{mod}");
-            mod = config.EloSystem != "None" ? "**" : "*";
+            mod = (config.EloSystem != "None" && config.EloSystem != "Average") ? "**" : "*";
             sb.AppendLine($"{mod}baseEloChangeDampening: {config.BaseEloChangeDampening}{mod}");
             mod = config.EloSystem == "Full" ? "**" : "*";
             sb.AppendLine($"{mod}initialElo: {config.InitialElo}{mod}");
@@ -126,6 +126,7 @@ namespace kandora.bot.commands.slash
             [Option(Resources.admin_setLeagueConfig_allowSanma, Resources.admin_setLeagueConfig_allowSanma_description)] bool allowSanma,
             [Option(Resources.admin_setLeagueConfig_countPoints, Resources.admin_setLeagueConfig_countPoints_description)] bool countPoints,
             [Choice(Resources.admin_setLeagueConfig_eloSystem_None,"None")]
+            [Choice(Resources.admin_setLeagueConfig_eloSystem_Average,"Average")]
             [Choice(Resources.admin_setLeagueConfig_eloSystem_Simple,"Simple")]
             [Choice(Resources.admin_setLeagueConfig_eloSystem_Full,"Full")]
             [Option(Resources.admin_setLeagueConfig_eloSystem, Resources.admin_setLeagueConfig_eloSystem_description)] string eloSystem,

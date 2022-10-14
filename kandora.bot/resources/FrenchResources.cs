@@ -21,6 +21,7 @@ namespace kandora.bot.resources
         public const string admin_setLeagueConfig_allowSanma_description = "Accepte les parties à 3 joueurs";
         public const string admin_setLeagueConfig_countPoints = "countPoints";
         public const string admin_setLeagueConfig_eloSystem_None = "Aucun";
+        public const string admin_setLeagueConfig_eloSystem_Average = "Moyenne";
         public const string admin_setLeagueConfig_eloSystem_Simple = "Simple";
         public const string admin_setLeagueConfig_eloSystem_Full = "Complet";
         public const string admin_setLeagueConfig_countPoints_description = "Prend en compte les points";

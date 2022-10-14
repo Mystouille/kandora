@@ -241,6 +241,9 @@ namespace kandora.bot.commands.slash
                 var userId = ctx.User.Id.ToString();
                 var serverId = ctx.Guild.Id.ToString();
                 var users = UserDbService.GetUsers();
+                var server = ServerDbService.GetServer(serverId);
+                var configId = server.LeagueConfigId;
+                var config = LeagueConfigDbService.GetLeagueConfig(configId);
                 List<Ranking> rankingList = RankingDbService.GetServerRankings(serverId);
                 var latestUserRankings = new Dictionary<string, Ranking>();
                 foreach (var rank in rankingList)
@@ -265,7 +268,12 @@ namespace kandora.bot.commands.slash
                     {
                         userStr = rank.UserId;
                     }
-                    var rankValue = Convert.ToInt32(rank.NewRank);
+
+                    var rankValue = Math.Round(rank.NewRank,2);
+                    if (config.EloSystem != "Average")
+                    {
+                        Convert.ToInt32(rank.NewRank);
+                    }
                     sb.Append($"{i}: <@{rank.UserId}> ({rankValue}) {(rank.UserId == userId ? $"<<< {Resources.league_seeRanking_youAreHere}" : "")}\n");
                     i++;
                 }
