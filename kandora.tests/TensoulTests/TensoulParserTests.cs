@@ -1,15 +1,15 @@
 ﻿using kandora.bot.models;
 using kandora.bot.utils;
-using kandora.bot.utils.TenhouParser;
+using kandora.bot.utils.TensoulLogParser;
 
 namespace kandora.tests.TenhouTests;
 
-public class TenhouParserTests
+public class TensoulParserTests
 {
     [Fact]
-    public void TenhouLogParser_GivenStandardJson_ShouldBeSuccessful()
+    public void TensoulParser_GivenStandardJson_ShouldBeSuccessful()
     {
-        string json = File.ReadAllText("TenhouTests\\tenhouLog.json");
+        string json = File.ReadAllText("TensoulTests\\tensoulLog.json");
 
         var riichiGame = TenhouLogParser.ParseTenhouFormatGame(json, GameType.Tenhou);
 
@@ -34,11 +34,11 @@ public class TenhouParserTests
     }
 
     [Fact]
-    public void TenhouLogParserNew_GivenStandardJson_ShouldBeSuccessful()
+    public void TensoulParserNew_GivenStandardJson_ShouldBeSuccessful()
     {
-        string json = File.ReadAllText("TenhouTests\\tenhouLog.json");
+        string json = File.ReadAllText("TensoulTests\\tensoulLog.json");
 
-        var riichiGame = TenhouLogParserNew.ParseTenhouFormatGame(json, GameType.Tenhou);
+        var riichiGame = TensoulParser.ParseTensoulFormatGame(json, GameType.Tenhou);
 
         Assert.NotNull(riichiGame);
         Assert.Equal("王座の間南喰赤", riichiGame.Title[0]);
@@ -63,12 +63,12 @@ public class TenhouParserTests
     }
 
     [Fact]
-    public void TenhouLogParserOld_GivenStandardJson_ShouldBeTheSameThanPrevious()
+    public void TensoulParsers_GivenStandardJson_ShouldBeTheSameThanPrevious()
     {
-        string json = File.ReadAllText("TenhouTests\\tenhouLog.json");
+        string json = File.ReadAllText("TensoulTests\\tensoulLog.json");
 
         var riichiGameOld = TenhouLogParser.ParseTenhouFormatGame(json, GameType.Tenhou);
-        var riichiGameNew = TenhouLogParserNew.ParseTenhouFormatGame(json, GameType.Tenhou);
+        var riichiGameNew = TensoulParser.ParseTensoulFormatGame(json, GameType.Tenhou);
 
         Assert.Equal(riichiGameOld.FinalRankDeltas, riichiGameNew.FinalRankDeltas);
         Assert.Equal(riichiGameOld.FinalScores, riichiGameNew.FinalScores);
@@ -85,6 +85,48 @@ public class TenhouParserTests
         for (int i = 0; i < riichiGameOld.Rounds.Count; i++)
         {
             for(int j = 0; j < riichiGameOld.Rounds[i].Discards.Length; j++)
+                Assert.Equal(riichiGameOld.Rounds[i].Discards[j], riichiGameNew.Rounds[i].Discards[j]);
+            for (int j = 0; j < riichiGameOld.Rounds[i].HaiPais.Length; j++)
+                Assert.Equal(riichiGameOld.Rounds[i].HaiPais[j], riichiGameNew.Rounds[i].HaiPais[j]);
+            for (int j = 0; j < riichiGameOld.Rounds[i].Draws.Length; j++)
+                Assert.Equal(riichiGameOld.Rounds[i].Draws[j], riichiGameNew.Rounds[i].Draws[j]);
+            for (int j = 0; j < riichiGameOld.Rounds[i].Result.Length; j++)
+            {
+                Assert.Equal(riichiGameOld.Rounds[i].Result[j].HandScore, riichiGameNew.Rounds[i].Result[j].HandScore);
+                Assert.Equal(riichiGameOld.Rounds[i].Result[j].Payments, riichiGameNew.Rounds[i].Result[j].Payments);
+                Assert.Equal(riichiGameOld.Rounds[i].Result[j].Winner, riichiGameNew.Rounds[i].Result[j].Winner);
+                Assert.Equal(riichiGameOld.Rounds[i].Result[j].Loser, riichiGameNew.Rounds[i].Result[j].Loser);
+                Assert.Equal(riichiGameOld.Rounds[i].Result[j].LoserPao, riichiGameNew.Rounds[i].Result[j].LoserPao);
+                Assert.Equal(riichiGameOld.Rounds[i].Result[j].Yakus, riichiGameNew.Rounds[i].Result[j].Yakus);
+
+            }
+            Assert.Equal(riichiGameOld.Rounds[i].StartingScores, riichiGameNew.Rounds[i].StartingScores);
+        }
+    }
+
+    [Fact]
+    public void TensoulParsers_GivenStandardJson2_ShouldBeTheSameThanPrevious()
+    {
+        string json = File.ReadAllText("TensoulTests\\tensoulLog2.json");
+
+        var riichiGameOld = TenhouLogParser.ParseTenhouFormatGame(json, GameType.Tenhou);
+        var riichiGameNew = TensoulParser.ParseTensoulFormatGame(json, GameType.Tenhou);
+
+        Assert.Equal(riichiGameOld.FinalRankDeltas, riichiGameNew.FinalRankDeltas);
+        Assert.Equal(riichiGameOld.FinalScores, riichiGameNew.FinalScores);
+        Assert.Equal(riichiGameOld.Names, riichiGameNew.Names);
+        Assert.Equal(riichiGameOld.Rate, riichiGameNew.Rate);
+        Assert.Equal(riichiGameOld.UserIds, riichiGameNew.UserIds);
+        Assert.Equal(riichiGameOld.Dan, riichiGameNew.Dan);
+        Assert.Equal(riichiGameOld.Rule.Aka51, riichiGameNew.Rule.Aka51);
+        Assert.Equal(riichiGameOld.Rule.Aka52, riichiGameNew.Rule.Aka52);
+        Assert.Equal(riichiGameOld.Rule.Aka53, riichiGameNew.Rule.Aka53);
+        Assert.Equal(riichiGameOld.Rounds.Count, riichiGameNew.Rounds.Count);
+        Assert.Equal(riichiGameOld.Ver, riichiGameNew.Ver);
+
+        for (int i = 0; i < riichiGameOld.Rounds.Count; i++)
+        {
+            for (int j = 0; j < riichiGameOld.Rounds[i].Discards.Length; j++)
                 Assert.Equal(riichiGameOld.Rounds[i].Discards[j], riichiGameNew.Rounds[i].Discards[j]);
             for (int j = 0; j < riichiGameOld.Rounds[i].HaiPais.Length; j++)
                 Assert.Equal(riichiGameOld.Rounds[i].HaiPais[j], riichiGameNew.Rounds[i].HaiPais[j]);

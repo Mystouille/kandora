@@ -1,9 +1,9 @@
 ﻿using kandora.bot.http;
 using System.Text.Json.Serialization;
 
-namespace kandora.bot.utils.TenhouParser;
+namespace kandora.bot.utils.TensoulLogParser;
 
-public class TenhouGame
+public class TensoulGame
 {
     [JsonPropertyName("ver")]
     public string Version { get; set; }

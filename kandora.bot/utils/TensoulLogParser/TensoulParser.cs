@@ -1,17 +1,18 @@
 ﻿using kandora.bot.http;
 using kandora.bot.models;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace kandora.bot.utils.TenhouParser;
+namespace kandora.bot.utils.TensoulLogParser;
 
-public static class TenhouLogParserNew
+public static class TensoulParser
 {
-    public static RiichiGame ParseTenhouFormatGame(string payload, GameType gameType)
+    public static RiichiGame ParseTensoulFormatGame(string payload, GameType gameType)
     {
-        var game = JsonSerializer.Deserialize<TenhouGame>(payload);
+        var game = JsonSerializer.Deserialize<TensoulGame>(payload);
         var node = JsonNode.Parse(payload);
         var riichiGame = game.ToRiichiGame(node.SelectByPath("$.log"));
         riichiGame.GameType = gameType;
@@ -19,7 +20,7 @@ public static class TenhouLogParserNew
         return riichiGame;
     }
 
-    public static RiichiGame ToRiichiGame(this TenhouGame tenhouGame, JsonNode resultGame)
+    public static RiichiGame ToRiichiGame(this TensoulGame tenhouGame, JsonNode resultGame)
     {
         return new RiichiGame()
         {
@@ -95,20 +96,32 @@ public static class TenhouLogParserNew
             for(int j = 16; j < curr.Count; j++)
             {
                 var rtr = curr[j].AsArray();
-                var roundResult = new RoundResult()
+                if (rtr.Count <= 2)
                 {
-                    Name = rtr[0].GetValue<string>(),
-                    Payments = rtr[1].AsArray().ToArray<int>()
-                };
-                if(rtr.Count > 2)
-                {
-                    roundResult.Winner = rtr[2].AsArray()[0].GetValue<int>();
-                    roundResult.Loser = rtr[2].AsArray()[1].GetValue<int>();
-                    roundResult.LoserPao = rtr[2].AsArray()[2].GetValue<int>();
-                    roundResult.HandScore = rtr[2].AsArray()[3].GetValue<string>();
-                    roundResult.Yakus = rtr[2].AsArray().ToStringArray().Skip(4).ToArray();
+                    var roundResult = new RoundResult()
+                    {
+                        Name = rtr[0].GetValue<string>(),
+                        Payments = rtr[1].AsArray().ToArray<int>()
+                    };
+                    roundResults.Add(roundResult);
                 }
-                roundResults.Add(roundResult);
+                else
+                {
+                    for(int k = 1; k < rtr.Count; k += 2)
+                    {
+                        var roundResult = new RoundResult()
+                        {
+                            Name = rtr[0].GetValue<string>(),
+                            Payments = rtr[k].AsArray().ToArray<int>(),
+                            Winner = rtr[k + 1].AsArray()[0].GetValue<int>(),
+                            Loser = rtr[k + 1].AsArray()[1].GetValue<int>(),
+                            LoserPao = rtr[k + 1].AsArray()[2].GetValue<int>(),
+                            HandScore = rtr[k + 1].AsArray()[3].GetValue<string>(),
+                            Yakus = rtr[k + 1].AsArray().ToStringArray().Skip(4).ToArray(),
+                        };
+                        roundResults.Add(roundResult);
+                    }
+                }
             }
             round.Result = roundResults.ToArray();
             rounds.Add(round);
