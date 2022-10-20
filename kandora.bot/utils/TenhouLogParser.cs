@@ -7,7 +7,7 @@ using System.IO;
 
 namespace kandora.bot.utils
 {
-    class TenhouLogParser
+    public static class TenhouLogParser
     {
         public static RiichiGame ParseTenhouFormatGame(string payload, GameType gameType)
         {

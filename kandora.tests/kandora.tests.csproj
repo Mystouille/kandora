@@ -25,4 +25,10 @@
     <ProjectReference Include="..\kandora.bot\kandora.bot.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TenhouTests\tenhouLog.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
