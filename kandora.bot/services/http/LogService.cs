@@ -1,6 +1,7 @@
 ﻿using kandora.bot.http;
 using kandora.bot.models;
 using kandora.bot.utils;
+using kandora.bot.utils.TensoulLogParser;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -51,7 +52,7 @@ namespace kandora.bot.services.http
                 {
                     log = await GetTenhouLog(logId);
                 }
-                return TenhouLogParser.ParseTenhouFormatGame(log, GameType.Tenhou);
+                return TensoulParser.ParseTensoulFormatGame(log, GameType.Tenhou);
             }
             else
             {
@@ -62,7 +63,7 @@ namespace kandora.bot.services.http
                     log = await GetMahjsoulLogAsTenhou(logId, lang);
                 }
 
-                return TenhouLogParser.ParseTenhouFormatGame(log, GameType.Mahjsoul);
+                return TensoulParser.ParseTensoulFormatGame(log, GameType.Mahjsoul);
             }
         }
 
