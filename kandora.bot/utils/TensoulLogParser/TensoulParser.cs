@@ -28,8 +28,8 @@ public static class TensoulParser
             Ref = tenhouGame.Reference,
             Ver = tenhouGame.Version,
             Rule = tenhouGame.Rule.ToRiichiRule(),
-            FinalRankDeltas = tenhouGame.Scores.GetRanks(),
-            FinalScores = tenhouGame.Scores.GetScores(),
+            FinalRankDeltas = tenhouGame.Scores.Where((s, i) => i % 2 == 1).ToArray(),
+            FinalScores = tenhouGame.Scores.Where((s, i) => i % 2 == 0).Select(s => (int)s).ToArray(),
             Names = tenhouGame.Names,
             UserIds = tenhouGame.GetIds(),
             Rate = tenhouGame.Rate,
@@ -40,26 +40,6 @@ public static class TensoulParser
             Rounds = GetRiichiRounds(resultGame.AsArray())
         };
     }
-
-    static int[] GetScores(this float[] sc)
-    {
-        var scores = new List<int>();
-        for (int i = 0; i < sc.Length; i += 2)
-        {
-            scores.Add((int)sc[i]);
-        }
-        return scores.ToArray();
-    }
-    static float[] GetRanks(this float[] sc)
-    {
-        var scores = new List<float>();
-        for (int i = 1; i < sc.Length; i += 2)
-        {
-            scores.Add(sc[i]);
-        }
-        return scores.ToArray();
-    }
-
 
     static List<Round> GetRiichiRounds(JsonArray jsonArray)
     {

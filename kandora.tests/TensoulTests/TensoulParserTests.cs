@@ -82,4 +82,14 @@ public class TensoulParserTests
         Assert.Equal(new int[4] {0, 0, -8000, 9000}, riichiGame.Rounds[1].Result[0].Payments);
         Assert.Equal(new int[4] { 0, 18000, -18000, 0 }, riichiGame.Rounds[1].Result[1].Payments);
     }
+
+    [Fact]
+    public void TensoulParser_GivenGame_ShouldHaveProperFinalScores()
+    {
+        var riichiGame = TensoulParser.ParseTensoulFormatGame(gameTwo, GameType.Tenhou);
+
+        Assert.NotNull(riichiGame);
+        Assert.Equal(new float[4] { -20.1f, 51.9f, -40.7f, 8.9f }, riichiGame.FinalRankDeltas);
+        Assert.Equal(new int[4] { 9900, 61900, -700, 28900 }, riichiGame.FinalScores);
+    }
 }
