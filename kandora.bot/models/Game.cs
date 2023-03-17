@@ -18,9 +18,10 @@ namespace kandora.bot.models
             this.Server = server;
         }
 
-        public Game(string logId, Server server, string user1Id, string user2Id, string user3Id, string user4Id, GameType platform, DateTime timestamp, bool isSanma ) : this(server)
+        public Game(int id, string gameName, Server server, string user1Id, string user2Id, string user3Id, string user4Id, GameType platform, DateTime timestamp, bool isSanma ) : this(server)
         {
-            Id = logId;
+            Id = id;
+            GameName = gameName;
             User1Id = user1Id;
             User2Id = user2Id;
             User3Id = user3Id;
@@ -29,7 +30,8 @@ namespace kandora.bot.models
             Timestamp = timestamp;
             IsSanma = isSanma;
         }
-        public string Id { get; set; }
+        public int Id { get; set; }
+        public string GameName { get; set; }
         public Server Server { get; set; }
         public GameType Platform { get; set; }
         public bool IsSanma { get; set; }   
@@ -249,10 +251,9 @@ namespace kandora.bot.models
         public DateTime Timestamp { get; set; }
         public string FullLog { get; set; }
 
-        public virtual User User1 { get; set; }
-        public virtual User User2 { get; set; }
-        public virtual User User3 { get; set; }
-        public virtual User User4 { get; set; }
-
+        public int User1Chombo { get; set; }
+        public int User2Chombo { get; set; }
+        public int User3Chombo { get; set; }
+        public int User4Chombo { get; set; }
     }
 }

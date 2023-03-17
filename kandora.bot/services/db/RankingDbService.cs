@@ -1,4 +1,5 @@
 ﻿using kandora.bot.exceptions;
+using kandora.bot.mahjong.handcalc;
 using kandora.bot.models;
 using kandora.bot.services.db;
 using Npgsql;
@@ -19,46 +20,18 @@ namespace kandora.bot.services
         private const string oldEloCol = "oldElo";
         private const string newEloCol = "newElo";
         private const string positionCol = "position";
+        private const string finalScoreCol = "finalScore";
         private const string timeStampCol = "timeStamp";
         private const string gameIdCol = "gameId";
 
         internal static List<Ranking> UpdateRankings(Game game, LeagueConfig config)
         {
-            List<Ranking> rkList1 = GetUserRankingHistory(game.User1Id, game.Server.Id);
-            List<Ranking> rkList2 = GetUserRankingHistory(game.User2Id, game.Server.Id);
-            List<Ranking> rkList3 = GetUserRankingHistory(game.User3Id, game.Server.Id);
-            List<Ranking> rkList4 = GetUserRankingHistory(game.User4Id, game.Server.Id);
+           var dataList = getUserGameInfos(game, config);
 
-            if (rkList1.Count() == 0)
-            {
-                InitUserRanking(game.User1Id, game.Server.Id, config);
-                rkList1 = GetUserRankingHistory(game.User1Id, game.Server.Id);
-            }
-            if (rkList2.Count() == 0)
-            {
-                InitUserRanking(game.User2Id, game.Server.Id, config);
-                rkList2 = GetUserRankingHistory(game.User2Id, game.Server.Id);
-            }
-            if (rkList3.Count() == 0)
-            {
-                InitUserRanking(game.User3Id, game.Server.Id, config);
-                rkList3 = GetUserRankingHistory(game.User3Id, game.Server.Id);
-            }
-            if (rkList4.Count() == 0)
-            {
-                InitUserRanking(game.User4Id, game.Server.Id, config);
-                rkList4 = GetUserRankingHistory(game.User4Id, game.Server.Id);
-            }
+            // Creating new rankings
+            var newRkList = dataList.Select(userData => new Ranking(userData.UserId, dataList, game.Id, game.Server.Id, config)).ToArray();
 
-            
-
-            List<Ranking> newRkList = new()
-            {
-                new Ranking(game.User1Id, rkList1, rkList2.Last(), rkList3.Last(), rkList4.Last(), game.User1Placement, game.Id, game.Server.Id, config, game.User1Score ?? default(int)),
-                new Ranking(game.User2Id, rkList2, rkList1.Last(), rkList3.Last(), rkList4.Last(), game.User2Placement, game.Id, game.Server.Id, config, game.User2Score ?? default(int)),
-                new Ranking(game.User3Id, rkList3, rkList2.Last(), rkList1.Last(), rkList4.Last(), game.User3Placement, game.Id, game.Server.Id, config, game.User3Score ?? default(int)),
-                new Ranking(game.User4Id, rkList4, rkList2.Last(), rkList3.Last(), rkList1.Last(), game.User4Placement, game.Id, game.Server.Id, config, game.User4Score ?? default(int))
-            };
+            // this part is for debugging purpose :D  ====>
 
             var score1 = newRkList[0].Score;
             var score2 = newRkList[1].Score;
@@ -79,11 +52,106 @@ namespace kandora.bot.services
             var sumOldRank = oldRank1 + oldRank2 + oldRank3 + oldRank4;
 
             var deltaRanks = sumNewRank - sumOldRank;
+
+            // <==== Now we get back to the important stuff
+
             foreach (var ranking in newRkList)
             {
-                AddRanking(ranking);
+                AddNewRanking(ranking);
             }
-            return newRkList;
+            return newRkList.ToList();
+        }
+
+        private static List<UserGameData> getUserGameInfos(Game game, LeagueConfig config)
+        {
+            var dataList = new List<UserGameData>();
+
+            List<Ranking> rkList1 = GetUserRankingHistory(game.User1Id, game.Server.Id);
+            List<Ranking> rkList2 = GetUserRankingHistory(game.User2Id, game.Server.Id);
+            List<Ranking> rkList3 = GetUserRankingHistory(game.User3Id, game.Server.Id);
+            List<Ranking> rkList4 = GetUserRankingHistory(game.User4Id, game.Server.Id);
+
+            if (rkList1.Count() == 0)
+            {
+                InitUserRanking(game.User1Id, game.Server.Id, config);
+                rkList1 = GetUserRankingHistory(game.User1Id, game.Server.Id);
+            }
+            if (rkList2.Count() == 0)
+            {
+                InitUserRanking(game.User2Id, game.Server.Id, config);
+                rkList2 = GetUserRankingHistory(game.User2Id, game.Server.Id);
+            }
+            if (rkList3.Count() == 0)
+            {
+                InitUserRanking(game.User3Id, game.Server.Id, config);
+                rkList3 = GetUserRankingHistory(game.User3Id, game.Server.Id);
+            }
+            if (!game.IsSanma && rkList4.Count() == 0)
+            {
+                InitUserRanking(game.User4Id, game.Server.Id, config);
+                rkList4 = GetUserRankingHistory(game.User4Id, game.Server.Id);
+            }
+
+            // Aggregating data needed to compute next ranking
+
+            dataList.Add(new UserGameData(game.User1Id, game.User1Score, game.User1Chombo, rkList1));
+            dataList.Add(new UserGameData(game.User2Id, game.User2Score, game.User2Chombo, rkList2));
+            dataList.Add(new UserGameData(game.User3Id, game.User3Score, game.User3Chombo, rkList3));
+            if (!game.IsSanma)
+            {
+                dataList.Add(new UserGameData(game.User4Id, game.User4Score, game.User4Chombo, rkList4));
+            }
+
+            dataList = dataList.OrderBy(x => x.UserScore).ToList();
+            dataList.Reverse();
+
+
+            // Computing placement (two player exaequo for 2nd and 3rd place have a placement value of "23")
+
+            for(int i =0; i< dataList.Count; i++)
+            {
+                dataList[i].UserPlacement= $"{i+1}";
+            }
+            for (int i = 0; i < dataList.Count-1; i++)
+            {
+                if (dataList[i].UserScore == dataList[i + 1].UserScore)
+                {
+                    dataList[i].UserPlacement = $"{dataList[i].UserPlacement}{i + 2}";
+                    dataList[i+1].UserPlacement = $"{i + i}{dataList[i+1].UserPlacement}";
+                }
+            }
+            for (int i = 0; i < dataList.Count - 1; i++)
+            {
+                if (dataList[i].UserScore == dataList[i + 1].UserScore)
+                {
+                    dataList[i].UserPlacement = $"{i+1}{i+2}";
+                    dataList[i + 1].UserPlacement = $"{i + 1}{i + 2}";
+                }
+            }
+            for (int i = 0; i < dataList.Count - 2; i++)
+            {
+                if (dataList[i].UserScore == dataList[i + 1].UserScore && dataList[i].UserScore == dataList[i + 2].UserScore)
+                {
+                    dataList[i].UserPlacement = $"{i + 1}{i + 2}{i + 3}";
+                    dataList[i + 1].UserPlacement = $"{i + 1}{i + 2}{i + 3}";
+                    dataList[i + 2].UserPlacement = $"{i + 1}{i + 2}{i + 3}";
+                }
+            }
+            if (!game.IsSanma)
+            {
+                for (int i = 0; i < dataList.Count - 3; i++)
+                {
+                    if (dataList[i].UserScore == dataList[i + 1].UserScore && dataList[i].UserScore == dataList[i + 2].UserScore && dataList[i].UserScore == dataList[i + 3].UserScore)
+                    {
+                        dataList[i].UserPlacement = $"{i + 1}{i + 2}{i + 3}{i + 4}";
+                        dataList[i + 1].UserPlacement = $"{i + 1}{i + 2}{i + 3}{i + 4}";
+                        dataList[i + 2].UserPlacement = $"{i + 1}{i + 2}{i + 3}{i + 4}";
+                        dataList[i + 3].UserPlacement = $"{i + 1}{i + 2}{i + 3}{i + 4}";
+                    }
+                }
+            }
+
+            return dataList;
         }
 
 
@@ -100,20 +168,21 @@ namespace kandora.bot.services
             return true;
         }
 
-        private static bool AddRanking(Ranking rk)
+        private static bool AddNewRanking(Ranking rk)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"INSERT INTO {tableName} ({userIdCol}, {oldEloCol}, {newEloCol}, {positionCol}, {gameIdCol}, {serverIdCol}) " +
-                    $"VALUES (@userId, @oldElo, @newElo, @position, @gameId, @serverId);";
+                command.CommandText = $"INSERT INTO {tableName} ({userIdCol}, {oldEloCol}, {newEloCol}, {positionCol}, {finalScoreCol}, {gameIdCol}, {serverIdCol}) " +
+                    $"VALUES (@userId, @oldElo, @newElo, @position, @finalScore, @gameId, @serverId);";
 
                 command.Parameters.AddWithValue("@userId", NpgsqlDbType.Varchar, rk.UserId);
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, rk.ServerId);
                 command.Parameters.AddWithValue("@position", NpgsqlDbType.Varchar, rk.Position);
-                command.Parameters.AddWithValue("@gameId", NpgsqlDbType.Varchar, rk.GameId);
+                command.Parameters.AddWithValue("@finalScore", NpgsqlDbType.Integer, rk.ScoreWithBonus);
+                command.Parameters.AddWithValue("@gameId", NpgsqlDbType.Integer, rk.GameId);
                 command.Parameters.AddWithValue("@oldElo", NpgsqlDbType.Double, rk.OldRank);
                 command.Parameters.AddWithValue("@newElo", NpgsqlDbType.Double, rk.NewRank);
                 command.CommandType = CommandType.Text;
@@ -174,7 +243,7 @@ namespace kandora.bot.services
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.CommandText = $"SELECT {idCol}, {oldEloCol}, {newEloCol}, {positionCol}, {timeStampCol} , {gameIdCol} FROM {tableName} " +
+                command.CommandText = $"SELECT {idCol}, {oldEloCol}, {newEloCol}, {positionCol}, {timeStampCol} , {gameIdCol}, {finalScoreCol} FROM {tableName} " +
                     $"WHERE {userIdCol} = @userId AND {serverIdCol} = @serverId " +
                     $"ORDER BY {idCol} ASC";
                 command.CommandType = CommandType.Text;
@@ -186,12 +255,13 @@ namespace kandora.bot.services
                 while (reader.Read())
                 {
                     int id = reader.GetInt32(0);
-                    float oldElo = reader.IsDBNull(1) ? -1 : (float)reader.GetDouble(1);
-                    float newElo = reader.IsDBNull(2) ? -1 : (float)reader.GetDouble(2);
-                    string position = reader.IsDBNull(3) ? "?" : reader.GetString(3);
+                    float? oldElo = reader.IsDBNull(1) ? null : (float)reader.GetDouble(1);
+                    float newElo = (float)reader.GetDouble(2);
+                    string position = reader.IsDBNull(3) ? "" : reader.GetString(3);
                     DateTime timestamp = reader.GetDateTime(4);
-                    string gameId = reader.IsDBNull(5) ? null : reader.GetString(5);
-                    rankingList.Add(new Ranking(id, userId, oldElo, newElo, position, timestamp, gameId, serverId));
+                    int gameId = reader.IsDBNull(5) ? -1 : reader.GetInt32(5);
+                    double finalScore = ((double)reader.GetInt32(6)) / 1000;
+                    rankingList.Add(new Ranking(id, userId, oldElo, newElo, position, finalScore, timestamp, gameId, serverId));
                     if (latest)
                     {
                         break;
@@ -209,7 +279,7 @@ namespace kandora.bot.services
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.CommandText = $"SELECT {idCol}, {userIdCol}, {oldEloCol}, {newEloCol}, {positionCol}, {timeStampCol} , {gameIdCol} FROM {tableName} " +
+                command.CommandText = $"SELECT {idCol}, {userIdCol}, {oldEloCol}, {newEloCol}, {positionCol}, {timeStampCol} , {gameIdCol}, {finalScoreCol} FROM {tableName} " +
                     $"WHERE {serverIdCol} = \'{serverId}\' " +
                     $"ORDER BY {idCol} DESC";
                 command.CommandType = CommandType.Text;
@@ -219,12 +289,13 @@ namespace kandora.bot.services
                 {
                     int id = reader.GetInt32(0);
                     string userId = reader.GetString(1);
-                    float oldElo = reader.IsDBNull(2) ? -1 : (float)reader.GetDouble(2);
+                    float? oldElo = reader.IsDBNull(2) ? null : (float)reader.GetDouble(2);
                     float newElo = reader.IsDBNull(3) ? -1 : (float)reader.GetDouble(3);
                     string position = reader.IsDBNull(4) ? "?" : reader.GetString(4);
                     DateTime timestamp = reader.GetDateTime(5);
-                    string gameId = reader.IsDBNull(6) ? null : reader.GetString(6);
-                    rankingListList.Add(new Ranking(id, userId, oldElo, newElo, position, timestamp, gameId, serverId));
+                    int gameId = reader.IsDBNull(6) ? -1 : reader.GetInt32(6);
+                    double finalScore = ((double)reader.GetInt32(7))/1000;
+                    rankingListList.Add(new Ranking(id, userId, oldElo, newElo, position, finalScore, timestamp, gameId, serverId));
                 }
                 reader.Close();
                 return rankingListList;

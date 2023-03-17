@@ -125,7 +125,12 @@ namespace kandora.bot.commands.slash
             [Option(Resources.league_option_player3Score, Resources.league_option_anyScore_description)] string score3,
             [Option(Resources.league_option_player4, Resources.league_option_anyPlayer_description)] string player4,
             [Option(Resources.league_option_player4Score, Resources.league_option_anyScore_description)] string score4,
-            [Option(Resources.league_option_date, Resources.league_option_date_description)] string date = ""
+            [Option(Resources.league_option_player1Chombo, Resources.league_option_chombo1_description)] long chombo1 = 0,
+            [Option(Resources.league_option_player2Chombo, Resources.league_option_chombo2_description)] long chombo2 = 0,
+            [Option(Resources.league_option_player3Chombo, Resources.league_option_chombo3_description)] long chombo3 = 0,
+            [Option(Resources.league_option_player4Chombo, Resources.league_option_chombo4_description)] long chombo4 = 0,
+            [Option(Resources.league_option_date, Resources.league_option_date_description)] string date = "",
+            [Option(Resources.league_option_location, Resources.league_option_location_description)] string location = ""
             )
         {
             try
@@ -139,13 +144,14 @@ namespace kandora.bot.commands.slash
 
                 var timestamp = date.Length==0? DateTime.Now : DateTime.ParseExact(date, "yyyy/MM/dd", System.Globalization.CultureInfo.InvariantCulture);
 
-                var usersScores = new (string, string)[] { (player1Id, score1), (player2Id, score2), (player3Id, score3), (player4Id, score4) };
+                var usersScores = new (string, string, long)[] { (player1Id, score1, chombo1), (player2Id, score2, chombo2), (player3Id, score3, chombo3), (player4Id, score4, chombo4) };
 
                 var sortedScores = usersScores.ToList();
                 sortedScores.Sort((tuple1, tuple2) => tuple2.Item2.CompareTo(tuple1.Item2));
 
                 var userIds = sortedScores.Select(x => x.Item1).ToArray();
                 var scoresStr = sortedScores.Select(x => x.Item2).ToArray();
+                var chombos = sortedScores.Select(x => (int)(x.Item3)).ToArray();
 
                 float[] scores = null;
                 if (scoresStr != null)
@@ -186,7 +192,7 @@ namespace kandora.bot.commands.slash
                 var gameResult = PrintGameResult(ctx.Client, userIds, scores);
 
                 var gameMsg = $"{Resources.league_submitResult_voteMessage}\n{gameResult}";
-                await kandoraContext.AddPendingGame(ctx, gameMsg, new PendingGame(userIds, scores, timestamp, server));
+                await kandoraContext.AddPendingGame(ctx, gameMsg, new PendingGame(userIds, scores, chombos, location, timestamp, server));
             }
             catch (Exception e)
             {
@@ -249,37 +255,39 @@ namespace kandora.bot.commands.slash
                 var configId = server.LeagueConfigId;
                 var config = LeagueConfigDbService.GetLeagueConfig(configId);
                 List<Ranking> rankingList = RankingDbService.GetServerRankings(serverId);
-                var latestUserRankings = new Dictionary<string, Ranking>();
+                var latestUserRankings = new Dictionary<string, (Ranking, int)>();
                 foreach (var rank in rankingList)
                 {
                     var id = rank.UserId;
                     if (!latestUserRankings.ContainsKey(id))
                     {
-                        latestUserRankings.Add(rank.UserId, rank);
+                        latestUserRankings.Add(rank.UserId, (rank, rankingList.Where(x=>x.UserId == id && x.GameId >= 0 && x.OldRank != null).Count()));
                     }
                 }
 
-                List<Ranking> sortedRanks = latestUserRankings.Values.ToList();
-                sortedRanks.Sort((val1, val2) => val2.NewRank.CompareTo(val1.NewRank));
+                List<(Ranking,int)> sortedRanks = latestUserRankings.Values.ToList();
+                sortedRanks.Sort((val1, val2) => val2.Item1.NewRank.CompareTo(val1.Item1.NewRank));
                 StringBuilder sb = new StringBuilder();
                 int i = 1;
                 sb.AppendLine(":partying_face:");
                 foreach (var rank in sortedRanks)
                 {
-                    var userName = ctx.Channel.Users.Where(x => x.Id.ToString() == rank.UserId).Select(x => x.Nickname).FirstOrDefault();
-                    var userStr = userName != null ? userName : rank.UserId;
+                    var userName = ctx.Channel.Users.Where(x => x.Id.ToString() == rank.Item1.UserId).Select(x => x.Nickname).FirstOrDefault();
+                    var userStr = userName != null ? userName : rank.Item1.UserId;
+                    var nbGames = rank.Item2;
+                       
                     long parseResult;
-                    if (!long.TryParse(rank.UserId, out parseResult))
+                    if (!long.TryParse(rank.Item1.UserId, out parseResult))
                     {
-                        userStr = rank.UserId;
+                        userStr = rank.Item1.UserId;
                     }
 
-                    var rankValue = Math.Round(rank.NewRank,2);
+                    var rankValue = Math.Round(rank.Item1.NewRank/1000,2);
                     if (config.EloSystem != "Average")
                     {
-                        Convert.ToInt32(rank.NewRank);
+                        Convert.ToInt32(rank.Item1.NewRank);
                     }
-                    sb.Append($"{i}: (<@{rank.UserId}>) ({rankValue}) {(rank.UserId == userId ? $"<<< {Resources.league_seeRanking_youAreHere}" : "")}\n");
+                    sb.Append($"{i}: (<@{rank.Item1.UserId}>):\t{rankValue}\t({rank.Item2}){(rank.Item1.UserId == userId ? $"<<< {Resources.league_seeRanking_youAreHere}" : "")}\n");
                     i++;
                 }
                 var leaderboard = sb.ToString();

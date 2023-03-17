@@ -74,7 +74,9 @@ namespace kandora.bot.commands.slash
 
                 string[] players = { benoit, dustray, ivy, arrcival };
                 float[] scores = { 50000, 4000, 20000, 10000 };
-                ScoreDbService.RecordIRLGame(players, scores, DateTime.Now, server, config);
+                int[] chombos = { 0, 0, 0, 0 };
+                string location = "nowhere";
+                ScoreDbService.RecordIRLGame(players, scores, chombos, DateTime.Now, location, server, config);
                 var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_testLeague_testLeagueStarted, playersStr));
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }

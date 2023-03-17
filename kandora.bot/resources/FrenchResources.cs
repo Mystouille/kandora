@@ -32,7 +32,7 @@ namespace kandora.bot.resources
         public const string admin_setLeagueConfig_endTime = "dateFin";
         public const string admin_setLeagueConfig_endTime_description = "La date de fin de la ligue (format: AAAA/MM/JJ)";
         public const string admin_setLeagueConfig_startingPoints = "startingPoints";
-        public const string admin_setLeagueConfig_startingPoints_description = "Points de chaque joueur en début de partie";
+        public const string admin_setLeagueConfig_startingPoints_description = "Points de chaque joueur en début de partie (en milliers)";
         public const string admin_setLeagueConfig_uma3p1 = "uma3p1";
         public const string admin_setLeagueConfig_uma3p1_description = "Uma du premier joueur en sanma";
         public const string admin_setLeagueConfig_uma3p2 = "uma3p2";
@@ -105,10 +105,21 @@ namespace kandora.bot.resources
         public const string league_option_player2Score = "Score2";
         public const string league_option_player3Score = "Score3";
         public const string league_option_player4Score = "Score4";
+        public const string league_option_player1Chombo = "Chombo1";
+        public const string league_option_player2Chombo = "Chombo2";
+        public const string league_option_player3Chombo = "Chombo3";
+        public const string league_option_player4Chombo = "Chombo4";
         public const string league_option_date = "Date";
         public const string league_option_date_description = "Date de la partie (au format YYYY/MM/DD)";
+        public const string league_option_location = "Lieu";
+        public const string league_option_location_description = "Endroit ou s'est passée la partie";
         public const string league_option_anyPlayer_description = "Mention (@) du joueur";
-        public const string league_option_anyScore_description = "Score final sans uma (ex: 44300)";
+        public const string league_option_anyScore_description = "Score final sans uma (ex: 44300 ou 44.3)";
+        public const string league_option_chombo1_description = "Nombre de chombos pour le Joueur1";
+        public const string league_option_chombo2_description = "Nombre de chombos pour le Joueur2";
+        public const string league_option_chombo3_description = "Nombre de chombos pour le Joueur3";
+        public const string league_option_chombo4_description = "Nombre de chombos pour le Joueur4";
+
         public const string league_submitResult_voteMessage = "Tous les joueurs doivent :o: pour valider ou :x: pour annuler l'enregistrement de la partie.";
         public const string league_submitResult_canceledMessage = "Tous les joueurs ont voté {0}, cette partie ne sera pas enregistrée";
         public const string league_submitResult_validatedMessage = "Tous les joueurs ont voté {0}, cette partie a été enregistrée!";

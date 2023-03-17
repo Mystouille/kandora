@@ -4,6 +4,7 @@
     [oldElo]    FLOAT NULL,
     [newElo]    FLOAT NOT NULL,
 	[position]	INT		   NULL,
+	[finalscore]INT		   NULL,
     [timestamp] DATETIME   NOT NULL DEFAULT SYSDATETIME(),
     [gameId]    NVARCHAR(100)   NULL,
     [serverId]  NVARCHAR(20) NOT NULL,
