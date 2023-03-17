@@ -51,7 +51,7 @@ namespace kandora.bot.models
             }
             NewRank = config.getNewRanking(dataList, userId);
 
-            ScoreWithBonus = Score.GetValueOrDefault() + config.getPostGameBonus(Position, dataList.Count);
+            ScoreWithBonus = Score.GetValueOrDefault() + config.getPostGameBonus(Position, dataList.Count, userData.UserChombo);
         }
 
         public virtual Game Game { get; set; }

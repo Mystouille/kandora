@@ -27,6 +27,7 @@ namespace kandora.bot.services
         public static string uma4p4Col = "uma4p4";
         public static string okaCol = "oka";
         public static string penaltyLastCol = "penaltyLast";
+        public static string penaltyChomboCol = "penaltyChombo";
         public static string EloSystemCol = "EloSystem";
         public static string initialEloCol = "initialElo";
         public static string minEloCol = "minElo";
@@ -47,7 +48,7 @@ namespace kandora.bot.services
                     + $"{uma3p1Col}, {uma3p2Col}, {uma3p3Col}, {uma4p1Col}, {uma4p2Col}, {uma4p3Col}, {uma4p4Col}, " // 3-9
                     + $"{okaCol}, {penaltyLastCol}, {EloSystemCol}, {initialEloCol}, {minEloCol}, {baseEloChangeDampeningCol}, " //10-15
                     + $"{eloChangeStartRatioCol}, {eloChangeEndRatioCol}, {trialPeriodDurationCol}, {allowSanmaCol}, " //16-19
-                    + $"{startDateCol}, {endDateCol} " // 20-21
+                    + $"{startDateCol}, {endDateCol}, {penaltyChomboCol} " // 20-22
                     + $"FROM {tableName} "
                     + $"WHERE {idCol} = @leagueId";
                 command.CommandType = CommandType.Text;
@@ -87,6 +88,7 @@ namespace kandora.bot.services
                     DateTime endDate = reader.GetDateTime(21);
                     league.StartTime = reader.GetDateTime(20);
                     league.EndTime = reader.GetDateTime(21);
+                    league.PenaltyChombo = reader.IsDBNull(22) ? -9999 : reader.GetDouble(22);
 
                     reader.Close();
                     return league;
@@ -114,6 +116,7 @@ namespace kandora.bot.services
             var uma4p4 = Double.Parse(settings.Get("uma4p4"));
             var oka = Double.Parse(settings.Get("oka"));
             var penaltyLast = Double.Parse(settings.Get("penaltyLast"));
+            var penaltyChombo = Double.Parse(settings.Get("penaltyChombo"));
             var initialElo = Double.Parse(settings.Get("initialElo"));
             var minElo = Double.Parse(settings.Get("minElo"));
             var baseEloChangeDampening = Double.Parse(settings.Get("baseEloChangeDampening"));
@@ -133,6 +136,7 @@ namespace kandora.bot.services
             SetConfigValue(uma4p4Col, leagueId, uma4p4);
             SetConfigValue(okaCol, leagueId, oka);
             SetConfigValue(penaltyLastCol, leagueId, penaltyLast);
+            SetConfigValue(penaltyChomboCol, leagueId, penaltyChombo);
             SetConfigValue(initialEloCol, leagueId, initialElo);
             SetConfigValue(minEloCol, leagueId, minElo);
             SetConfigValue(baseEloChangeDampeningCol, leagueId, baseEloChangeDampening);

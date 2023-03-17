@@ -63,6 +63,7 @@ namespace kandora.bot.models
         public double Uma4p4 { get; set; }
         public double Oka { get; set; }
         public double PenaltyLast { get; set; }
+        public double PenaltyChombo { get; set; }
         public string EloSystem { get; set; }
         public double InitialElo { get; set; }
         public double MinElo { get; set; }
@@ -71,7 +72,7 @@ namespace kandora.bot.models
         public double EloChangeEndRatio { get; set; }
         public int TrialPeriodDuration { get; set; }
 
-        public double getPostGameBonus(string playerPlacement, int nbPlayers)
+        public double getPostGameBonus(string playerPlacement, int nbPlayers, int nbChombos)
         {
             int nbOpponents = nbPlayers-1;
             double[] umas = new double[4];
@@ -110,7 +111,7 @@ namespace kandora.bot.models
             {
                 bonusPts += (umas[3] - Oka * 1000 - PenaltyLast * 1000) / playerPlacement.Length;
             }
-            return bonusPts;
+            return bonusPts - nbChombos * PenaltyChombo * 1000;
         }
 
         public double getNewRanking( List<UserGameData> dataList, string userId)
@@ -120,6 +121,7 @@ namespace kandora.bot.models
             var ownPosition = userData.UserPlacement;
             var otherPlayerLastRankings = dataList.Where(data => data.UserId != userId).Select(x => x.RankingHistory.Last());
             var ownScore = userData.UserScore;
+            var ownChombos = userData.UserChombo;
             var oldRank = EloSystem == "Full" ? InitialElo : 0;
             if (userData.RankingHistory.Count > 0)
             {
@@ -137,7 +139,7 @@ namespace kandora.bot.models
 
             double basePts = (CountPoints ? (ownScore - StartingPoints * 1000) : 0).GetValueOrDefault(); //SCORE
 
-            basePts += getPostGameBonus(ownPosition, dataList.Count); // Oka, Uma, last place penalty
+            basePts += getPostGameBonus(ownPosition, dataList.Count, ownChombos); // Oka, Uma, last place penalty
 
             double rankChange = basePts;
             var newRank = oldRank;

@@ -111,6 +111,7 @@ namespace kandora.bot.commands.slash
             sb.AppendLine($"{mod}uma4p4: {config.Uma4p4}{mod}");
             sb.AppendLine($"{mod}oka: {config.Oka}{mod}");
             sb.AppendLine($"{mod}penaltyLast: {config.PenaltyLast}{mod}");
+            sb.AppendLine($"{mod}chomboPenalty: {config.PenaltyChombo}{mod}");
             mod = (config.EloSystem != "None" && config.EloSystem != "Average") ? "**" : "*";
             sb.AppendLine($"{mod}baseEloChangeDampening: {config.BaseEloChangeDampening}{mod}");
             mod = config.EloSystem == "Full" ? "**" : "*";
@@ -143,6 +144,7 @@ namespace kandora.bot.commands.slash
             [Option(Resources.admin_setLeagueConfig_uma4p4, Resources.admin_setLeagueConfig_uma4p4_description)] double uma4p4 = -1,
             [Option(Resources.admin_setLeagueConfig_oka, Resources.admin_setLeagueConfig_oka_description)] double oka = -1,
             [Option(Resources.admin_setLeagueConfig_penaltyLast, Resources.admin_setLeagueConfig_penaltyLast_description)] double penaltyLast = -1,
+            [Option(Resources.admin_setLeagueConfig_penaltyChombo, Resources.admin_setLeagueConfig_penaltyChombo_description)] double penaltyChombo = -1,
             [Option(Resources.admin_setLeagueConfig_initialElo, Resources.admin_setLeagueConfig_initialElo_description)] long initialElo = -1,
             [Option(Resources.admin_setLeagueConfig_minElo, Resources.admin_setLeagueConfig_minElo_description)] long minElo = -1,
             [Option(Resources.admin_setLeagueConfig_eloChangeDampening, Resources.admin_setLeagueConfig_eloChangeDampening_description)] double eloChangeDampening = -1,
@@ -223,6 +225,11 @@ namespace kandora.bot.commands.slash
                     {
                         LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.penaltyLastCol, configId, penaltyLast);
                     }
+                    if (penaltyChombo != -1)
+                    {
+                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.penaltyChomboCol, configId, penaltyChombo);
+                    }
+                    
                 }
                 LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.EloSystemCol, configId, eloSystem);
 

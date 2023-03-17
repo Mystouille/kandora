@@ -27,6 +27,7 @@ CREATE TABLE LeagueConfig (
     uma4p4 FLOAT,
     oka FLOAT,
     penaltyLast FLOAT,
+    penaltyChombo FLOAT,
     eloSystem VARCHAR(30) NOT NULL,
     initialElo FLOAT,
     minElo FLOAT,

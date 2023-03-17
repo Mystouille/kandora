@@ -51,6 +51,8 @@ namespace kandora.bot.resources
         public const string admin_setLeagueConfig_oka_description = "Oka (payment to the first player, if points are activated)";
         public const string admin_setLeagueConfig_penaltyLast = "penaltyLast";
         public const string admin_setLeagueConfig_penaltyLast_description = "Last place penalty (if points are activated)";
+        public const string admin_setLeagueConfig_penaltyChombo = "penaltyChombo";
+        public const string admin_setLeagueConfig_penaltyChombo_description = "Penalty per chombo";
         public const string admin_setLeagueConfig_initialElo = "initialElo";
         public const string admin_setLeagueConfig_initialElo_description = "Initial ELO (if ELO is activated)";
         public const string admin_setLeagueConfig_minElo = "minElo";

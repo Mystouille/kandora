@@ -12,6 +12,7 @@
     [uma4p4] FLOAT,
     [oka] FLOAT,
     [penaltyLast] FLOAT,
+    [penaltyChombo] FLOAT,
     [useEloSystem] BIT NOT NULL,
     [initialElo] FLOAT,
     [minElo] FLOAT,
