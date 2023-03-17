@@ -27,6 +27,10 @@ namespace kandora.bot.resources
         public const string admin_setLeagueConfig_countPoints_description = "Prend en compte les points";
         public const string admin_setLeagueConfig_eloSystem = "eloSystem";
         public const string admin_setLeagueConfig_eloSystem_description = "Selectione le systèle de ELO";
+        public const string admin_setLeagueConfig_startTime = "dateDebut";
+        public const string admin_setLeagueConfig_startTime_description = "La date de debut de la ligue (format: AAAA/MM/JJ)";
+        public const string admin_setLeagueConfig_endTime = "dateFin";
+        public const string admin_setLeagueConfig_endTime_description = "La date de fin de la ligue (format: AAAA/MM/JJ)";
         public const string admin_setLeagueConfig_startingPoints = "startingPoints";
         public const string admin_setLeagueConfig_startingPoints_description = "Points de chaque joueur en début de partie";
         public const string admin_setLeagueConfig_uma3p1 = "uma3p1";
@@ -62,9 +66,15 @@ namespace kandora.bot.resources
         public const string admin_setLeagueConfig_backfillInProgress = "La configuration de la ligue a changé.\n{0}\n\n :bangbang: Kandora recalcule le classement à partir du début... ";
         public const string admin_setLeagueConfig_backfillFinished = "La configuration de la ligue a changé.\n{0}\n\n :white_check_mark: Kandora a fini de recalculer le classement! ";
 
-        public const string admin_addGuest_description = "Inscrit un utilisateur n'étant pas sur le serveur à la ligue";
+        public const string admin_addGuest_description = "Inscrit un utilisateur n'étant pas sur le serveur";
         public const string admin_addGuest_nickname = "nom";
         public const string admin_addGuest_nickname_description = "Le nom du joueur";
+
+        public const string admin_addPlayer_Success = "Le joueur {0} a bien été ajouté à la ligue";
+
+        public const string admin_addPlayer_description = "Inscrit un utilisateur étant sur le serveur";
+        public const string admin_addPlayer_mention = "pseudo";
+        public const string admin_addPlayer_mention_description = "La mention du joueur (avec @)";
 
         //League commands
         public const string league_register_description = "S'inscrire à la ligue ou modifier ses infos";
@@ -95,6 +105,8 @@ namespace kandora.bot.resources
         public const string league_option_player2Score = "Score2";
         public const string league_option_player3Score = "Score3";
         public const string league_option_player4Score = "Score4";
+        public const string league_option_date = "Date";
+        public const string league_option_date_description = "Date de la partie (au format YYYY/MM/DD)";
         public const string league_option_anyPlayer_description = "Mention (@) du joueur";
         public const string league_option_anyScore_description = "Score final sans uma (ex: 44300)";
         public const string league_submitResult_voteMessage = "Tous les joueurs doivent :o: pour valider ou :x: pour annuler l'enregistrement de la partie.";
@@ -108,6 +120,11 @@ namespace kandora.bot.resources
 
         public const string league_seeRanking_description = "Affiche le classement actuel de la ligue";
         public const string league_seeRanking_youAreHere = "Tu es là";
+
+        public const string league_seeLastGames_description = "Affiche les 10 dernières parties jouées";
+        public const string league_seeLastGames_noGames = "Aucune partie n'a été jouée entre le {0} et le {1}";
+        
+
 
         //Quizz commands
         public const string quizz_groupDescription = "Commence un quizz";
@@ -187,6 +204,7 @@ namespace kandora.bot.resources
         public const string commandError_gameAlreadyExists = "La partie ayant pour id: {0} existe déjà. Une partie ne peut être enregistrée qu'une fois, et que dans une seule ligue à la fois.";
         public const string commandError_UserNicknameAlreadyExists = "Un utilisateur avec ce nom existe déja.";
         public const string commandError_ValueAlreadyExists = "Un joueur ayant comme {0}: {1} existe déjà! Contacte un admin si nécessaire.";
+        public const string commandError_CouldntExtractDateFromLog = "La date de ce log n'a pas pu être extraite. la partie ne sera pas enregistrée";
 
 
 

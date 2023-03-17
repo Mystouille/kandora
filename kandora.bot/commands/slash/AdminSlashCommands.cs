@@ -1,11 +1,9 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using kandora.bot.models;
 using kandora.bot.resources;
 using kandora.bot.services;
 using kandora.bot.services.db;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Linq;
 using System.Text;
@@ -93,7 +91,10 @@ namespace kandora.bot.commands.slash
             var configId = server.LeagueConfigId;
             var config = LeagueConfigDbService.GetLeagueConfig(configId);
             var sb = new StringBuilder();
+            
             var mod = "**";
+            sb.AppendLine($"{mod}startTime: {config.StartTime.ToString("yyyy/MM/dd")}{mod}");
+            sb.AppendLine($"{mod}endTime: {(config.EndTime.ToString("yyyy/MM/dd"))}{mod}");
             sb.AppendLine($"{mod}countPoints: {(config.CountPoints ? "Yes" : "No")}{mod}");
             sb.AppendLine($"{mod}allowSanma: {(config.AllowSanma ? "Yes" : "No")}{mod}");
             sb.AppendLine($"{mod}EloSystem: {config.EloSystem}{mod}");
@@ -130,6 +131,8 @@ namespace kandora.bot.commands.slash
             [Choice(Resources.admin_setLeagueConfig_eloSystem_Simple,"Simple")]
             [Choice(Resources.admin_setLeagueConfig_eloSystem_Full,"Full")]
             [Option(Resources.admin_setLeagueConfig_eloSystem, Resources.admin_setLeagueConfig_eloSystem_description)] string eloSystem,
+            [Option(Resources.admin_setLeagueConfig_startTime, Resources.admin_setLeagueConfig_startTime_description)] string startTime = "",
+            [Option(Resources.admin_setLeagueConfig_endTime, Resources.admin_setLeagueConfig_endTime_description)] string endTime = "",
             [Option(Resources.admin_setLeagueConfig_startingPoints, Resources.admin_setLeagueConfig_startingPoints_description)] long startingPoints = -1,
             [Option(Resources.admin_setLeagueConfig_uma3p1, Resources.admin_setLeagueConfig_uma3p1_description)] double uma3p1 = -1,
             [Option(Resources.admin_setLeagueConfig_uma3p2, Resources.admin_setLeagueConfig_uma3p2_description)] double uma3p2 = -1,
@@ -158,86 +161,98 @@ namespace kandora.bot.commands.slash
                 var configId = server.LeagueConfigId;
                 var config = LeagueConfigDbService.GetLeagueConfig(configId);
 
+                if (startTime.Length > 0)
+                {
+                    var startDateTime = DateTime.ParseExact(startTime, "yyyy/MM/dd",
+                                       System.Globalization.CultureInfo.InvariantCulture);
+                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.startDateCol, configId, startDateTime);
+                }
+                if (endTime.Length > 0)
+                {
+                    var endDateTime = DateTime.ParseExact(endTime, "yyyy/MM/dd",
+                                       System.Globalization.CultureInfo.InvariantCulture);
+                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.endDateCol, configId, endDateTime);
+                }
                 if (allowSanma)
                 {
-                    LeagueConfigDbService.SetConfigValue("allowSanma", configId, true);
+                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.allowSanmaCol, configId, true);
                     if (uma3p1 != -1)
                     {
-                        LeagueConfigDbService.SetConfigValue("uma3p1", configId, uma3p1);
+                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.uma3p1Col, configId, uma3p1);
                     }
                     if (uma3p2 != -1)
                     {
-                        LeagueConfigDbService.SetConfigValue("uma3p2", configId, uma3p2);
+                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.uma3p2Col, configId, uma3p2);
                     }
                     if (uma3p3 != -1)
                     {
-                        LeagueConfigDbService.SetConfigValue("uma3p3", configId, uma3p3);
+                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.uma3p3Col, configId, uma3p3);
                     }
                 }
 
                 if (uma4p1 != -1)
                 {
-                    LeagueConfigDbService.SetConfigValue("uma4p1", configId, uma4p1);
+                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.uma4p1Col, configId, uma4p1);
                 }
                 if (uma4p2 != -1)
                 {
-                    LeagueConfigDbService.SetConfigValue("uma4p2", configId, uma4p2);
+                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.uma4p2Col, configId, uma4p2);
                 }
                 if (uma4p3 != -1)
                 {
-                    LeagueConfigDbService.SetConfigValue("uma4p3", configId, uma4p3);
+                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.uma4p3Col, configId, uma4p3);
                 }
                 if (uma4p3 != -1)
                 {
-                    LeagueConfigDbService.SetConfigValue("uma4p4", configId, uma4p4);
+                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.uma4p4Col, configId, uma4p4);
                 }
 
                 if (countPoints)
                 {
-                    LeagueConfigDbService.SetConfigValue("countPoints", configId, true);
+                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.countPointsCol, configId, true);
                     if( startingPoints != -1)
                     {
-                        LeagueConfigDbService.SetConfigValue("startingPoints", configId, startingPoints);
+                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.startingPointsCol, configId, startingPoints);
                     }
 
                     if (oka != -1)
                     {
-                        LeagueConfigDbService.SetConfigValue("oka", configId, oka);
+                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.okaCol, configId, oka);
                     }
                     if (penaltyLast != -1)
                     {
-                        LeagueConfigDbService.SetConfigValue("penaltyLast", configId, penaltyLast);
+                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.penaltyLastCol, configId, penaltyLast);
                     }
                 }
-                LeagueConfigDbService.SetConfigValue("eloSystem", configId, eloSystem);
+                LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.EloSystemCol, configId, eloSystem);
 
                 if (eloSystem == "Full" || eloSystem == "Simple")
                 {
                     if (initialElo != -1)
                     {
-                        LeagueConfigDbService.SetConfigValue("initialElo", configId, initialElo);
+                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.initialEloCol, configId, initialElo);
                     }
                     if (eloChangeDampening != -1)
                     {
-                        LeagueConfigDbService.SetConfigValue("baseEloChangeDampening", configId, eloChangeDampening);
+                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.baseEloChangeDampeningCol, configId, eloChangeDampening);
                     }
                     if (eloSystem == "Full")
                     {
                         if (minElo != -1)
                         {
-                            LeagueConfigDbService.SetConfigValue("minElo", configId, minElo);
+                            LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.minEloCol, configId, minElo);
                         }
                         if (eloChangeStartRatio != -1)
                         {
-                            LeagueConfigDbService.SetConfigValue("eloChangeStartRatio", configId, eloChangeStartRatio);
+                            LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.eloChangeStartRatioCol, configId, eloChangeStartRatio);
                         }
                         if (eloChangeEndRatio != -1)
                         {
-                            LeagueConfigDbService.SetConfigValue("eloChangeEndRatio", configId, eloChangeEndRatio);
+                            LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.eloChangeEndRatioCol, configId, eloChangeEndRatio);
                         }
                         if (trialPeriodDuration != -1)
                         {
-                            LeagueConfigDbService.SetConfigValue("trialPeriodDuration", configId, trialPeriodDuration);
+                            LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.trialPeriodDurationCol, configId, trialPeriodDuration);
                         }
                     }
                 }
@@ -307,7 +322,39 @@ namespace kandora.bot.commands.slash
                     UserDbService.SetTenhouName(nickname, tenhouName);
                 }
 
-                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_startLeague_leagueStarted, ctx.Guild.Name));
+                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_addPlayer_Success, nickname));
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
+            }
+            catch (Exception e)
+            {
+                replyWithException(ctx, e);
+            }
+        }
+
+
+        [SlashCommand("addPlayer", Resources.admin_addPlayer_description)]
+        public async Task AddPlayer(InteractionContext ctx,
+            [Option(Resources.admin_addPlayer_mention, Resources.admin_addGuest_nickname_description)] DiscordUser player
+            )
+        {
+            try
+            {
+                var serverDiscordId = ctx.Guild.Id.ToString();
+                var users = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(users);
+                var playerId = player.Id.ToString();
+                if (UserDbService.IsUserInDb(playerId))
+                {
+                    throw (new Exception(Resources.commandError_UserNicknameAlreadyExists));
+                }
+
+                var server = servers[serverDiscordId];
+                var configId = server.LeagueConfigId;
+                var config = LeagueConfigDbService.GetLeagueConfig(configId);
+                UserDbService.CreateUser(playerId, server.Id, config);
+                ServerDbService.AddUserToServer(playerId, serverDiscordId);
+
+                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_addPlayer_Success, player.Username));
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
             catch (Exception e)

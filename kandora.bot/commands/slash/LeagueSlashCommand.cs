@@ -20,7 +20,7 @@ namespace kandora.bot.commands.slash
     class LeagueSlashCommands : KandoraSlashCommandModule
     {
         [SlashCommand("register", Resources.league_register_description)]
-        public async Task GetLogInfo(InteractionContext ctx,
+        public async Task Register(InteractionContext ctx,
              [Option(Resources.league_register_mahjsoulName, Resources.league_register_mahjsoulName_description)] string mahjsoulName = "",
              [Option(Resources.league_register_mahjsoulFriendId, Resources.league_register_mahjsoulFriendId_description)] string mahjsoulFriendId = "",
              [Option(Resources.league_register_tenhouName, Resources.league_register_tenhouName_description)] string tenhouName = "")
@@ -98,7 +98,7 @@ namespace kandora.bot.commands.slash
         }
 
         [SlashCommand("seeLog", Resources.league_logInfo_description)]
-        public async Task GetLogInfo(InteractionContext ctx,
+        public async Task SeeLog(InteractionContext ctx,
              [Option(Resources.league_option_gameId, Resources.league_option_gameId_description)] string gameId)
         {
             try
@@ -124,7 +124,9 @@ namespace kandora.bot.commands.slash
             [Option(Resources.league_option_player3, Resources.league_option_anyPlayer_description)] string player3,
             [Option(Resources.league_option_player3Score, Resources.league_option_anyScore_description)] string score3,
             [Option(Resources.league_option_player4, Resources.league_option_anyPlayer_description)] string player4,
-            [Option(Resources.league_option_player4Score, Resources.league_option_anyScore_description)] string score4)
+            [Option(Resources.league_option_player4Score, Resources.league_option_anyScore_description)] string score4,
+            [Option(Resources.league_option_date, Resources.league_option_date_description)] string date = ""
+            )
         {
             try
             {
@@ -134,6 +136,8 @@ namespace kandora.bot.commands.slash
                 var player2Id = getIdFromPlayerParam(player2);
                 var player3Id = getIdFromPlayerParam(player3);
                 var player4Id = getIdFromPlayerParam(player4);
+
+                var timestamp = date.Length==0? DateTime.Now : DateTime.ParseExact(date, "yyyy/MM/dd", System.Globalization.CultureInfo.InvariantCulture);
 
                 var usersScores = new (string, string)[] { (player1Id, score1), (player2Id, score2), (player3Id, score3), (player4Id, score4) };
 
@@ -182,7 +186,7 @@ namespace kandora.bot.commands.slash
                 var gameResult = PrintGameResult(ctx.Client, userIds, scores);
 
                 var gameMsg = $"{Resources.league_submitResult_voteMessage}\n{gameResult}";
-                await kandoraContext.AddPendingGame(ctx, gameMsg, new PendingGame(userIds, scores, server));
+                await kandoraContext.AddPendingGame(ctx, gameMsg, new PendingGame(userIds, scores, timestamp, server));
             }
             catch (Exception e)
             {
@@ -262,7 +266,8 @@ namespace kandora.bot.commands.slash
                 sb.AppendLine(":partying_face:");
                 foreach (var rank in sortedRanks)
                 {
-                    var userStr = $"<@{rank.UserId}>";
+                    var userName = ctx.Channel.Users.Where(x => x.Id.ToString() == rank.UserId).Select(x => x.Nickname).FirstOrDefault();
+                    var userStr = userName != null ? userName : rank.UserId;
                     long parseResult;
                     if (!long.TryParse(rank.UserId, out parseResult))
                     {
@@ -274,7 +279,7 @@ namespace kandora.bot.commands.slash
                     {
                         Convert.ToInt32(rank.NewRank);
                     }
-                    sb.Append($"{i}: <@{rank.UserId}> ({rankValue}) {(rank.UserId == userId ? $"<<< {Resources.league_seeRanking_youAreHere}" : "")}\n");
+                    sb.Append($"{i}: (<@{rank.UserId}>) ({rankValue}) {(rank.UserId == userId ? $"<<< {Resources.league_seeRanking_youAreHere}" : "")}\n");
                     i++;
                 }
                 var leaderboard = sb.ToString();
@@ -285,6 +290,44 @@ namespace kandora.bot.commands.slash
             {
                 replyWithException(ctx, e);
             }
+        }
+
+        [SlashCommand("seeLastGames", Resources.league_seeLastGames_description)]
+        public async Task SeeLastGames(InteractionContext ctx)
+        {
+            var serverId = ctx.Guild.Id.ToString();
+            var server = ServerDbService.GetServer(serverId);
+            var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+            var games = ScoreDbService.GetLastNRecordedGame(server, config, 10);
+
+            StringBuilder sb = new StringBuilder();
+            foreach (Game game in games)
+            {
+                List<(string, string, int?)> userPlacements = new List<(string, string, int?)>();
+                userPlacements.Add((game.User1Placement, game.User1Id, game.User1Score));
+                userPlacements.Add((game.User2Placement, game.User2Id, game.User2Score));
+                userPlacements.Add((game.User3Placement, game.User3Id, game.User3Score));
+                userPlacements.Add((game.User4Placement, game.User4Id, game.User4Score));
+                userPlacements.Sort();
+                sb.Append($"{game.Id}\t{game.Platform}\t{game.Timestamp}\t");
+                foreach (var placement in userPlacements)
+                {
+                    string playerId = placement.Item2;
+                    bool isInt = Int64.TryParse(placement.Item2, out _);
+                    if (isInt)
+                    {
+                        playerId = $"<@{placement.Item2}>";
+                    }
+                    sb.Append($"{playerId}: {placement.Item3} / ");
+                }
+                sb.AppendLine();
+            }
+            if(games.Count == 0)
+            {
+                sb.AppendLine(String.Format(Resources.league_seeLastGames_noGames,config.StartTime.ToString("yyyy/MM/dd"), config.EndTime.ToString("yyyy/MM/dd")));
+            }
+            var rb = new DiscordInteractionResponseBuilder().WithContent(sb.ToString()).AsEphemeral();
+            await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
         }
 
         //Checks if a log has all its player in the league and return them
@@ -357,8 +400,8 @@ namespace kandora.bot.commands.slash
             if (game.Title != null)
             {
                 sb.Append($"{Resources.league_title}: {game.Title[0]}\n");
-                sb.Append($"{Resources.league_date}: {game.Title[1]}\n");
             }
+            sb.Append($"{Resources.league_date}: {game.Timestamp.ToString("yyyy/MM/dd HH:mm")}\n");
             sb.Append($"{Resources.league_results}: \n");
             var names = game.Names;
             var discordIds = new string[names.Length];

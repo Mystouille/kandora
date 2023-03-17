@@ -19,4 +19,6 @@
     [eloChangeStartRatio] FLOAT,
     [eloChangeEndRatio] FLOAT,
     [trialPeriodDuration] INT,
+    [startDate] DATETIME   NOT NULL DEFAULT (SYSDATETIME() - interval '12 months'),
+    [endDate] DATETIME   NOT NULL DEFAULT (SYSDATETIME() + interval '12 months'),
 );

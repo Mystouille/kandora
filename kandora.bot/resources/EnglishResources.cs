@@ -10,7 +10,8 @@ namespace kandora.bot.resources
         public const string admin_groupDescription = "Admin commands";
         public const string admin_startLeague_description = "Starts a mahjong league";
         public const string admin_startLeague_leagueStarted = "A mahjong league just started on {0}!";
-        public const string admin_endLeague_description = "Delete the existing mahjong league and all existing users and games";
+        public const string admin_endLeague_description = "Delete the existing mahjong league and all eisting users and games";
+        public const string admin_startLeague_leagueAlreadyExists = "A league already exists on {0}!";
         public const string admin_endLeague_leagueEnded = "The mahjong league got deleted!";
         public const string admin_testLeague_description = "Delete the current mahjong league and create one with 4 existing players";
         public const string admin_testLeague_testLeagueStarted = "A test league got created with these players:\n{0}";
@@ -26,6 +27,10 @@ namespace kandora.bot.resources
         public const string admin_setLeagueConfig_countPoints_description = "Take players points into account";
         public const string admin_setLeagueConfig_eloSystem = "eloSystem";
         public const string admin_setLeagueConfig_eloSystem_description = "Select the ELO system";
+        public const string admin_setLeagueConfig_startTime = "startDate";
+        public const string admin_setLeagueConfig_startTime_description = "League's start date (format: YYYY/MM/DD)";
+        public const string admin_setLeagueConfig_endTime = "endDate";
+        public const string admin_setLeagueConfig_endTime_description = "League's end date (format: YYYY/MM/DD)";
         public const string admin_setLeagueConfig_startingPoints = "startingPoints";
         public const string admin_setLeagueConfig_startingPoints_description = "Player's starting points";
         public const string admin_setLeagueConfig_uma3p1 = "uma3p1";
@@ -65,6 +70,12 @@ namespace kandora.bot.resources
         public const string admin_addGuest_nickname = "name";
         public const string admin_addGuest_nickname_description = "The player's name";
 
+        public const string admin_addPlayer_Success = "The player {0} has been added to the league";
+
+        public const string admin_addPlayer_description = "Register a user on this server";
+        public const string admin_addPlayer_mention = "nickname";
+        public const string admin_addPlayer_mention_description = "The player's mention (with @)";
+
         //League commands
         public const string league_register_description = "Register to the league or change your info";
         public const string league_register_mahjsoulName = "mahjsoulname";
@@ -94,6 +105,8 @@ namespace kandora.bot.resources
         public const string league_option_player2Score = "Score2";
         public const string league_option_player3Score = "Score3";
         public const string league_option_player4Score = "Score4";
+        public const string league_option_date = "Date";
+        public const string league_option_date_description = "Time of the game (YYYY/MM/DD format)";
         public const string league_option_anyPlayer_description = "Mention (@) of the player";
         public const string league_option_anyScore_description = "Final score without uma (ie. 44300)";
         public const string league_submitResult_voteMessage = "All players must :o: to confirm or :x: to cancel the game recording";
@@ -106,6 +119,9 @@ namespace kandora.bot.resources
 
         public const string league_seeRanking_description = "Affiche le classement actuel de la ligue";
         public const string league_seeRanking_youAreHere = "You are here";
+
+        public const string league_seeLastGames_description = "Displays the 10 last games played";
+        public const string league_seeLastGames_noGames = "No game has been played between {0} and {1}";
 
         //Quizz commands
         public const string quizz_groupDescription = "Starts a quizz";
@@ -185,6 +201,7 @@ namespace kandora.bot.resources
         public const string commandError_gameAlreadyExists = "The game with ID: {0} already exists. A game can be recorded only once, and contribute to only one league.";
         public const string commandError_UserNicknameAlreadyExists = "A user with this name already exists.";
         public const string commandError_ValueAlreadyExists = "A user with {0} {1} exists already! Contact the admin if you want to fix that.";
+        public const string commandError_CouldntExtractDateFromLog = "Couldn't extract date from this log, it won't be recorded";
 
 
         //League

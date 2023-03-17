@@ -33,7 +33,9 @@ CREATE TABLE LeagueConfig (
     baseEloChangeDampening FLOAT,
     eloChangeStartRatio FLOAT,
     eloChangeEndRatio FLOAT,
-    trialPeriodDuration INT
+    trialPeriodDuration INT,
+    startDate timestamp   NOT NULL DEFAULT (current_timestamp - interval '12 months'),
+    endDate timestamp   NOT NULL DEFAULT (current_timestamp + interval '12 months')
 );
 CREATE TABLE Server (
     Id VARCHAR(20) PRIMARY KEY NOT NULL UNIQUE,

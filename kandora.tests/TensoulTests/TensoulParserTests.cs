@@ -39,7 +39,6 @@ public class TensoulParserTests
         Assert.Equal(new int[4] { -1300, 3700, -700, -700 }, riichiGame.Rounds[0].Result[0].Payments);
         Assert.Equal(new string[4] { "門前清自摸和(1飜)", "平和(1飜)", "立直(1飜)", "裏ドラ(0飜)" }, riichiGame.Rounds[0].Result[0].Yakus);
         Assert.Equal(new int[4] { 23700, 27700, 24300, 24300 }, riichiGame.Rounds[1].StartingScores);
-        Assert.Equal("2.3", riichiGame.Ver);
     }
 
     [Fact]

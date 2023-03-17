@@ -89,9 +89,10 @@ namespace kandora.bot.services
 
         public static bool BackfillRankings(Server server, LeagueConfig config)
         {
-
             DeleteRankings(server.Id, butNotTheInitial: false);
-            var games = ScoreDbService.GetLastNRecordedGame(server);
+            var games = ScoreDbService.GetLastNRecordedGame(server, config);
+            // from first to last
+            games.Reverse();
             foreach(Game game in games)
             {
                 UpdateRankings(game, config);

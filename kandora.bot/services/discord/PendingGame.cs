@@ -24,13 +24,14 @@ namespace kandora.bot.services.discord
             usersOk = new HashSet<string>();
             usersNo = new HashSet<string>();
         }
-        public PendingGame(string[] userIds, float[] scores, Server server)
+        public PendingGame(string[] userIds, float[] scores, DateTime timestamp, Server server)
         {
             UserIds = userIds;
             Scores = scores;
             Server = server;
             usersOk = new HashSet<string>();
             usersNo = new HashSet<string>();
+            TimeStamp = timestamp;
         }
 
         private ISet<string> usersOk;
@@ -39,6 +40,7 @@ namespace kandora.bot.services.discord
         public float[] Scores { get; }
         public RiichiGame Log { get; }
         public Server Server { get; }
+        public DateTime TimeStamp { get; }
         public bool TryChangeUserOk(string userId, bool isAdd)
         {
             return TryChangeSet(usersOk, userId, isAdd);
@@ -117,11 +119,11 @@ namespace kandora.bot.services.discord
 
                     if (game.Log == null)
                     {
-                        ScoreDbService.RecordIRLGame(game.UserIds, game.Scores, server, leagueConfig);
+                        ScoreDbService.RecordIRLGame(game.UserIds, game.Scores, game.TimeStamp, server, leagueConfig);
                     }
                     else
                     {
-                        ScoreDbService.RecordOnlineGame(game.Log, server);
+                        ScoreDbService.RecordOnlineGame(game.Log, server, leagueConfig);
                     }
                     kanContext.PendingGames.Remove(msgId);
 

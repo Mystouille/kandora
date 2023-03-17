@@ -32,7 +32,7 @@ namespace kandora.bot.services
         private const string IsSanmaCol = "isSanma";
 
 
-        public static (Game, List<Ranking>) RecordIRLGame(string[] members, float[] scores, Server server, LeagueConfig leagueConfig)
+        public static (Game, List<Ranking>) RecordIRLGame(string[] members, float[] scores, DateTime timeStamp, Server server, LeagueConfig leagueConfig)
         {
             var dbCon = DBConnection.Instance();
 
@@ -51,14 +51,15 @@ namespace kandora.bot.services
                     ? ""
                     : $", @score1, @score2, @score3{(scores.Length > 3 ? $", @score4" : "")}";
 
-                command.CommandText = $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {IdCol}, {PlatformCol}, {IsSanmaCol}, {ServerIdCol}{scoreColumns}) " +
-                    $"VALUES (\'{members[0]}\', \'{members[1]}\', \'{members[2]}\', \'{members[3]}\', @logId, @gameType, @isSanma, @serverId{scoreValues});";
+                command.CommandText = $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {IdCol}, {PlatformCol}, {IsSanmaCol}, {ServerIdCol}, {TimestampCol}{scoreColumns}) " +
+                    $"VALUES (\'{members[0]}\', \'{members[1]}\', \'{members[2]}\', \'{members[3]}\', @logId, @gameType, @isSanma, @serverId, @timestamp{scoreValues});";
                 command.CommandType = CommandType.Text;
 
                 command.Parameters.AddWithValue("@logId", NpgsqlDbType.Varchar, logId);
                 command.Parameters.AddWithValue("@gameType", NpgsqlDbType.Varchar, GameType.IRL.ToString());
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, server.Id);
-                command.Parameters.AddWithValue("@isSanma", NpgsqlDbType.Boolean, members.Length==3);
+                command.Parameters.AddWithValue("@isSanma", NpgsqlDbType.Boolean, members.Length == 3);
+                command.Parameters.AddWithValue("@timestamp", NpgsqlDbType.Timestamp, timeStamp);
                 if (scores != null)
                 {
                     for (int i = 0; i < scores.Length && i < 4; i++)
@@ -69,14 +70,25 @@ namespace kandora.bot.services
                 command.ExecuteNonQuery();
 
                 var game = GetGameFromLogId(logId, server);
-                var rankings = RankingDbService.UpdateRankings(game, leagueConfig);
 
-                return (game, rankings);
+                //only take game into account if it's between the league timePeriod
+                if (timeStamp.CompareTo(leagueConfig.StartTime) > 0
+                    && timeStamp.CompareTo(leagueConfig.EndTime) < 0)
+                {
+                    var rankings = RankingDbService.UpdateRankings(game, leagueConfig);
+                    return (game, rankings);
+                }
+                else
+                {
+                    var rankings = RankingDbService.GetServerRankings(server.Id);
+                    return (game, rankings);
+                }
+
             }
             throw (new DbConnectionException());
         }
 
-        public static (Game, List<Ranking>) RecordOnlineGame(RiichiGame gameLog, Server serverWithUsers)
+        public static (Game, List<Ranking>) RecordOnlineGame(RiichiGame gameLog, Server serverWithUsers, LeagueConfig config)
         {
             var dbCon = DBConnection.Instance();
 
@@ -88,6 +100,7 @@ namespace kandora.bot.services
             var scores = gameLog.FinalScores;
             var userList = serverWithUsers.Users;
             var platform = gameLog.GameTypeStr;
+            var timestamp = gameLog.Timestamp;
 
             // TODO feed timestamp from game data
             if (playerNames.Length < 3)
@@ -136,8 +149,8 @@ namespace kandora.bot.services
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.CommandText = $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {IdCol}, {FullLogIdCol}, {PlatformCol}, {ServerIdCol}, {IsSanmaCol}) " +
-                    $"VALUES (@playerId1, @playerId2, @playerId3, @playerId4, {scores[0]}, {scores[1]}, {scores[2]}, {scores[3]}, @logId, @fullLog, @platform, @serverId, @isSanma);";
+                command.CommandText = $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {IdCol}, {FullLogIdCol}, {PlatformCol}, {ServerIdCol}, {IsSanmaCol}, {TimestampCol}) " +
+                    $"VALUES (@playerId1, @playerId2, @playerId3, @playerId4, {scores[0]}, {scores[1]}, {scores[2]}, {scores[3]}, @logId, @fullLog, @platform, @serverId, @isSanma, @timestamp);";
                 command.CommandType = CommandType.Text;
 
                 command.Parameters.AddWithValue("@playerId1", NpgsqlDbType.Varchar, playerIds[0]);
@@ -149,6 +162,7 @@ namespace kandora.bot.services
                 command.Parameters.AddWithValue("@platform", NpgsqlDbType.Varchar, platform);
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverWithUsers.Id);
                 command.Parameters.AddWithValue("@isSanma", NpgsqlDbType.Boolean, playerIds.Length == 3);
+                command.Parameters.AddWithValue("@timestamp", NpgsqlDbType.Timestamp, timestamp);
                 command.ExecuteNonQuery();
 
                 //Add the majsouldID to the new users:
@@ -156,11 +170,21 @@ namespace kandora.bot.services
                 {
                     UserDbService.SetMahjsoulUserId(playerIds[idx], playerMjIds[idx]);
                 }
-                var config = LeagueConfigDbService.GetLeagueConfig(serverWithUsers.LeagueConfigId);
                 var game = GetGameFromLogId(logId, serverWithUsers);
-                var rankings = RankingDbService.UpdateRankings(game, config);
 
-                return (game, rankings);
+
+                //only take game into account if it's between the league timePeriod
+                if (game.Timestamp.CompareTo(config.StartTime) > 0
+                    && game.Timestamp.CompareTo(config.EndTime) < 0)
+                {
+                    var rankings = RankingDbService.UpdateRankings(game, config);
+                    return (game, rankings);
+                }
+                else
+                {
+                    var rankings = RankingDbService.GetServerRankings(serverWithUsers.Id);
+                    return (game, rankings);
+                }
             }
             throw (new DbConnectionException());
         }
@@ -192,7 +216,7 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static List<Game> GetLastNRecordedGame(Server server, int numberOfGames = -1)
+        public static List<Game> GetLastNRecordedGame(Server server, LeagueConfig config, int numberOfGames = -1)
         {
             var dbCon = DBConnection.Instance();
             var games = new List<Game>();
@@ -202,10 +226,16 @@ namespace kandora.bot.services
                 command.CommandText = $"SELECT {IdCol}, {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {FullLogIdCol}, {PlatformCol}, {TimestampCol}, {IsSanmaCol}" +
                     $" FROM {GameTableName}" +
                     $" WHERE {ServerIdCol} = @serverId" +
-                    $" ORDER BY {TimestampCol} ASC, {IdCol} ASC;";
+                    (config == null ? "" : $" AND {TimestampCol} > @startTime AND {TimestampCol} < @endTime") +
+                    $" ORDER BY {TimestampCol} DESC, {IdCol} DESC;";
                 command.CommandType = CommandType.Text;
 
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, server.Id);
+                if (config != null)
+                {
+                    command.Parameters.AddWithValue("@startTime", NpgsqlDbType.Timestamp, config.StartTime);
+                    command.Parameters.AddWithValue("@endTime", NpgsqlDbType.Timestamp, config.EndTime);
+                }
 
                 Reader = command.ExecuteReader();
                 var idx = 0;

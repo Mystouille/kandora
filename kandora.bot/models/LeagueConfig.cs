@@ -13,6 +13,9 @@ namespace kandora.bot.models
             EloSystem = eloSystem;
         }
 
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+
         public int Id { get; set; }
         public bool CountPoints { get; set; }
         public double StartingPoints { get; set; }

@@ -17,6 +17,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Optimize>false</Optimize>
+    <WarningLevel>6</WarningLevel>
+    <NoWarn>1701;1702;SQL80001</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <WarningLevel>6</WarningLevel>
+    <NoWarn>1701;1702;SQL80001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="resources\tiles.png" />

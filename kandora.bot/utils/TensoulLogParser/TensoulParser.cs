@@ -1,7 +1,10 @@
 ﻿using kandora.bot.http;
 using kandora.bot.models;
+using kandora.bot.resources;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -26,7 +29,6 @@ public static class TensoulParser
         {
             Dan = tenhouGame.Dans,
             Ref = tenhouGame.Reference,
-            Ver = tenhouGame.Version,
             Rule = tenhouGame.Rule.ToRiichiRule(),
             FinalRankDeltas = tenhouGame.Scores.Where((s, i) => i % 2 == 1).ToArray(),
             FinalScores = tenhouGame.Scores.Where((s, i) => i % 2 == 0).Select(s => (int)s).ToArray(),
@@ -37,8 +39,28 @@ public static class TensoulParser
             Sx = tenhouGame.Sx,
             Ratingc = tenhouGame.Rating,
             Title = tenhouGame.Title,
-            Rounds = GetRiichiRounds(resultGame.AsArray())
+            Rounds = GetRiichiRounds(resultGame.AsArray()),
+            Timestamp = GetTimestamp(tenhouGame.Reference, tenhouGame.Title)
         };
+    }
+
+    static DateTime GetTimestamp(string Ref, string[] Title)
+    {
+        var dateStr = Ref.Substring(0, 10);
+        //Tenhou time is if the ref value
+        if (int.TryParse(dateStr, out _))
+        {
+            return DateTime.ParseExact(dateStr, "yyyyMMddHH", System.Globalization.CultureInfo.InvariantCulture);
+        }
+        //majsoul as well, but there isn't the hour info, and the title value is more accurate, so let's use that
+        else if (Title.Length > 1)
+        {
+            return DateTime.ParseExact(Title[1], "ddd, dd MMM yyyy HH':'mm':'ss 'GMT'", System.Globalization.CultureInfo.InvariantCulture);
+        }
+        else
+        {
+            throw new Exception(Resources.commandError_CouldntExtractDateFromLog);
+        }
     }
 
     static List<Round> GetRiichiRounds(JsonArray jsonArray)

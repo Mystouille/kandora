@@ -5,8 +5,6 @@ namespace kandora.bot.utils.TensoulLogParser;
 
 public class TensoulGame
 {
-    [JsonPropertyName("ver")]
-    public string Version { get; set; }
 
     [JsonPropertyName("ref")]
     public string Reference { get; set; }

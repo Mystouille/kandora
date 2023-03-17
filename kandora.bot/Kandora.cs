@@ -36,7 +36,8 @@ namespace kandora.bot
             slashCommands.RegisterCommands<MahjongSlashCommands>();
             slashCommands.RegisterCommands<AdminSlashCommands>();
             slashCommands.RegisterCommands<LeagueSlashCommands>();
-            //nope
+
+            //nopes
             //slashCommands.RegisterCommands<TestSlashCommands>();
 
             client.MessageReactionAdded += ReactionListener.OnReactionAdded;

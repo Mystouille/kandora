@@ -34,6 +34,8 @@ namespace kandora.bot.services
         public static string eloChangeStartRatioCol = "eloChangeStartRatio";
         public static string eloChangeEndRatioCol = "eloChangeEndRatio";
         public static string trialPeriodDurationCol = "trialPeriodDuration";
+        public static string startDateCol = "startDate";
+        public static string endDateCol = "endDate";
 
         public static LeagueConfig GetLeagueConfig(int leagueConfigId)
         {
@@ -44,7 +46,8 @@ namespace kandora.bot.services
                 command.CommandText = $"SELECT {idCol}, {countPointsCol}, {startingPointsCol}, " //0-2
                     + $"{uma3p1Col}, {uma3p2Col}, {uma3p3Col}, {uma4p1Col}, {uma4p2Col}, {uma4p3Col}, {uma4p4Col}, " // 3-9
                     + $"{okaCol}, {penaltyLastCol}, {EloSystemCol}, {initialEloCol}, {minEloCol}, {baseEloChangeDampeningCol}, " //10-15
-                    + $"{eloChangeStartRatioCol}, {eloChangeEndRatioCol}, {trialPeriodDurationCol}, {allowSanmaCol} " //16-19
+                    + $"{eloChangeStartRatioCol}, {eloChangeEndRatioCol}, {trialPeriodDurationCol}, {allowSanmaCol}, " //16-19
+                    + $"{startDateCol}, {endDateCol} " // 20-21
                     + $"FROM {tableName} "
                     + $"WHERE {idCol} = @leagueId";
                 command.CommandType = CommandType.Text;
@@ -79,6 +82,11 @@ namespace kandora.bot.services
                     league.EloChangeEndRatio = reader.IsDBNull(17) ? -9999 : reader.GetDouble(17);
                     league.TrialPeriodDuration = reader.IsDBNull(18) ? -9999 : reader.GetInt32(18);
                     league.AllowSanma = reader.GetBoolean(19);
+
+                    DateTime startDate = reader.GetDateTime(20);
+                    DateTime endDate = reader.GetDateTime(21);
+                    league.StartTime = reader.GetDateTime(20);
+                    league.EndTime = reader.GetDateTime(21);
 
                     reader.Close();
                     return league;

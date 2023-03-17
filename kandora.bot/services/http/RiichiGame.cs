@@ -28,7 +28,6 @@ namespace kandora.bot.http
                 }
             }
         }
-        public string Ver { get; set; }
         public string Ref { get; set; }
         public List<Round> Rounds { get; set; }
         public string Ratingc { get; set; }
@@ -43,6 +42,7 @@ namespace kandora.bot.http
         public string[] UserIds { get; set; }
         public string[] Title { get; set; }
         public string FullLog { get; set; }
+        public DateTime Timestamp { get; set; }
         public int MahjsoulRoomId
         {
             get

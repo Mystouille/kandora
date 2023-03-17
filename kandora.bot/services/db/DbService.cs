@@ -1,6 +1,7 @@
 ﻿using kandora.bot.exceptions;
 using Npgsql;
 using NpgsqlTypes;
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
@@ -84,6 +85,10 @@ namespace kandora.bot.services.db
             else if (val.GetType() == typeof(double))
             {
                 type = NpgsqlDbType.Double;
+            }
+            else if (val.GetType() == typeof(DateTime))
+            {
+                type = NpgsqlDbType.Timestamp;
             }
             return type;
         }
