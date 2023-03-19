@@ -52,13 +52,6 @@ namespace kandora.bot.commands.slash
                 ServerDbService.DeleteServer(serverDiscordId);
                 LeagueConfigDbService.DeleteLeagueConfig(server.LeagueConfigId);
 
-                var roleName = "KandoraLeague";
-                var roles = ctx.Guild.Roles.Where(x => x.Value.Name == roleName);
-                if (roles.Count() > 0)
-                {
-                    await roles.First().Value.DeleteAsync();
-                }
-
                 var rb = new DiscordInteractionResponseBuilder().WithContent(Resources.admin_endLeague_leagueEnded);
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
@@ -309,15 +302,16 @@ namespace kandora.bot.commands.slash
                 var serverDiscordId = ctx.Guild.Id.ToString();
                 var users = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(users);
-
-                if (UserDbService.IsUserInDb(nickname))
-                {
-                    throw (new Exception(Resources.commandError_UserNicknameAlreadyExists));
-                }
-
                 var server = servers[serverDiscordId];
                 var configId = server.LeagueConfigId;
                 var config = LeagueConfigDbService.GetLeagueConfig(configId);
+
+                if (UserDbService.IsUserInDb(nickname))
+                {
+                    var nbGames = RankingDbService.GetUserRankingHistory(nickname, server.Id).Where(x=>x.GameId>0 && x.OldRank!=null).Count();
+                    throw (new Exception(String.Format(Resources.commandError_UserNicknameAlreadyExists,nbGames)));
+                }
+
                 UserDbService.CreateUser(nickname, server.Id, config);
                 ServerDbService.AddUserToServer(nickname, serverDiscordId);
                 if (mahjsoulName.Length == 0)
@@ -341,7 +335,7 @@ namespace kandora.bot.commands.slash
 
         [SlashCommand("addPlayer", Resources.admin_addPlayer_description)]
         public async Task AddPlayer(InteractionContext ctx,
-            [Option(Resources.admin_addPlayer_mention, Resources.admin_addGuest_nickname_description)] DiscordUser player
+            [Option(Resources.admin_addPlayer_mention, Resources.admin_addPlayer_mention_description)] DiscordUser player
             )
         {
             try
@@ -352,7 +346,8 @@ namespace kandora.bot.commands.slash
                 var playerId = player.Id.ToString();
                 if (UserDbService.IsUserInDb(playerId))
                 {
-                    throw (new Exception(Resources.commandError_UserNicknameAlreadyExists));
+                    var nbGames = RankingDbService.GetUserRankingHistory(playerId, serverDiscordId).Where(x => x.GameId > 0 && x.OldRank != null).Count();
+                    throw (new Exception(String.Format(Resources.commandError_UserNicknameAlreadyExists, nbGames)));
                 }
 
                 var server = servers[serverDiscordId];

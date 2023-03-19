@@ -26,7 +26,7 @@ namespace kandora.bot.services
 
         internal static List<Ranking> UpdateRankings(Game game, LeagueConfig config)
         {
-           var dataList = getUserGameInfos(game, config);
+           var dataList = getFullUserGameInfos(game, config);
 
             // Creating new rankings
             var newRkList = dataList.Select(userData => new Ranking(userData.UserId, dataList, game.Id, game.Server.Id, config)).ToArray();
@@ -62,7 +62,7 @@ namespace kandora.bot.services
             return newRkList.ToList();
         }
 
-        private static List<UserGameData> getUserGameInfos(Game game, LeagueConfig config)
+        private static List<UserGameData> getFullUserGameInfos(Game game, LeagueConfig config)
         {
             var dataList = new List<UserGameData>();
 
@@ -105,51 +105,7 @@ namespace kandora.bot.services
             dataList = dataList.OrderBy(x => x.UserScore).ToList();
             dataList.Reverse();
 
-
-            // Computing placement (two player exaequo for 2nd and 3rd place have a placement value of "23")
-
-            for(int i =0; i< dataList.Count; i++)
-            {
-                dataList[i].UserPlacement= $"{i+1}";
-            }
-            for (int i = 0; i < dataList.Count-1; i++)
-            {
-                if (dataList[i].UserScore == dataList[i + 1].UserScore)
-                {
-                    dataList[i].UserPlacement = $"{dataList[i].UserPlacement}{i + 2}";
-                    dataList[i+1].UserPlacement = $"{i + i}{dataList[i+1].UserPlacement}";
-                }
-            }
-            for (int i = 0; i < dataList.Count - 1; i++)
-            {
-                if (dataList[i].UserScore == dataList[i + 1].UserScore)
-                {
-                    dataList[i].UserPlacement = $"{i+1}{i+2}";
-                    dataList[i + 1].UserPlacement = $"{i + 1}{i + 2}";
-                }
-            }
-            for (int i = 0; i < dataList.Count - 2; i++)
-            {
-                if (dataList[i].UserScore == dataList[i + 1].UserScore && dataList[i].UserScore == dataList[i + 2].UserScore)
-                {
-                    dataList[i].UserPlacement = $"{i + 1}{i + 2}{i + 3}";
-                    dataList[i + 1].UserPlacement = $"{i + 1}{i + 2}{i + 3}";
-                    dataList[i + 2].UserPlacement = $"{i + 1}{i + 2}{i + 3}";
-                }
-            }
-            if (!game.IsSanma)
-            {
-                for (int i = 0; i < dataList.Count - 3; i++)
-                {
-                    if (dataList[i].UserScore == dataList[i + 1].UserScore && dataList[i].UserScore == dataList[i + 2].UserScore && dataList[i].UserScore == dataList[i + 3].UserScore)
-                    {
-                        dataList[i].UserPlacement = $"{i + 1}{i + 2}{i + 3}{i + 4}";
-                        dataList[i + 1].UserPlacement = $"{i + 1}{i + 2}{i + 3}{i + 4}";
-                        dataList[i + 2].UserPlacement = $"{i + 1}{i + 2}{i + 3}{i + 4}";
-                        dataList[i + 3].UserPlacement = $"{i + 1}{i + 2}{i + 3}{i + 4}";
-                    }
-                }
-            }
+            Ranking.addPlacementToDataList(dataList, game);
 
             return dataList;
         }

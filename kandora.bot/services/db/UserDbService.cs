@@ -74,20 +74,21 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static void CreateUser(string userDiscordId, string serverId, LeagueConfig leagueConfig)
+        public static void CreateUser(string userId, string serverId, LeagueConfig leagueConfig)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.CommandText = $"INSERT INTO {tableName} ({idCol}) " +
-                    $"VALUES (@discordId);";
+                    $"VALUES (@userId) ON CONFLICT DO NOTHING;";
 
-                command.Parameters.AddWithValue("@discordId", NpgsqlDbType.Varchar, userDiscordId);
+                command.Parameters.AddWithValue("@userId", NpgsqlDbType.Varchar, userId);
                 command.CommandType = CommandType.Text;
 
                 command.ExecuteNonQuery();
-                RankingDbService.InitUserRanking(userDiscordId, serverId, leagueConfig);
+                ServerDbService.AddUserToServer(userId, serverId);
+                RankingDbService.InitUserRanking(userId, serverId, leagueConfig);
 
                 return;
             }

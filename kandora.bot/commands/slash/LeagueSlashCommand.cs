@@ -10,6 +10,7 @@ using kandora.bot.services.http;
 using kandora.bot.utils;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -57,7 +58,7 @@ namespace kandora.bot.commands.slash
 
                 var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
                 var responseMessage = "";
-                if (UserDbService.IsUserInDb(userId))
+                if (ServerDbService.IsUserInServer(userId, serverId))
                 {
                     if(RankingDbService.GetUserRankingHistory(userId, serverId, latest: true).Count == 0)
                     {
@@ -115,7 +116,52 @@ namespace kandora.bot.commands.slash
             }
         }
 
-        [SlashCommand("submitIRL", Resources.league_submitResult_description)]
+        [SlashCommand("getGames", Resources.league_getGames_description)]
+        public async Task GetGames(InteractionContext ctx)
+        {
+            try
+            {
+
+                var serverId = ctx.Guild.Id.ToString();
+                var allUsers = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(allUsers);
+                var server = servers[serverId];
+                var userId = ctx.User.Id.ToString();
+
+                var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+                var logs = ScoreDbService.GetLastNRecordedGame(server, config);
+                logs.Reverse();
+
+                var sb = new StringBuilder();
+                var userNameCache = new Dictionary<string, string>();
+                sb.AppendLine(Resources.league_getGames_fileHeader);
+                
+                foreach (var log in logs)
+                {
+
+                    sb.AppendLine($"{log.Id},{log.GameName},{log.LocationStr}," +
+                        $"{getPlayerSimpleName(log.User1Id,ctx,userNameCache)},{log.User1Score},{log.User1Chombo}," +
+                        $"{getPlayerSimpleName(log.User2Id, ctx, userNameCache)},{log.User2Score},{log.User2Chombo}," +
+                        $"{getPlayerSimpleName(log.User3Id, ctx, userNameCache)},{log.User3Score},{log.User3Chombo}," +
+                        $"{getPlayerSimpleName(log.User4Id, ctx, userNameCache)},{log.User4Score},{log.User4Chombo}");
+                }
+                var startTime = config.StartTime.ToString("yyyy/MM/dd");
+                var endTime = config.EndTime.ToString("yyyy/MM/dd");
+                var leagueTime = $"{startTime}-{endTime}";
+                var rb = new DiscordInteractionResponseBuilder()
+                    .AddFile($"{ctx.Guild.Name}league{leagueTime}.csv",FileUtils.GenerateStreamFromString(sb.ToString()))
+                    .WithContent(String.Format(Resources.league_getGames_message, startTime, endTime))
+                    .AsEphemeral(); ;
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
+            }
+            catch (Exception e)
+            {
+                replyWithException(ctx, e);
+            }
+        }
+
+
+        [SlashCommand("submit", Resources.league_submitResult_description)]
         public async Task SubmitIRL(InteractionContext ctx,
             [Option(Resources.league_option_player1, Resources.league_option_anyPlayer_description)] string player1,
             [Option(Resources.league_option_player1Score, Resources.league_option_anyScore_description)] string score1,
@@ -142,7 +188,9 @@ namespace kandora.bot.commands.slash
                 var player3Id = getIdFromPlayerParam(player3);
                 var player4Id = getIdFromPlayerParam(player4);
 
-                var timestamp = date.Length==0? DateTime.Now : DateTime.ParseExact(date, "yyyy/MM/dd", System.Globalization.CultureInfo.InvariantCulture);
+                var timestamp = date.Length == 0 ? DateTime.Now : DateTime.ParseExact(date, "yyyy/MM/dd", System.Globalization.CultureInfo.InvariantCulture);
+
+
 
                 var usersScores = new (string, string, long)[] { (player1Id, score1, chombo1), (player2Id, score2, chombo2), (player3Id, score3, chombo3), (player4Id, score4, chombo4) };
 
@@ -153,13 +201,22 @@ namespace kandora.bot.commands.slash
                 var scoresStr = sortedScores.Select(x => x.Item2).ToArray();
                 var chombos = sortedScores.Select(x => (int)(x.Item3)).ToArray();
 
-                float[] scores = null;
+                int[] scores = null;
                 if (scoresStr != null)
                 {
-                    scores = scoresStr.Select(x => float.Parse(x)).ToArray();
+                    var tempScores = scoresStr.Select(x => float.Parse(x)).ToArray();
+                    // is scores are 32.3, 27.7, etc, convert them to 32300, ...
+                    if (tempScores.All(x => x < 1000))
+                    {
+                        scores = tempScores.Select(x => (int)(x * 1000)).ToArray();
+                    }
+                    // is scores are 32300, 27700, etc, let them as is
+                    else
+                    {
+                        scores = tempScores.Select(x => (int)(x)).ToArray();
+                    }
                 }
                 var serverId = ctx.Guild.Id.ToString();
-                var userId = ctx.Member.Id.ToString();
                 var channelDiscordId = ctx.Channel.Id.ToString();
 
                 var server = servers[serverId];
@@ -189,7 +246,21 @@ namespace kandora.bot.commands.slash
                     throw new Exception(String.Format(Resources.commandError_badDistinctPlayerNumber, distinctUsers.Count()));
                 }
 
-                var gameResult = PrintGameResult(ctx.Client, userIds, scores);
+
+                var dummyGame = new Game(0, "", server, userIds[0], userIds[1], userIds[2], userIds[3], GameType.IRL, "nowhere", timestamp, isSanma: false);
+                dummyGame.User1Score = scores[0];
+                dummyGame.User2Score = scores[1];
+                dummyGame.User3Score = scores[2];
+                dummyGame.User4Score = scores[3];
+                dummyGame.User1Chombo = chombos[0];
+                dummyGame.User2Chombo = chombos[1];
+                dummyGame.User3Chombo = chombos[2];
+                dummyGame.User4Chombo = chombos[3];
+
+                var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+                var partialRankings = Ranking.getPartialRanking(dummyGame, config);
+
+                var gameResult = PrintGameResult(partialRankings);
 
                 var gameMsg = $"{Resources.league_submitResult_voteMessage}\n{gameResult}";
                 await kandoraContext.AddPendingGame(ctx, gameMsg, new PendingGame(userIds, scores, chombos, location, timestamp, server));
@@ -209,7 +280,31 @@ namespace kandora.bot.commands.slash
             return playerStr;
         }
 
-        [SlashCommand("submit", Resources.league_submitOnlineResult_description)]
+        private static string getPlayerMention(string playerId)
+        {
+            if (long.TryParse(playerId, out _))
+            {
+                return $"<@{playerId}>";
+            }
+            return playerId;
+        }
+
+        private static string getPlayerSimpleName(string playerId, InteractionContext ctx, Dictionary<string,string> userNameCache)
+        {
+            if (long.TryParse(playerId, out _))
+            {
+                var key = Convert.ToUInt64(playerId);
+                if (ctx.Guild.Members.ContainsKey(key))
+                {
+                    DiscordMember discordMember;
+                    ctx.Guild.Members.TryGetValue(key, out discordMember);
+                    return discordMember.DisplayName;
+                }
+            }
+            return playerId;
+        }
+
+        [SlashCommand("submitLog", Resources.league_submitOnlineResult_description)]
         public async Task Submit(InteractionContext ctx,
             [Option(Resources.league_submitOnlineResult_gameId, Resources.league_submitOnlineResult_gameId_description)] string gameId)
         {
@@ -311,22 +406,22 @@ namespace kandora.bot.commands.slash
             StringBuilder sb = new StringBuilder();
             foreach (Game game in games)
             {
-                List<(string, string, int?)> userPlacements = new List<(string, string, int?)>();
-                userPlacements.Add((game.User1Placement, game.User1Id, game.User1Score));
-                userPlacements.Add((game.User2Placement, game.User2Id, game.User2Score));
-                userPlacements.Add((game.User3Placement, game.User3Id, game.User3Score));
-                userPlacements.Add((game.User4Placement, game.User4Id, game.User4Score));
+                List<(string, int?)> userPlacements = new List<(string, int?)>();
+                userPlacements.Add((game.User1Id, game.User1Score));
+                userPlacements.Add((game.User2Id, game.User2Score));
+                userPlacements.Add((game.User3Id, game.User3Score));
+                userPlacements.Add((game.User4Id, game.User4Score));
                 userPlacements.Sort();
                 sb.Append($"{game.Id}\t{game.Platform}\t{game.Timestamp}\t");
                 foreach (var placement in userPlacements)
                 {
-                    string playerId = placement.Item2;
-                    bool isInt = Int64.TryParse(placement.Item2, out _);
+                    string playerId = placement.Item1;
+                    bool isInt = Int64.TryParse(placement.Item1, out _);
                     if (isInt)
                     {
-                        playerId = $"<@{placement.Item2}>";
+                        playerId = $"<@{placement.Item1}>";
                     }
-                    sb.Append($"{playerId}: {placement.Item3} / ");
+                    sb.Append($"{playerId}: {placement.Item2} / ");
                 }
                 sb.AppendLine();
             }
@@ -469,13 +564,15 @@ namespace kandora.bot.commands.slash
             return sb.ToString();
         }
 
-        private static string PrintGameResult(DiscordClient client, string[] userIds, float[] scores = null)
+        private static string PrintGameResult(Ranking[] partialRankings)
         {
             var sb = new StringBuilder();
             sb.AppendLine("IRL Game:");
-            for (int i = 0; i < userIds.Length; i++)
+            sb.AppendLine(Resources.league_submitResult_messageHeader);
+            foreach (var ranking in partialRankings)
             {
-                sb.AppendLine($"{i + 1}: <@{userIds[i]}>: {scores[i]}");
+                var nbGames = RankingDbService.GetUserRankingHistory(ranking.UserId, ranking.ServerId).Count() - 1;
+                sb.AppendLine($"{ranking.Position}: {getPlayerMention(ranking.UserId)} ({nbGames}):\t{ranking.Score} => {(float)(ranking.ScoreWithBonus)/1000}");
             }
             return sb.ToString();
         }

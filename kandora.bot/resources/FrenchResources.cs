@@ -98,6 +98,10 @@ namespace kandora.bot.resources
         public const string league_results = "Résultats"; 
         public const string league_bestHand = "Meilleure main:  {0}({1}) (manche {2}) avec {3} pour un total de {4} ";
 
+        public const string league_getGames_description = "Télécharge un fichier csv des parties jouées pendant la ligue";
+        public const string league_getGames_fileHeader = "logId,nomPartie,lieu,joueur1,score1,chombo1,joueur2,score2,chombo2,joueur3,score3,chombo3,joueur4,score4,chombo4";
+        public const string league_getGames_message = "Voila le log des parties jouées entre le {0} et le {1}";
+
         public const string league_submitResult_description = "Enregistre une partie comptant dans le classement";
         public const string league_option_player1 = "Joueur1";
         public const string league_option_player2 = "Joueur2";
@@ -123,6 +127,7 @@ namespace kandora.bot.resources
         public const string league_option_chombo4_description = "Nombre de chombos pour le Joueur4";
 
         public const string league_submitResult_voteMessage = "Tous les joueurs doivent :o: pour valider ou :x: pour annuler l'enregistrement de la partie.";
+        public const string league_submitResult_messageHeader = "*place: nomJoueur (nbparties): score => score final*";
         public const string league_submitResult_canceledMessage = "Tous les joueurs ont voté {0}, cette partie ne sera pas enregistrée";
         public const string league_submitResult_validatedMessage = "Tous les joueurs ont voté {0}, cette partie a été enregistrée!";
 
@@ -215,7 +220,7 @@ namespace kandora.bot.resources
         public const string commandError_unknownLogFormat = "Cet ID de log n'a pas l'air d'être au format tenhou ou mahjsoul";
         public const string commandError_mahjsoulUserNameChanged = "Le pseudo mahjsoul de <@{0}> semble avoir changé. Il vient d'être automatiquement mis à jour de {1} vers {2}. De rien ;)";
         public const string commandError_gameAlreadyExists = "La partie ayant pour id: {0} existe déjà. Une partie ne peut être enregistrée qu'une fois, et que dans une seule ligue à la fois.";
-        public const string commandError_UserNicknameAlreadyExists = "Un utilisateur avec ce nom existe déja.";
+        public const string commandError_UserNicknameAlreadyExists = "Un utilisateur avec ce nom existe déja et a {0} partie(s) sur ce serveur.";
         public const string commandError_ValueAlreadyExists = "Un joueur ayant comme {0}: {1} existe déjà! Contacte un admin si nécessaire.";
         public const string commandError_CouldntExtractDateFromLog = "La date de ce log n'a pas pu être extraite. la partie ne sera pas enregistrée";
 

@@ -97,6 +97,10 @@ namespace kandora.bot.resources
         public const string league_date = "Date";
         public const string league_results = "Results";
         public const string league_bestHand = "Best hand: {0}({1}) (round {2}) with {3}, total:{4}";
+        
+        public const string league_getGames_description = "Download a csv file containing the games played during this current league";
+        public const string league_getGames_fileHeader = "logId,gameName,location,player1,score1,chombo1,player2,score2,chombo2,player3,score3,chombo3,player4,score4,chombo4";
+        public const string league_getGames_message = "Here's the log of the games played between {0} and {1}";
 
         public const string league_submitResult_description = "Record a game contributing to the ranking";
         public const string league_option_player1 = "Player1";
@@ -121,7 +125,9 @@ namespace kandora.bot.resources
         public const string league_option_chombo2_description = "Number of chombos done by Player2";
         public const string league_option_chombo3_description = "Number of chombos done by Player3";
         public const string league_option_chombo4_description = "Number of chombos done by Player4";
+
         public const string league_submitResult_voteMessage = "All players must :o: to confirm or :x: to cancel the game recording";
+        public const string league_submitResult_messageHeader = "*place: playerName (nbGames): score => final score";
         public const string league_submitResult_canceledMessage = "All players have voted {0}, this game won't be recorded";
         public const string league_submitResult_validatedMessage = "All players have voted {0}, this game has been recorded!";
 
@@ -211,7 +217,7 @@ namespace kandora.bot.resources
         public const string commandError_unknownLogFormat = "This log ID doesn't seem to be a mahjsoul or tenhou format";
         public const string commandError_mahjsoulUserNameChanged = "Detected old user name for <@{0}>. Automatically updated from {1} to {2}, don't thank me ;)";
         public const string commandError_gameAlreadyExists = "The game with ID: {0} already exists. A game can be recorded only once, and contribute to only one league.";
-        public const string commandError_UserNicknameAlreadyExists = "A user with this name already exists.";
+        public const string commandError_UserNicknameAlreadyExists = "A user with this name already exists and has {0} games recorded on this server.";
         public const string commandError_ValueAlreadyExists = "A user with {0} {1} exists already! Contact the admin if you want to fix that.";
         public const string commandError_CouldntExtractDateFromLog = "Couldn't extract date from this log, it won't be recorded";
 

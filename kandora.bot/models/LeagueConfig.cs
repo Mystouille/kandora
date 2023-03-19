@@ -72,8 +72,12 @@ namespace kandora.bot.models
         public double EloChangeEndRatio { get; set; }
         public int TrialPeriodDuration { get; set; }
 
-        public double getPostGameBonus(string playerPlacement, int nbPlayers, int nbChombos)
+        public double getFinalPoints(string playerPlacement, int? playerScore, int nbPlayers, int nbChombos)
         {
+
+            //Rank affected by score (UMA count also for ELO system, since they are the base ELO variation)
+            double basePts = ((CountPoints && playerScore!= null) ? (playerScore - StartingPoints * 1000) : 0).GetValueOrDefault(); //SCORE
+
             int nbOpponents = nbPlayers-1;
             double[] umas = new double[4];
             if (nbPlayers == 3)
@@ -111,7 +115,7 @@ namespace kandora.bot.models
             {
                 bonusPts += (umas[3] - Oka * 1000 - PenaltyLast * 1000) / playerPlacement.Length;
             }
-            return bonusPts - nbChombos * PenaltyChombo * 1000;
+            return basePts + bonusPts - nbChombos * PenaltyChombo * 1000;
         }
 
         public double getNewRanking( List<UserGameData> dataList, string userId)
@@ -119,7 +123,7 @@ namespace kandora.bot.models
             var userData = dataList.Where(x => x.UserId == userId).FirstOrDefault();
             var ownRankingHistory = userData.RankingHistory;
             var ownPosition = userData.UserPlacement;
-            var otherPlayerLastRankings = dataList.Where(data => data.UserId != userId).Select(x => x.RankingHistory.Last());
+            var otherPlayerLastRankings = dataList.Where(data => data.UserId != userId).Select(x => x.RankingHistory.LastOrDefault());
             var ownScore = userData.UserScore;
             var ownChombos = userData.UserChombo;
             var oldRank = EloSystem == "Full" ? InitialElo : 0;
@@ -128,20 +132,16 @@ namespace kandora.bot.models
                 oldRank = userData.RankingHistory.Last().NewRank;
             }
 
-            int nbOpponents = otherPlayerLastRankings.Count();
+            int nbOpponents = dataList.Count()-1;
             int nbTotalGames = ownRankingHistory.Where(x => x.OldRank != null).Count();
-            double avgOpponentRk = (otherPlayerLastRankings.Sum(x => x.NewRank)) / nbOpponents;
+            double avgOpponentRk = (otherPlayerLastRankings.Sum(x => x == null ? 0 : x.NewRank)) / nbOpponents;
             double[] UMA = nbOpponents == 3
                 ? new double[] { Uma4p1, Uma4p2, Uma4p3, Uma4p4 }
                 : new double[] { Uma3p1, Uma3p2, Uma3p3 };
 
-            //Rank affected by score (UMA count also for ELO system, since they are the base ELO variation)
+            var finalPoints = getFinalPoints(ownPosition, ownScore, dataList.Count, ownChombos); // Oka, Uma, last place penalty
 
-            double basePts = (CountPoints ? (ownScore - StartingPoints * 1000) : 0).GetValueOrDefault(); //SCORE
-
-            basePts += getPostGameBonus(ownPosition, dataList.Count, ownChombos); // Oka, Uma, last place penalty
-
-            double rankChange = basePts;
+            double rankChange = finalPoints;
             var newRank = oldRank;
             //ELO bonus/penalty depending on opponents average ELO
             if (EloSystem == "Full")
@@ -166,11 +166,11 @@ namespace kandora.bot.models
             }
             else if (EloSystem == "Average")
             {
-                newRank = ((double)nbTotalGames * oldRank + basePts) / (double)(nbTotalGames + 1);
+                newRank = ((double)nbTotalGames * oldRank + finalPoints) / (double)(nbTotalGames + 1);
             }
             else if (EloSystem == "None")
             {
-                newRank += basePts;
+                newRank += finalPoints;
             }
             if (EloSystem == "Full" && MinElo != -1)
             {

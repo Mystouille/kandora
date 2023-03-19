@@ -244,11 +244,35 @@ namespace kandora.bot.services
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"DELETE FROM {ServerUserTableName} WHERE {userIdCol} = \'{userId}\' AND {serverIdCol} = \'{serverId}\'";
+                command.CommandText = $"DELETE FROM {ServerUserTableName} WHERE {userIdCol} = \'{userId}\' AND {serverIdCol} = \'{serverId}\';";
                 command.CommandType = CommandType.Text;
 
                 command.ExecuteNonQuery();
                 return;
+            }
+            throw (new DbConnectionException());
+        }
+
+
+        public static bool IsUserInServer(string userId, string serverId)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.Connection = dbCon.Connection;
+                command.CommandText = $"SELECT {idCol} FROM {ServerUserTableName} WHERE {userIdCol} = \'{userId}\' AND {serverIdCol} = \'{serverId}\';";
+                command.CommandType = CommandType.Text;
+
+                var reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    reader.Close();
+                    return true;
+                }
+                reader.Close();
+                return false;
             }
             throw (new DbConnectionException());
         }

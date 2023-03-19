@@ -73,7 +73,7 @@ namespace kandora.bot.commands.slash
                 var playersStr = $"arrcival dustray ivy benoit";
 
                 string[] players = { benoit, dustray, ivy, arrcival };
-                float[] scores = { 50000, 4000, 20000, 10000 };
+                int[] scores = { 50000, 4000, 20000, 10000 };
                 int[] chombos = { 0, 0, 0, 0 };
                 string location = "nowhere";
                 ScoreDbService.RecordIRLGame(players, scores, chombos, DateTime.Now, location, server, config);

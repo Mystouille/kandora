@@ -1,6 +1,5 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
-using kandora.bot.commands.regular;
 using kandora.bot.http;
 using kandora.bot.models;
 using kandora.bot.resources;
@@ -9,8 +8,6 @@ using kandora.bot.utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Policy;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace kandora.bot.services.discord
@@ -25,7 +22,7 @@ namespace kandora.bot.services.discord
             usersOk = new HashSet<string>();
             usersNo = new HashSet<string>();
         }
-        public PendingGame(string[] userIds, float[] scores, int[] chombos, string location, DateTime timestamp, Server server)
+        public PendingGame(string[] userIds, int[] scores, int[] chombos, string location, DateTime timestamp, Server server)
         {
             UserIds = userIds;
             Scores = scores;
@@ -40,7 +37,7 @@ namespace kandora.bot.services.discord
         private ISet<string> usersOk;
         private ISet<string> usersNo;
         public string[] UserIds { get; }
-        public float[] Scores { get; }
+        public int[] Scores { get; }
         public int[] Chombos { get; }
         public string Location { get; }
         public RiichiGame Log { get; }

@@ -38,7 +38,7 @@ namespace kandora.bot.services
         private const string IsSanmaCol = "isSanma"; 
 
 
-        public static (Game, List<Ranking>) RecordIRLGame(string[] members, float[] scores, int[] chombos, DateTime timeStamp, string location, Server server, LeagueConfig leagueConfig)
+        public static (Game, List<Ranking>) RecordIRLGame(string[] members, int[] scores, int[] chombos, DateTime timeStamp, string location, Server server, LeagueConfig leagueConfig)
         {
             var dbCon = DBConnection.Instance();
 
@@ -57,10 +57,11 @@ namespace kandora.bot.services
                     ? ""
                     : $", @score1, @score2, @score3{(scores.Length > 3 ? $", @score4" : "")}";
 
-                command.CommandText = $"INSERT INTO {GameTableName} ({User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {PlatformCol}, {IsSanmaCol}, {ServerIdCol}, {TimestampCol}{scoreColumns}, {User1ChomboCol}, {User2ChomboCol}, {User2ChomboCol}, {User2ChomboCol}) " +
-                    $"VALUES (\'{members[0]}\', \'{members[1]}\', \'{members[2]}\', \'{members[3]}\', @gameType, @isSanma, @serverId, @timestamp{scoreValues}, {chombos[0]}, {chombos[1]}, {chombos[2]}, {chombos[3]});";
+                command.CommandText = $"INSERT INTO {GameTableName} ({NameCol}, {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {PlatformCol}, {IsSanmaCol}, {ServerIdCol}, {TimestampCol}{scoreColumns}, {User1ChomboCol}, {User2ChomboCol}, {User3ChomboCol}, {User4ChomboCol}) " +
+                    $"VALUES (@gameName, \'{members[0]}\', \'{members[1]}\', \'{members[2]}\', \'{members[3]}\', @gameType, @isSanma, @serverId, @timestamp{scoreValues}, {chombos[0]}, {chombos[1]}, {chombos[2]}, {chombos[3]});";
                 command.CommandType = CommandType.Text;
 
+                command.Parameters.AddWithValue("@gameName", NpgsqlDbType.Varchar, logId);
                 command.Parameters.AddWithValue("@gameType", NpgsqlDbType.Varchar, GameType.IRL.ToString());
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, server.Id);
                 command.Parameters.AddWithValue("@isSanma", NpgsqlDbType.Boolean, members.Length == 3);
@@ -74,20 +75,21 @@ namespace kandora.bot.services
                 }
                 command.ExecuteNonQuery();
 
-                var game = GetGameFromGameName(logId, server);
+                //var game = GetGameFromGameName(logId, server);
 
                 //only take game into account if it's between the league timePeriod
                 if (timeStamp.CompareTo(leagueConfig.StartTime) > 0
                     && timeStamp.CompareTo(leagueConfig.EndTime) < 0)
                 {
-                    var rankings = RankingDbService.UpdateRankings(game, leagueConfig);
-                    return (game, rankings);
+                    //var rankings = RankingDbService.UpdateRankings(game, leagueConfig);
+                    //return (game, rankings);
                 }
                 else
                 {
-                    var rankings = RankingDbService.GetServerRankings(server.Id);
-                    return (game, rankings);
+                    //var rankings = RankingDbService.GetServerRankings(server.Id);
+                    //return (game, rankings);
                 }
+                return (null, new List<Ranking>());
 
             }
             throw (new DbConnectionException());
@@ -242,7 +244,7 @@ namespace kandora.bot.services
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.CommandText = $"SELECT {IdCol}, {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {FullLogIdCol}, {PlatformCol}, {TimestampCol}, {IsSanmaCol}, {NameCol}" +
+                command.CommandText = $"SELECT {IdCol}, {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {FullLogIdCol}, {PlatformCol}, {TimestampCol}, {IsSanmaCol}, {NameCol}, {LocationCol}" +
                     $" FROM {GameTableName}" +
                     $" WHERE {ServerIdCol} = @serverId" +
                     (config == null ? "" : $" AND {TimestampCol} > @startTime AND {TimestampCol} < @endTime") +
@@ -274,9 +276,10 @@ namespace kandora.bot.services
                     DateTime timestamp = Reader.GetDateTime(11);
                     bool isSanma = Reader.GetBoolean(12);
                     string name = Reader.GetString(13);
+                    string location = Reader.GetString(14);
                     GameType platform = (GameType)Enum.Parse(typeof(GameType), platformStr);
 
-                    var game = new Game(id, name, server, user1Id, user2Id, user3Id, user4Id, platform, timestamp, isSanma);
+                    var game = new Game(id, name, server, user1Id, user2Id, user3Id, user4Id, platform, location, timestamp, isSanma);
                     game.FullLog = fullLog;
                     game.User1Score = user1Score;
                     game.User2Score = user2Score;
@@ -312,7 +315,7 @@ namespace kandora.bot.services
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.CommandText = $"SELECT {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {ServerIdCol}, {PlatformCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {TimestampCol}, {FullLogIdCol}, {IsSanmaCol}, {User1ChomboCol}, {User2ChomboCol}, {User3ChomboCol}, {User4ChomboCol}, {IdCol}" +
+                command.CommandText = $"SELECT {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {ServerIdCol}, {PlatformCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {TimestampCol}, {FullLogIdCol}, {IsSanmaCol}, {User1ChomboCol}, {User2ChomboCol}, {User3ChomboCol}, {User4ChomboCol}, {IdCol}, {LocationCol}" +
                     $" FROM {GameTableName}" +
                     $" WHERE {NameCol} = @name AND {ServerIdCol} = @serverId";
 
@@ -343,10 +346,11 @@ namespace kandora.bot.services
                     int user4Chombo = Reader.IsDBNull(16) ? 0 : Reader.GetInt32(16);
 
                     int gameId = Reader.GetInt32(16);
+                    string location = Reader.GetString(17);
 
                     Reader.Close();
 
-                    var game = new Game(gameId, gameName, server, user1Id, user2Id, user3Id, user4Id, platform, timestamp, isSanma);
+                    var game = new Game(gameId, gameName, server, user1Id, user2Id, user3Id, user4Id, platform, location, timestamp, isSanma);
                     game.User1Score = user1Score;
                     game.User2Score = user2Score;
                     game.User3Score = user3Score;
