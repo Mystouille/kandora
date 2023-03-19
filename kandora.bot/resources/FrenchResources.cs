@@ -137,6 +137,8 @@ namespace kandora.bot.resources
 
 
         public const string league_seeRanking_description = "Affiche le classement actuel de la ligue";
+        public const string league_seeRanking_minGames = "nbPartiesMin";
+        public const string league_seeRanking_minGames_description = "Nombre de parties minimum pour être dans le classement (défaut: 10)";
         public const string league_seeRanking_youAreHere = "Tu es là";
 
         public const string league_seeLastGames_description = "Affiche les 10 dernières parties jouées";

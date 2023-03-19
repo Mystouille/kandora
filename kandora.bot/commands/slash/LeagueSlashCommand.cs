@@ -339,7 +339,8 @@ namespace kandora.bot.commands.slash
         }
 
         [SlashCommand("seeRanking", Resources.league_seeRanking_description)]
-        public async Task SeeRanking(InteractionContext ctx)
+        public async Task SeeRanking(InteractionContext ctx,
+            [Option(Resources.league_seeRanking_minGames, Resources.league_seeRanking_minGames_description)] long nbMin = 10)
         {
             try
             {
@@ -351,12 +352,19 @@ namespace kandora.bot.commands.slash
                 var config = LeagueConfigDbService.GetLeagueConfig(configId);
                 List<Ranking> rankingList = RankingDbService.GetServerRankings(serverId);
                 var latestUserRankings = new Dictionary<string, (Ranking, int)>();
+                var checkList = new HashSet<string>();
+
                 foreach (var rank in rankingList)
                 {
                     var id = rank.UserId;
-                    if (!latestUserRankings.ContainsKey(id))
+                    if (!checkList.Contains(id))
                     {
-                        latestUserRankings.Add(rank.UserId, (rank, rankingList.Where(x=>x.UserId == id && x.GameId >= 0 && x.OldRank != null).Count()));
+                        var history = RankingDbService.GetUserRankingHistory(id, serverId);
+                        if (history.Count() - 1 > nbMin)
+                        {
+                            latestUserRankings.Add(id, (rank, history.Count() -1));
+                        }
+                        checkList.Add(id);
                     }
                 }
 
@@ -382,7 +390,7 @@ namespace kandora.bot.commands.slash
                     {
                         Convert.ToInt32(rank.Item1.NewRank);
                     }
-                    sb.Append($"{i}: (<@{rank.Item1.UserId}>):\t{rankValue}\t({rank.Item2}){(rank.Item1.UserId == userId ? $"<<< {Resources.league_seeRanking_youAreHere}" : "")}\n");
+                    sb.Append($"{i}: {getPlayerMention(rank.Item1.UserId)}:\t{rankValue}\t({rank.Item2}){(rank.Item1.UserId == userId ? $"<<< {Resources.league_seeRanking_youAreHere}" : "")}\n");
                     i++;
                 }
                 var leaderboard = sb.ToString();

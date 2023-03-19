@@ -136,6 +136,8 @@ namespace kandora.bot.resources
         public const string league_submitOnlineResult_gameId_description = "The tenhou or mahjsoul game id";
 
         public const string league_seeRanking_description = "Affiche le classement actuel de la ligue";
+        public const string league_seeRanking_minGames = "nbMinGames";
+        public const string league_seeRanking_minGames_description = "Minimum number of games to be in the rankings (default: 10)";
         public const string league_seeRanking_youAreHere = "You are here";
 
         public const string league_seeLastGames_description = "Displays the 10 last games played";
