@@ -118,10 +118,9 @@ namespace kandora.bot.commands.slash
 
         [SlashCommand("setConfig", Resources.admin_setLeagueConfig_description)]
         public async Task SetLeagueConfig(InteractionContext ctx,
-            [Option(Resources.admin_setLeagueConfig_allowSanma, Resources.admin_setLeagueConfig_allowSanma_description)] bool allowSanma,
             [Option(Resources.admin_setLeagueConfig_countPoints, Resources.admin_setLeagueConfig_countPoints_description)] bool countPoints,
-            [Choice(Resources.admin_setLeagueConfig_eloSystem_None,"None")]
             [Choice(Resources.admin_setLeagueConfig_eloSystem_Average,"Average")]
+            [Choice(Resources.admin_setLeagueConfig_eloSystem_None,"None")]
             [Choice(Resources.admin_setLeagueConfig_eloSystem_Simple,"Simple")]
             [Choice(Resources.admin_setLeagueConfig_eloSystem_Full,"Full")]
             [Option(Resources.admin_setLeagueConfig_eloSystem, Resources.admin_setLeagueConfig_eloSystem_description)] string eloSystem,
@@ -168,6 +167,8 @@ namespace kandora.bot.commands.slash
                                        System.Globalization.CultureInfo.InvariantCulture);
                     LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.endDateCol, configId, endDateTime);
                 }
+                //hardcoding this for now since it's gonna be pretty much useless until the bot becomes worldwide famous
+                var allowSanma = false;
                 if (allowSanma)
                 {
                     LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.allowSanmaCol, configId, true);
@@ -281,7 +282,7 @@ namespace kandora.bot.commands.slash
                 var response = await ctx.GetOriginalResponseAsync();
 
                 var wb = new DiscordWebhookBuilder().WithContent(String.Format(Resources.admin_setLeagueConfig_backfillFinished, configStr));
-                RankingDbService.BackfillRankings(server, config);
+                RankingDbService.BackfillRankings(serverDiscordId, config);
                 await ctx.EditResponseAsync(wb);
             }
             catch (Exception e)

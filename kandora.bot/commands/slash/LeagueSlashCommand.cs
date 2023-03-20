@@ -129,7 +129,7 @@ namespace kandora.bot.commands.slash
                 var userId = ctx.User.Id.ToString();
 
                 var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
-                var logs = ScoreDbService.GetLastNRecordedGame(server, config);
+                var logs = ScoreDbService.GetLastNRecordedGame(serverId, config);
                 logs.Reverse();
 
                 var sb = new StringBuilder();
@@ -247,7 +247,7 @@ namespace kandora.bot.commands.slash
                 }
 
 
-                var dummyGame = new Game(0, "", server, userIds[0], userIds[1], userIds[2], userIds[3], GameType.IRL, "nowhere", timestamp, isSanma: false);
+                var dummyGame = new Game(0, "", serverId, userIds[0], userIds[1], userIds[2], userIds[3], GameType.IRL, "nowhere", timestamp, isSanma: false);
                 dummyGame.User1Score = scores[0];
                 dummyGame.User2Score = scores[1];
                 dummyGame.User3Score = scores[2];
@@ -257,10 +257,9 @@ namespace kandora.bot.commands.slash
                 dummyGame.User3Chombo = chombos[2];
                 dummyGame.User4Chombo = chombos[3];
 
-                var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
-                var partialRankings = Ranking.getPartialRanking(dummyGame, config);
+                var similarGames = ScoreDbService.CheckGame(dummyGame, serverId);
 
-                var gameResult = PrintGameResult(partialRankings);
+                var gameResult = PrintGameResult(dummyGame, similarGames, server);
 
                 var gameMsg = $"{Resources.league_submitResult_voteMessage}\n{gameResult}";
                 await kandoraContext.AddPendingGame(ctx, gameMsg, new PendingGame(userIds, scores, chombos, location, timestamp, server));
@@ -409,7 +408,7 @@ namespace kandora.bot.commands.slash
             var serverId = ctx.Guild.Id.ToString();
             var server = ServerDbService.GetServer(serverId);
             var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
-            var games = ScoreDbService.GetLastNRecordedGame(server, config, 10);
+            var games = ScoreDbService.GetLastNRecordedGame(serverId, config, 10);
 
             StringBuilder sb = new StringBuilder();
             foreach (Game game in games)
@@ -572,15 +571,30 @@ namespace kandora.bot.commands.slash
             return sb.ToString();
         }
 
-        private static string PrintGameResult(Ranking[] partialRankings)
+        private static string PrintGameResult(Game game, List<Game> similarGames, Server server)
         {
+
+            var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+            var partialRankings = Ranking.getPartialRanking(game, config);
+
             var sb = new StringBuilder();
-            sb.AppendLine("IRL Game:");
+            if(game.Id > 0)
+            {
+                sb.AppendLine(String.Format(Resources.league_submitResult_NameAndId,game.GameName, game.Id));
+            }
+            sb.AppendLine(String.Format(Resources.league_submitResult_Date,game.Timestamp.ToString("yyyy/MM/dd")));
             sb.AppendLine(Resources.league_submitResult_messageHeader);
             foreach (var ranking in partialRankings)
             {
                 var nbGames = RankingDbService.GetUserRankingHistory(ranking.UserId, ranking.ServerId).Count() - 1;
                 sb.AppendLine($"{ranking.Position}: {getPlayerMention(ranking.UserId)} ({nbGames}):\t{ranking.Score} => {(float)(ranking.ScoreWithBonus)/1000}");
+            }
+
+            if(similarGames.Count > 0 )
+            {
+                sb.AppendLine(String.Format(Resources.league_submitResult_SimilarGameFound,similarGames.Count()));
+                // Recursion? recursion.
+                sb.AppendLine(PrintGameResult(similarGames.Last(),new List<Game>(), server));
             }
             return sb.ToString();
         }

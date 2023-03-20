@@ -59,7 +59,7 @@ namespace kandora.bot.models
 
             var dataList = getPartialUserGameInfos(game);
 
-            var newRkList = dataList.Select(userData => new Ranking(userData.UserId, dataList, game.Id, game.Server.Id, config)).ToArray();
+            var newRkList = dataList.Select(userData => new Ranking(userData.UserId, dataList, game.Id, game.ServerId, config)).ToArray();
             return newRkList;
         }
 

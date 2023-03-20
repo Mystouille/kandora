@@ -12,13 +12,7 @@ namespace kandora.bot.models
 
     public partial class Game
     {
-
-        public Game(Server server)
-        {
-            this.Server = server;
-        }
-
-        public Game(int id, string gameName, Server server, string user1Id, string user2Id, string user3Id, string user4Id, GameType platform, string location, DateTime timestamp, bool isSanma ) : this(server)
+        public Game(int id, string gameName, string serverId, string user1Id, string user2Id, string user3Id, string user4Id, GameType platform, string location, DateTime timestamp, bool isSanma )
         {
             Id = id;
             GameName = gameName;
@@ -30,10 +24,11 @@ namespace kandora.bot.models
             Timestamp = timestamp;
             IsSanma = isSanma;
             Location = location;
+            ServerId = serverId;
         }
         public int Id { get; set; }
         public string GameName { get; set; }
-        public Server Server { get; set; }
+        public string ServerId { get; set; }
         public GameType Platform { get; set; }
         public string Location { get; set; }
         public bool IsSanma { get; set; }   

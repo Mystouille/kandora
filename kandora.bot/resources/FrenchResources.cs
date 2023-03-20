@@ -128,6 +128,9 @@ namespace kandora.bot.resources
 
         public const string league_submitResult_voteMessage = "Tous les joueurs doivent :o: pour valider ou :x: pour annuler l'enregistrement de la partie.";
         public const string league_submitResult_messageHeader = "*place: nomJoueur (nbparties): score => score final*";
+        public const string league_submitResult_NameAndId = "Nom: {0}, Id: {1}";
+        public const string league_submitResult_Date = "Partie du : {0}";
+        public const string league_submitResult_SimilarGameFound = "\n**ATTENTION**\n({0}) parties similaires ont été trouvées sur la league, voici les details de la dernière en date:"; 
         public const string league_submitResult_canceledMessage = "Tous les joueurs ont voté {0}, cette partie ne sera pas enregistrée";
         public const string league_submitResult_validatedMessage = "Tous les joueurs ont voté {0}, cette partie a été enregistrée!";
 

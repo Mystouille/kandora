@@ -1,4 +1,5 @@
-﻿using kandora.bot.exceptions;
+﻿using DSharpPlus.CommandsNext;
+using kandora.bot.exceptions;
 using kandora.bot.http;
 using kandora.bot.models;
 using kandora.bot.services.db;
@@ -7,7 +8,10 @@ using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Drawing;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 
 namespace kandora.bot.services
 {
@@ -91,6 +95,39 @@ namespace kandora.bot.services
                 }
                 return (null, new List<Ranking>());
 
+            }
+            throw (new DbConnectionException());
+        }
+
+
+        public static List<Game> CheckGame(Game gameToCheck, string serverId)
+        {
+            long scoreProduct = (long)(gameToCheck.User1Score) * (long)(gameToCheck.User2Score) * (long)(gameToCheck.User3Score) * (long)(gameToCheck.User4Score);
+
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                AddGameQueryCommandText(command);
+                command.CommandText = command.CommandText + $" WHERE {User1ScoreCol}::bigint*{User2ScoreCol}::bigint*{User3ScoreCol}::bigint*{User4ScoreCol}::bigint = @product AND {ServerIdCol} = @serverId";
+                command.Parameters.AddWithValue("@product", NpgsqlDbType.Bigint, scoreProduct);
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
+                Reader = command.ExecuteReader();
+                var games = getGameQueryResult(Reader);
+
+                var matchingGames = new List<Game>();
+                foreach(var game in games)
+                {
+                    if((gameToCheck.User1Id == game.User1Id || gameToCheck.User1Id == game.User2Id || gameToCheck.User1Id == game.User3Id || gameToCheck.User1Id == game.User4Id)
+                        && (gameToCheck.User2Id == game.User1Id || gameToCheck.User2Id == game.User2Id || gameToCheck.User2Id == game.User3Id || gameToCheck.User2Id == game.User4Id)
+                        && (gameToCheck.User3Id == game.User1Id || gameToCheck.User3Id == game.User2Id || gameToCheck.User3Id == game.User3Id || gameToCheck.User3Id == game.User4Id)
+                        && (gameToCheck.User4Id == game.User1Id || gameToCheck.User4Id == game.User2Id || gameToCheck.User4Id == game.User3Id || gameToCheck.User4Id == game.User4Id))
+                    {
+                        matchingGames.Add(game);
+                    }
+                }
+                matchingGames.OrderBy(x => x.Timestamp);
+                return games;
             }
             throw (new DbConnectionException());
         }
@@ -237,7 +274,7 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static List<Game> GetLastNRecordedGame(Server server, LeagueConfig config, int numberOfGames = -1)
+        public static List<Game> GetLastNRecordedGame(string serverId, LeagueConfig config, int numberOfGames = -1)
         {
             var dbCon = DBConnection.Instance();
             var games = new List<Game>();
@@ -251,7 +288,7 @@ namespace kandora.bot.services
                     $" ORDER BY {TimestampCol} DESC, {IdCol} DESC;";
                 command.CommandType = CommandType.Text;
 
-                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, server.Id);
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
                 if (config != null)
                 {
                     command.Parameters.AddWithValue("@startTime", NpgsqlDbType.Timestamp, config.StartTime);
@@ -279,7 +316,7 @@ namespace kandora.bot.services
                     string location = Reader.GetString(14);
                     GameType platform = (GameType)Enum.Parse(typeof(GameType), platformStr);
 
-                    var game = new Game(id, name, server, user1Id, user2Id, user3Id, user4Id, platform, location, timestamp, isSanma);
+                    var game = new Game(id, name, serverId, user1Id, user2Id, user3Id, user4Id, platform, location, timestamp, isSanma);
                     game.FullLog = fullLog;
                     game.User1Score = user1Score;
                     game.User2Score = user2Score;
@@ -309,61 +346,76 @@ namespace kandora.bot.services
             }
         }
 
+        private static void AddGameQueryCommandText(NpgsqlCommand command)
+        {
+            command.CommandText = $"SELECT {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {ServerIdCol}, {PlatformCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {TimestampCol}, {FullLogIdCol}, {IsSanmaCol}, {User1ChomboCol}, {User2ChomboCol}, {User3ChomboCol}, {User4ChomboCol}, {IdCol}, {LocationCol}, {NameCol}" +
+                $" FROM {GameTableName}";
+            command.CommandType = CommandType.Text;
+        }
+
+        private static List<Game> getGameQueryResult(DbDataReader Reader)
+        {
+            var games = new List<Game>();
+            while (Reader.Read())
+            {
+                string user1Id = Reader.GetString(0);
+                string user2Id = Reader.GetString(1);
+                string user3Id = Reader.GetString(2);
+                string user4Id = Reader.GetString(3);
+                string serverId = Reader.GetString(4);
+                GameType platform = (GameType)Enum.Parse(typeof(GameType), Reader.GetString(5));
+                int user1Score = Reader.IsDBNull(6) ? 0 : Reader.GetInt32(6);
+                int user2Score = Reader.IsDBNull(7) ? 0 : Reader.GetInt32(7);
+                int user3Score = Reader.IsDBNull(8) ? 0 : Reader.GetInt32(8);
+                int user4Score = Reader.IsDBNull(9) ? 0 : Reader.GetInt32(9);
+                DateTime timestamp = Reader.GetDateTime(10);
+                string fullLog = Reader.IsDBNull(11) ? null : Reader.GetString(11);
+                bool isSanma = Reader.IsDBNull(12) ? false : Reader.GetBoolean(12);
+
+                int user1Chombo = Reader.IsDBNull(13) ? 0 : Reader.GetInt32(13);
+                int user2Chombo = Reader.IsDBNull(14) ? 0 : Reader.GetInt32(14);
+                int user3Chombo = Reader.IsDBNull(15) ? 0 : Reader.GetInt32(15);
+                int user4Chombo = Reader.IsDBNull(16) ? 0 : Reader.GetInt32(16);
+
+                int gameId = Reader.GetInt32(17);
+                string location = Reader.GetString(18);
+                string name = Reader.GetString(19);
+
+
+                var game = new Game(gameId, name, serverId, user1Id, user2Id, user3Id, user4Id, platform, location, timestamp, isSanma);
+                game.User1Score = user1Score;
+                game.User2Score = user2Score;
+                game.User3Score = user3Score;
+                game.User4Score = user4Score;
+                game.User1Chombo = user1Chombo;
+                game.User2Chombo = user2Chombo;
+                game.User3Chombo = user3Chombo;
+                game.User4Chombo = user4Chombo;
+                game.FullLog = fullLog;
+                games.Add(game);
+            }
+            Reader.Close();
+            return games;
+        }
+
         public static Game GetGameFromGameName(string gameName, Server server)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.CommandText = $"SELECT {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {ServerIdCol}, {PlatformCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {TimestampCol}, {FullLogIdCol}, {IsSanmaCol}, {User1ChomboCol}, {User2ChomboCol}, {User3ChomboCol}, {User4ChomboCol}, {IdCol}, {LocationCol}" +
-                    $" FROM {GameTableName}" +
-                    $" WHERE {NameCol} = @name AND {ServerIdCol} = @serverId";
+                AddGameQueryCommandText(command);
+                command.CommandText = command.CommandText + $" WHERE {NameCol} = @name AND {ServerIdCol} = @serverId";
 
                 command.Parameters.AddWithValue("@name", NpgsqlDbType.Varchar, gameName);
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, server.Id);
-
-                command.CommandType = CommandType.Text;
                 Reader = command.ExecuteReader();
-                while (Reader.Read())
+                var games = getGameQueryResult(Reader);
+                if (games.Count() == 0)
                 {
-                    string user1Id = Reader.GetString(0);
-                    string user2Id = Reader.GetString(1);
-                    string user3Id = Reader.GetString(2);
-                    string user4Id = Reader.GetString(3);
-                    string serverId = Reader.GetString(4);
-                    GameType platform = (GameType)Enum.Parse(typeof(GameType), Reader.GetString(5));
-                    int user1Score = Reader.IsDBNull(6) ? 0 : Reader.GetInt32(6);
-                    int user2Score = Reader.IsDBNull(7) ? 0 : Reader.GetInt32(7);
-                    int user3Score = Reader.IsDBNull(8) ? 0 : Reader.GetInt32(8);
-                    int user4Score = Reader.IsDBNull(9) ? 0 : Reader.GetInt32(9);
-                    DateTime timestamp = Reader.GetDateTime(10);
-                    string fullLog = Reader.IsDBNull(11) ? null : Reader.GetString(11);
-                    bool isSanma = Reader.IsDBNull(12) ? false : Reader.GetBoolean(12);
-
-                    int user1Chombo = Reader.IsDBNull(13) ? 0 : Reader.GetInt32(13);
-                    int user2Chombo = Reader.IsDBNull(14) ? 0 : Reader.GetInt32(14);
-                    int user3Chombo = Reader.IsDBNull(15) ? 0 : Reader.GetInt32(15);
-                    int user4Chombo = Reader.IsDBNull(16) ? 0 : Reader.GetInt32(16);
-
-                    int gameId = Reader.GetInt32(16);
-                    string location = Reader.GetString(17);
-
-                    Reader.Close();
-
-                    var game = new Game(gameId, gameName, server, user1Id, user2Id, user3Id, user4Id, platform, location, timestamp, isSanma);
-                    game.User1Score = user1Score;
-                    game.User2Score = user2Score;
-                    game.User3Score = user3Score;
-                    game.User4Score = user4Score;
-                    game.User1Chombo = user1Chombo;
-                    game.User2Chombo = user2Chombo;
-                    game.User3Chombo = user3Chombo;
-                    game.User4Chombo = user4Chombo;
-                    game.FullLog = fullLog;
-                    return game;
+                    throw (new Exception($"Game with gameName:{gameName} was not found on this league"));
                 }
-                Reader.Close();
-                throw (new Exception($"Game with gameName:{gameName} was not found on this league"));
+                return games.FirstOrDefault();
             }
             throw (new DbConnectionException());
         }

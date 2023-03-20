@@ -29,7 +29,7 @@ namespace kandora.bot.services
            var dataList = getFullUserGameInfos(game, config);
 
             // Creating new rankings
-            var newRkList = dataList.Select(userData => new Ranking(userData.UserId, dataList, game.Id, game.Server.Id, config)).ToArray();
+            var newRkList = dataList.Select(userData => new Ranking(userData.UserId, dataList, game.Id, game.ServerId, config)).ToArray();
 
             // this part is for debugging purpose :D  ====>
 
@@ -66,30 +66,30 @@ namespace kandora.bot.services
         {
             var dataList = new List<UserGameData>();
 
-            List<Ranking> rkList1 = GetUserRankingHistory(game.User1Id, game.Server.Id);
-            List<Ranking> rkList2 = GetUserRankingHistory(game.User2Id, game.Server.Id);
-            List<Ranking> rkList3 = GetUserRankingHistory(game.User3Id, game.Server.Id);
-            List<Ranking> rkList4 = GetUserRankingHistory(game.User4Id, game.Server.Id);
+            List<Ranking> rkList1 = GetUserRankingHistory(game.User1Id, game.ServerId);
+            List<Ranking> rkList2 = GetUserRankingHistory(game.User2Id, game.ServerId);
+            List<Ranking> rkList3 = GetUserRankingHistory(game.User3Id, game.ServerId);
+            List<Ranking> rkList4 = GetUserRankingHistory(game.User4Id, game.ServerId);
 
             if (rkList1.Count() == 0)
             {
-                InitUserRanking(game.User1Id, game.Server.Id, config);
-                rkList1 = GetUserRankingHistory(game.User1Id, game.Server.Id);
+                InitUserRanking(game.User1Id, game.ServerId, config);
+                rkList1 = GetUserRankingHistory(game.User1Id, game.ServerId);
             }
             if (rkList2.Count() == 0)
             {
-                InitUserRanking(game.User2Id, game.Server.Id, config);
-                rkList2 = GetUserRankingHistory(game.User2Id, game.Server.Id);
+                InitUserRanking(game.User2Id, game.ServerId, config);
+                rkList2 = GetUserRankingHistory(game.User2Id, game.ServerId);
             }
             if (rkList3.Count() == 0)
             {
-                InitUserRanking(game.User3Id, game.Server.Id, config);
-                rkList3 = GetUserRankingHistory(game.User3Id, game.Server.Id);
+                InitUserRanking(game.User3Id, game.ServerId, config);
+                rkList3 = GetUserRankingHistory(game.User3Id, game.ServerId);
             }
             if (!game.IsSanma && rkList4.Count() == 0)
             {
-                InitUserRanking(game.User4Id, game.Server.Id, config);
-                rkList4 = GetUserRankingHistory(game.User4Id, game.Server.Id);
+                InitUserRanking(game.User4Id, game.ServerId, config);
+                rkList4 = GetUserRankingHistory(game.User4Id, game.ServerId);
             }
 
             // Aggregating data needed to compute next ranking
@@ -111,10 +111,10 @@ namespace kandora.bot.services
         }
 
 
-        public static bool BackfillRankings(Server server, LeagueConfig config)
+        public static bool BackfillRankings(string serverId, LeagueConfig config)
         {
-            DeleteRankings(server.Id, butNotTheInitial: false);
-            var games = ScoreDbService.GetLastNRecordedGame(server, config);
+            DeleteRankings(serverId, butNotTheInitial: false);
+            var games = ScoreDbService.GetLastNRecordedGame(serverId, config);
             // from first to last
             games.Reverse();
             foreach(Game game in games)

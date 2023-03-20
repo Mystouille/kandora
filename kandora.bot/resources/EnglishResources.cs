@@ -128,8 +128,12 @@ namespace kandora.bot.resources
 
         public const string league_submitResult_voteMessage = "All players must :o: to confirm or :x: to cancel the game recording";
         public const string league_submitResult_messageHeader = "*place: playerName (nbGames): score => final score";
+        public const string league_submitResult_NameAndId = "Name: {0}, Id: {1}";
+        public const string league_submitResult_Date = "Played the : {0}";
+        public const string league_submitResult_SimilarGameFound = "\n**ATTENTION**\n({0}) similar games have been found on the league, here are some details about the last one:";
         public const string league_submitResult_canceledMessage = "All players have voted {0}, this game won't be recorded";
         public const string league_submitResult_validatedMessage = "All players have voted {0}, this game has been recorded!";
+
 
         public const string league_submitOnlineResult_description = "Record a mahjsoul or tenhou game for the league";
         public const string league_submitOnlineResult_gameId = "gameId";
