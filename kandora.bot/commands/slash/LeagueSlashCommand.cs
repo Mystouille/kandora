@@ -1,6 +1,7 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using kandora.bot.exceptions;
 using kandora.bot.http;
 using kandora.bot.models;
 using kandora.bot.resources;
@@ -8,8 +9,11 @@ using kandora.bot.services;
 using kandora.bot.services.discord;
 using kandora.bot.services.http;
 using kandora.bot.utils;
+using Npgsql;
+using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -73,6 +77,7 @@ namespace kandora.bot.commands.slash
                 else
                 {
                     UserDbService.CreateUser(ctx.User.Id.ToString(), serverId, config);
+                    RankingDbService.InitUserRanking(userId, serverId, config);
                     responseMessage = Resources.league_register_response_newUser;
                 }
 

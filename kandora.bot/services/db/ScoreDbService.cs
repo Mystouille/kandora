@@ -79,22 +79,20 @@ namespace kandora.bot.services
                 }
                 command.ExecuteNonQuery();
 
-                //var game = GetGameFromGameName(logId, server);
+                var game = GetGameFromGameName(logId, server);
 
                 //only take game into account if it's between the league timePeriod
                 if (timeStamp.CompareTo(leagueConfig.StartTime) > 0
                     && timeStamp.CompareTo(leagueConfig.EndTime) < 0)
                 {
-                    //var rankings = RankingDbService.UpdateRankings(game, leagueConfig);
-                    //return (game, rankings);
+                    var rankings = RankingDbService.UpdateRankings(game, leagueConfig);
+                    return (game, rankings);
                 }
                 else
                 {
-                    //var rankings = RankingDbService.GetServerRankings(server.Id);
-                    //return (game, rankings);
+                    var rankings = RankingDbService.GetServerRankings(server.Id);
+                    return (game, rankings);
                 }
-                return (null, new List<Ranking>());
-
             }
             throw (new DbConnectionException());
         }
@@ -419,5 +417,33 @@ namespace kandora.bot.services
             }
             throw (new DbConnectionException());
         }
+
+        private static void ReplaceUserInColumn(string userId, string newUserId, string serverId, string columnName)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.CommandText = $"UPDATE {GameTableName} SET {columnName} = @newUserid WHERE {columnName} = @userId AND {ServerIdCol} = @serverId;";
+
+                command.Parameters.AddWithValue("@userId", NpgsqlDbType.Varchar, userId);
+                command.Parameters.AddWithValue("@newUserid", NpgsqlDbType.Varchar, newUserId);
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
+                command.CommandType = CommandType.Text;
+                command.ExecuteNonQuery();
+
+                return;
+            }
+            throw (new DbConnectionException());
+        }
+
+        public static void ChangeUserNameInGames(string userId, string newUserId, string serverId)
+        {
+            ReplaceUserInColumn(userId, newUserId, serverId, User1IdCol);
+            ReplaceUserInColumn(userId, newUserId, serverId, User2IdCol);
+            ReplaceUserInColumn(userId, newUserId, serverId, User3IdCol);
+            ReplaceUserInColumn(userId, newUserId, serverId, User4IdCol);
+        }
+
     }
 }

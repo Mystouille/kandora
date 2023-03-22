@@ -12,6 +12,7 @@ namespace kandora.bot.resources
         public const string admin_startLeague_leagueStarted = "Une ligue de mahjong vient de commencer sur {0}!";
         public const string admin_startLeague_leagueAlreadyExists = "Une ligue existe déjà sur {0}!";
         public const string admin_endLeague_description = "Supprime une ligue de mahjong ainsi que l'historique des parties";
+        public const string admin_endLeague_unauthorized = "Cette commande supprime tout l'historique, on va éviter pour le moment.";
         public const string admin_endLeague_leagueEnded = "La ligue de mahjong a été supprimée!";
         public const string admin_testLeague_description = "Supprime la ligue actuelle et en crée une composée de 4 joueurs";
         public const string admin_testLeague_testLeagueStarted = "Une ligue de test a été créée avec ces joueurs:\n{0}";
@@ -68,15 +69,18 @@ namespace kandora.bot.resources
         public const string admin_setLeagueConfig_backfillInProgress = "La configuration de la ligue a changé.\n{0}\n\n :bangbang: Kandora recalcule le classement à partir du début... ";
         public const string admin_setLeagueConfig_backfillFinished = "La configuration de la ligue a changé.\n{0}\n\n :white_check_mark: Kandora a fini de recalculer le classement! ";
 
-        public const string admin_addGuest_description = "Inscrit un utilisateur n'étant pas sur le serveur";
-        public const string admin_addGuest_nickname = "nom";
-        public const string admin_addGuest_nickname_description = "Le nom du joueur";
+        public const string admin_addPlayer_description = "Inscrit un utilisateur à la ligue du serveur";
+        public const string admin_addPlayer_nickname = "nom";
+        public const string admin_addPlayer_nickname_description = "La mention du joueur (avec @) ou son nom d'invité s'il n'est pas sur le serveur";
 
         public const string admin_addPlayer_Success = "Le joueur {0} a bien été ajouté à la ligue";
 
-        public const string admin_addPlayer_description = "Inscrit un utilisateur étant sur le serveur";
-        public const string admin_addPlayer_mention = "pseudo";
-        public const string admin_addPlayer_mention_description = "La mention du joueur (avec @)";
+        public const string admin_migratePlayer_description = "Change le pseudo d'un utilisateur (et migre son historique de parties)";
+        public const string admin_migratePlayer_sourceName = "pseudoActuel";
+        public const string admin_migratePlayer_sourceName_description = "Le pseudo du joueur invité ou la mention du joueur (avec @)";
+        public const string admin_migratePlayer_targetName = "pseudoVoulu";
+        public const string admin_migratePlayer_targetName_description = "Mention du joueur voulu ou pseudo (pour crée un joueur invité)";
+        public const string admin_migratePlayer_success = "Le joueur {0} a bien été renommé en {1}.";
 
         //League commands
         public const string league_register_description = "S'inscrire à la ligue ou modifier ses infos";
@@ -216,7 +220,7 @@ namespace kandora.bot.resources
         public const string commandError_title = "Une erreur s'est produite";
         public const string commandError_InvalidKanFormat = "Un kan est mal déclaré: {0}";
         public const string commandError_TooManyTiles = "Trop de tuiles: {0}";
-        public const string commandError_CouldNotFindGameUser = "<@{0}> n'est pas inscrit dans la ligue";
+        public const string commandError_CouldNotFindGameUser = "Il n'y a pas de joueur inscrit avec le nom {0} : {1}";
         public const string commandError_LeagueConfigRequiresScore = "La configuration actuelle de la ligue nécessite les scores des joueurs pour enregistrer une partie.";
         public const string commandError_sanmaNotAllowed = "La configuration actuelle de la ligue n'accepte pas le sanma";
         public const string commandError_badPlayerNumber = "La configuration actuelle de la ligue n'accepte pas les parties a {0} joueurs";
@@ -228,6 +232,7 @@ namespace kandora.bot.resources
         public const string commandError_UserNicknameAlreadyExists = "Un utilisateur avec ce nom existe déja et a {0} partie(s) sur ce serveur.";
         public const string commandError_ValueAlreadyExists = "Un joueur ayant comme {0}: {1} existe déjà! Contacte un admin si nécessaire.";
         public const string commandError_CouldntExtractDateFromLog = "La date de ce log n'a pas pu être extraite. la partie ne sera pas enregistrée";
+        public const string commandError_PlayerUnknown = "Le joueur {0} n'est pas encore inscrit";
 
 
 

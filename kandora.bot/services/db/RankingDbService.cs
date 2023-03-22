@@ -172,6 +172,24 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
+        public static void ChangeUserNameInRankings(string userId, string newuserId, string serverId)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.CommandText = $"UPDATE {tableName} SET {userIdCol} = @newUserid WHERE {userIdCol} = @userId AND {serverIdCol} = @serverId;";
+
+                command.Parameters.AddWithValue("@userId", NpgsqlDbType.Varchar, userId);
+                command.Parameters.AddWithValue("@newUserid", NpgsqlDbType.Varchar, newuserId);
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
+                command.CommandType = CommandType.Text;
+                command.ExecuteNonQuery();
+                return;
+            }
+            throw (new DbConnectionException());
+        }
+
         internal static void DeleteRankings(string serverId, bool butNotTheInitial = false)
         {
             var dbCon = DBConnection.Instance();

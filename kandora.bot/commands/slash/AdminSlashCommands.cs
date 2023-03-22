@@ -1,13 +1,16 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using kandora.bot.models;
 using kandora.bot.resources;
 using kandora.bot.services;
 using kandora.bot.services.db;
+using kandora.bot.utils;
 using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace kandora.bot.commands.slash
 {
@@ -45,6 +48,11 @@ namespace kandora.bot.commands.slash
             {
                 var serverDiscordId = ctx.Guild.Id.ToString();
                 var server = ServerDbService.GetServer(serverDiscordId);
+
+                if (!Bypass.isSuperUser(ctx.User.Id.ToString()))
+                {
+                    throw new Exception(Resources.admin_endLeague_unauthorized);
+                }
 
                 RankingDbService.DeleteRankings(serverDiscordId);
                 ScoreDbService.DeleteGamesFromServer(serverDiscordId);
@@ -291,15 +299,16 @@ namespace kandora.bot.commands.slash
             }
         }
 
-        [SlashCommand("addGuestPlayer", Resources.admin_addGuest_description)]
+        [SlashCommand("addUser", Resources.admin_addPlayer_description)]
         public async Task AddGuestPlayer(InteractionContext ctx,
-            [Option(Resources.admin_addGuest_nickname, Resources.admin_addGuest_nickname_description)] string nickname,
+            [Option(Resources.admin_addPlayer_nickname, Resources.admin_addPlayer_nickname_description)] string name,
             [Option(Resources.league_register_mahjsoulName, Resources.league_register_mahjsoulName_description)] string mahjsoulName = "",
             [Option(Resources.league_register_tenhouName, Resources.league_register_tenhouName_description)] string tenhouName = ""
             )
         {
             try
             {
+                var userId = getIdFromPlayerParam(name);
                 var serverDiscordId = ctx.Guild.Id.ToString();
                 var users = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(users);
@@ -307,24 +316,30 @@ namespace kandora.bot.commands.slash
                 var configId = server.LeagueConfigId;
                 var config = LeagueConfigDbService.GetLeagueConfig(configId);
 
-                if (UserDbService.IsUserInDb(nickname))
+                if (server.Users.Select(x => x.Id).Contains(userId))
                 {
-                    var nbGames = RankingDbService.GetUserRankingHistory(nickname, server.Id).Where(x=>x.GameId>0 && x.OldRank!=null).Count();
+                    var nbGames = RankingDbService.GetUserRankingHistory(userId, server.Id).Where(x=>x.GameId>0 && x.OldRank!=null).Count();
                     throw (new Exception(String.Format(Resources.commandError_UserNicknameAlreadyExists,nbGames)));
                 }
 
-                UserDbService.CreateUser(nickname, server.Id, config);
-                ServerDbService.AddUserToServer(nickname, serverDiscordId);
+                if (!users.Keys.Contains(userId))
+                {
+                    UserDbService.CreateUser(userId, serverDiscordId, config);
+                }
+                ServerDbService.AddUserToServer(userId, serverDiscordId);
+                RankingDbService.InitUserRanking(userId, serverDiscordId, config);
+                
+
                 if (mahjsoulName.Length == 0)
                 {
-                    UserDbService.SetMahjsoulName(nickname, mahjsoulName);
+                    UserDbService.SetMahjsoulName(userId, mahjsoulName);
                 }
                 if (tenhouName.Length == 0)
                 {
-                    UserDbService.SetTenhouName(nickname, tenhouName);
+                    UserDbService.SetTenhouName(userId, tenhouName);
                 }
 
-                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_addPlayer_Success, nickname));
+                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_addPlayer_Success, name)).AsEphemeral();
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
             catch (Exception e)
@@ -333,31 +348,57 @@ namespace kandora.bot.commands.slash
             }
         }
 
+        private string getIdFromPlayerParam(string playerStr)
+        {
+            if (playerStr.StartsWith("<@") && playerStr.EndsWith(">"))
+            {
+                return playerStr.Substring(2, playerStr.Length - 3);
+            }
+            return playerStr;
+        }
 
-        [SlashCommand("addPlayer", Resources.admin_addPlayer_description)]
-        public async Task AddPlayer(InteractionContext ctx,
-            [Option(Resources.admin_addPlayer_mention, Resources.admin_addPlayer_mention_description)] DiscordUser player
+        [SlashCommand("migrateUser", Resources.admin_migratePlayer_description)]
+        public async Task MigratePlayer(InteractionContext ctx,
+            [Option(Resources.admin_migratePlayer_sourceName, Resources.admin_migratePlayer_sourceName_description)] string sourceName,
+            [Option(Resources.admin_migratePlayer_targetName, Resources.admin_migratePlayer_targetName_description)] string targetName
             )
         {
             try
             {
-                var serverDiscordId = ctx.Guild.Id.ToString();
+                var serverId = ctx.Guild.Id.ToString();
                 var users = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(users);
-                var playerId = player.Id.ToString();
-                if (UserDbService.IsUserInDb(playerId))
-                {
-                    var nbGames = RankingDbService.GetUserRankingHistory(playerId, serverDiscordId).Where(x => x.GameId > 0 && x.OldRank != null).Count();
-                    throw (new Exception(String.Format(Resources.commandError_UserNicknameAlreadyExists, nbGames)));
-                }
-
-                var server = servers[serverDiscordId];
+                var server = servers[serverId];
                 var configId = server.LeagueConfigId;
                 var config = LeagueConfigDbService.GetLeagueConfig(configId);
-                UserDbService.CreateUser(playerId, server.Id, config);
-                ServerDbService.AddUserToServer(playerId, serverDiscordId);
+                var userId = getIdFromPlayerParam(sourceName);
+                var targetuserId = getIdFromPlayerParam(targetName);
 
-                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_addPlayer_Success, player.Username));
+                //Check if user exists
+                if (!server.Users.Select(x => x.Id).Contains(userId))
+                {
+                    throw (new Exception(Resources.commandError_PlayerUnknown));
+                }
+                //Create new user in server/db if he's not here already
+                if (!users.Keys.Contains(targetuserId))
+                {
+                    UserDbService.CreateUser(targetuserId, serverId, config);
+                }
+                else if (!server.Users.Select(x => x.Id).Contains(targetuserId))
+                {
+                    ServerDbService.AddUserToServer(targetuserId, serverId);
+                }
+
+                //Change rankings reference to user
+                RankingDbService.ChangeUserNameInRankings(userId, targetuserId, serverId);
+
+                //Change games reference to user
+                ScoreDbService.ChangeUserNameInGames(userId, targetuserId, serverId);
+
+                //Remove old user from server
+                ServerDbService.RemoveUserFromServer(userId,serverId);
+
+                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_migratePlayer_success, sourceName, targetuserId)).AsEphemeral();
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
             catch (Exception e)

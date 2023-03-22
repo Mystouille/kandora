@@ -12,6 +12,7 @@ namespace kandora.bot.resources
         public const string admin_startLeague_leagueStarted = "A mahjong league just started on {0}!";
         public const string admin_endLeague_description = "Delete the existing mahjong league and all eisting users and games";
         public const string admin_startLeague_leagueAlreadyExists = "A league already exists on {0}!";
+        public const string admin_endLeague_unauthorized = "This commands deletes every game and every player data, so let's not do that for now.";
         public const string admin_endLeague_leagueEnded = "The mahjong league got deleted!";
         public const string admin_testLeague_description = "Delete the current mahjong league and create one with 4 existing players";
         public const string admin_testLeague_testLeagueStarted = "A test league got created with these players:\n{0}";
@@ -68,15 +69,17 @@ namespace kandora.bot.resources
         public const string admin_setLeagueConfig_backfillInProgress = "The league config has been changed.\n{0}\n\n :bangbang: Kandora is recomputing the rankings... ";
         public const string admin_setLeagueConfig_backfillFinished = "The league config has been changed.\n{0}\n\n :white_check_mark: Kandora has finished recomputing the rankings! ";
 
-        public const string admin_addGuest_description = "Register a user not on this server";
-        public const string admin_addGuest_nickname = "name";
-        public const string admin_addGuest_nickname_description = "The player's name";
+        public const string admin_addPlayer_description = "Register a user to the server's league";
+        public const string admin_addPlayer_nickname = "name";
+        public const string admin_addPlayer_nickname_description = "The user's mention (with @) or his name if he's not on discord";
 
         public const string admin_addPlayer_Success = "The player {0} has been added to the league";
 
-        public const string admin_addPlayer_description = "Register a user on this server";
-        public const string admin_addPlayer_mention = "nickname";
-        public const string admin_addPlayer_mention_description = "The player's mention (with @)";
+        public const string admin_migratePlayer_description = "Change a user's name, and migrate all his game history";
+        public const string admin_migratePlayer_sourceName = "currentName";
+        public const string admin_migratePlayer_sourceName_description = "His current name (in case of a guest user) or his mention (with @)";
+        public const string admin_migratePlayer_targetName = "targetName";
+        public const string admin_migratePlayer_targetName_description = "His new name or a mention of a user in the server";
 
         //League commands
         public const string league_register_description = "Register to the league or change your info";
@@ -214,7 +217,6 @@ namespace kandora.bot.resources
         public const string commandError_InvalidKanFormat = "A kan is not correct: {0}";
         public const string commandError_TooManyTiles = "Too many tiles: {0}";
         public const string commandError_CouldNotFindGameUser = "There is no league-registered user with the {0} nickname : {1}";
-        public const string commandError_UserNotRegistered = "<@{0}> is not registered in the league";
         public const string commandError_LeagueConfigRequiresScore = "The current league configuration requires players scores to record the game";
         public const string commandError_sanmaNotAllowed = "The current league configuration doesn't accept sanma games";
         public const string commandError_badPlayerNumber = "The current league configuration does not support {0} player games";
@@ -226,6 +228,7 @@ namespace kandora.bot.resources
         public const string commandError_UserNicknameAlreadyExists = "A user with this name already exists and has {0} games recorded on this server.";
         public const string commandError_ValueAlreadyExists = "A user with {0} {1} exists already! Contact the admin if you want to fix that.";
         public const string commandError_CouldntExtractDateFromLog = "Couldn't extract date from this log, it won't be recorded";
+        public const string commandError_PlayerUnknown = "The user {0} isn't registered";
 
 
         //League

@@ -88,7 +88,6 @@ namespace kandora.bot.services
 
                 command.ExecuteNonQuery();
                 ServerDbService.AddUserToServer(userId, serverId);
-                RankingDbService.InitUserRanking(userId, serverId, leagueConfig);
 
                 return;
             }
