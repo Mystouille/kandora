@@ -103,7 +103,7 @@ namespace kandora.bot.resources
         public const string league_bestHand = "Meilleure main:  {0}({1}) (manche {2}) avec {3} pour un total de {4} ";
 
         public const string league_getGames_description = "Télécharge un fichier csv des parties jouées pendant la ligue";
-        public const string league_getGames_fileHeader = "logId,nomPartie,lieu,joueur1,score1,chombo1,joueur2,score2,chombo2,joueur3,score3,chombo3,joueur4,score4,chombo4";
+        public const string league_getGames_fileHeader = "logId,nomPartie,lieu,date,joueur1,score1,chombo1,joueur2,score2,chombo2,joueur3,score3,chombo3,joueur4,score4,chombo4";
         public const string league_getGames_message = "Voila le log des parties jouées entre le {0} et le {1}";
 
         public const string league_submitResult_description = "Enregistre une partie comptant dans le classement";

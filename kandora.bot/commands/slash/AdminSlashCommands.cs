@@ -363,8 +363,11 @@ namespace kandora.bot.commands.slash
             [Option(Resources.admin_migratePlayer_targetName, Resources.admin_migratePlayer_targetName_description)] string targetName
             )
         {
+            var transactionName = $"migration:{sourceName}-{targetName}";
+            DbService.Begin(transactionName);
             try
             {
+
                 var serverId = ctx.Guild.Id.ToString();
                 var users = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(users);
@@ -373,6 +376,7 @@ namespace kandora.bot.commands.slash
                 var config = LeagueConfigDbService.GetLeagueConfig(configId);
                 var userId = getIdFromPlayerParam(sourceName);
                 var targetuserId = getIdFromPlayerParam(targetName);
+
 
                 //Check if user exists
                 if (!server.Users.Select(x => x.Id).Contains(userId))
@@ -398,11 +402,18 @@ namespace kandora.bot.commands.slash
                 //Remove old user from server
                 ServerDbService.RemoveUserFromServer(userId,serverId);
 
+                //Update the rankings
+                RankingDbService.BackfillRankings(serverId, config);
+
+
+                DbService.Commit(transactionName);
+
                 var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_migratePlayer_success, sourceName, targetuserId)).AsEphemeral();
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
             catch (Exception e)
             {
+                DbService.Rollback(transactionName);
                 replyWithException(ctx, e);
             }
         }

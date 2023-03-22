@@ -102,7 +102,7 @@ namespace kandora.bot.resources
         public const string league_bestHand = "Best hand: {0}({1}) (round {2}) with {3}, total:{4}";
         
         public const string league_getGames_description = "Download a csv file containing the games played during this current league";
-        public const string league_getGames_fileHeader = "logId,gameName,location,player1,score1,chombo1,player2,score2,chombo2,player3,score3,chombo3,player4,score4,chombo4";
+        public const string league_getGames_fileHeader = "logId,gameName,location,date,player1,score1,chombo1,player2,score2,chombo2,player3,score3,chombo3,player4,score4,chombo4";
         public const string league_getGames_message = "Here's the log of the games played between {0} and {1}";
 
         public const string league_submitResult_description = "Record a game contributing to the ranking";

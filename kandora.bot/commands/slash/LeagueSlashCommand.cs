@@ -144,7 +144,7 @@ namespace kandora.bot.commands.slash
                 foreach (var log in logs)
                 {
 
-                    sb.AppendLine($"{log.Id},{log.GameName},{log.LocationStr}," +
+                    sb.AppendLine($"{log.Id},{log.GameName},{log.LocationStr},{log.Timestamp.ToString("yyyy/MM/dd HH:mm")}," +
                         $"{getPlayerSimpleName(log.User1Id,ctx,userNameCache)},{log.User1Score},{log.User1Chombo}," +
                         $"{getPlayerSimpleName(log.User2Id, ctx, userNameCache)},{log.User2Score},{log.User2Chombo}," +
                         $"{getPlayerSimpleName(log.User3Id, ctx, userNameCache)},{log.User3Score},{log.User3Chombo}," +
