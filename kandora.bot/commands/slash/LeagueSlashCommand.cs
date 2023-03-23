@@ -188,6 +188,11 @@ namespace kandora.bot.commands.slash
             {
                 var allUsers = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(allUsers);
+                var serverId = ctx.Guild.Id.ToString();
+                var server = servers[serverId];
+                var leagueConfig = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+
+
                 var player1Id = getIdFromPlayerParam(player1);
                 var player2Id = getIdFromPlayerParam(player2);
                 var player3Id = getIdFromPlayerParam(player3);
@@ -205,7 +210,6 @@ namespace kandora.bot.commands.slash
                 var userIds = sortedScores.Select(x => x.Item1).ToArray();
                 var scoresStr = sortedScores.Select(x => x.Item2).ToArray();
                 var chombos = sortedScores.Select(x => (int)(x.Item3)).ToArray();
-
                 int[] scores = null;
                 if (scoresStr != null)
                 {
@@ -221,10 +225,6 @@ namespace kandora.bot.commands.slash
                         scores = tempScores.Select(x => (int)(x)).ToArray();
                     }
                 }
-                var serverId = ctx.Guild.Id.ToString();
-                var channelDiscordId = ctx.Channel.Id.ToString();
-
-                var server = servers[serverId];
                 foreach (var id in userIds)
                 {
                     if (server.Users.Where(x => x.Id == id).Count() == 0)
@@ -232,7 +232,13 @@ namespace kandora.bot.commands.slash
                         throw new Exception($"{String.Format(Resources.commandError_CouldNotFindGameUser, id)}");
                     }
                 }
-                var leagueConfig = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+                var scoreSum = scores.Sum();
+                var targetScoreSum = leagueConfig.StartingPoints * 1000 * 4;
+                if (scoreSum != targetScoreSum)
+                {
+                    
+                    throw new Exception(String.Format(Resources.commandError_Wrong_Scores, scoreSum, targetScoreSum));
+                }
                 if (leagueConfig.CountPoints && scores == null)
                 {
                     throw new Exception(Resources.commandError_LeagueConfigRequiresScore);

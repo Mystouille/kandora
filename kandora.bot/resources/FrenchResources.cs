@@ -222,6 +222,7 @@ namespace kandora.bot.resources
         public const string commandError_TooManyTiles = "Trop de tuiles: {0}";
         public const string commandError_CouldNotFindGameUser = "Il n'y a pas de joueur inscrit avec le nom {0} : {1}";
         public const string commandError_LeagueConfigRequiresScore = "La configuration actuelle de la ligue nécessite les scores des joueurs pour enregistrer une partie.";
+        public const string commandError_Wrong_Scores = "La somme des points des joueurs est {0} (normalement {1})";
         public const string commandError_sanmaNotAllowed = "La configuration actuelle de la ligue n'accepte pas le sanma";
         public const string commandError_badPlayerNumber = "La configuration actuelle de la ligue n'accepte pas les parties a {0} joueurs";
         public const string commandError_badDistinctPlayerNumber = "Il n'y a que {0} joueurs distincts mentionés";

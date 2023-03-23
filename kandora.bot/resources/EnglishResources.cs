@@ -218,6 +218,7 @@ namespace kandora.bot.resources
         public const string commandError_TooManyTiles = "Too many tiles: {0}";
         public const string commandError_CouldNotFindGameUser = "There is no league-registered user with the {0} nickname : {1}";
         public const string commandError_LeagueConfigRequiresScore = "The current league configuration requires players scores to record the game";
+        public const string commandError_Wrong_Scores = "The sum of the scores is {0} (normally {1})";
         public const string commandError_sanmaNotAllowed = "The current league configuration doesn't accept sanma games";
         public const string commandError_badPlayerNumber = "The current league configuration does not support {0} player games";
         public const string commandError_badDistinctPlayerNumber = "There are only {0} distinct players mentioned";
