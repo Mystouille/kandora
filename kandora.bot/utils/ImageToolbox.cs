@@ -19,7 +19,6 @@ namespace kandora.bot.utils
         const int tileImgWidth = 80;
         const int tileImgHeight = 129;
         const float shrinkFactor = 3;
-        const string inputResourceLoc = "kandora.bot.resources";
         const string inputfileName = "tiles.png";
         const string inputCalledfileName = "tilesCalled.png";
         const string resourcesDirName = "resources";
@@ -31,7 +30,7 @@ namespace kandora.bot.utils
 
         static Bitmap GetAllTiles()
         {
-            var inputFileStream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"{inputResourceLoc}.{inputfileName}");
+            var inputFileStream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"{FileUtils.inputResourceLoc}.{inputfileName}");
             var image = new Bitmap(inputFileStream);
             inputFileStream.Close();
             return image;
@@ -39,7 +38,7 @@ namespace kandora.bot.utils
 
         static Bitmap GetAllCalledTiles()
         {
-            var inputFileStream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"{inputResourceLoc}.{inputCalledfileName}");
+            var inputFileStream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"{FileUtils.inputResourceLoc}.{inputCalledfileName}");
             var image = new Bitmap(inputFileStream);
             inputFileStream.Close();
             return image;

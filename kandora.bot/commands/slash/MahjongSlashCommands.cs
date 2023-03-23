@@ -10,6 +10,9 @@ using System.Linq;
 using kandora.bot.mahjong;
 using System.Text;
 using System.IO;
+using kandora.bot.http;
+using kandora.bot.mahjong.handcalc.yaku.yakuman;
+using kandora.bot.services.nanikiru;
 
 namespace kandora.bot.commands.slash
 {
@@ -95,6 +98,11 @@ namespace kandora.bot.commands.slash
             [Option(Resources.mahjong_option_turn, Resources.mahjong_option_turn_description)] string turn = "",
             [Option(Resources.mahjong_option_thread, Resources.mahjong_option_thread_description)] bool createThread = false)
         {
+            if (handStr == "x")
+            {
+                GetStoredProblem(ctx);
+                return;
+            }
             try
             {
                 var basicHand = HandParser.GetSimpleHand(handStr);
@@ -108,32 +116,12 @@ namespace kandora.bot.commands.slash
                 var shantenCalc = new ShantenCalculator();
                 var nbTiles = hand34.Sum();
                 var sb = new StringBuilder();
-                var context = new List<string>();
                 if(discards != "")
                 {
                     optionsEmoji = HandParser.GetHandEmojiCodes(discards, ctx.Client).Distinct();
                 }
-                if(seat != "")
-                {
-                    context.Add(string.Format(Resources.mahjong_nanikiru_seat, seat));
-                }
-                if (round != "")
-                {
-                    context.Add(string.Format(Resources.mahjong_nanikiru_round, this.RoundToString(round)));
-                }
-                if (turn != "")
-                {
-                    context.Add(string.Format(Resources.mahjong_nanikiru_turn, turn));
-                }
-                if (doras != "")
-                {
-                    context.Add(string.Format(Resources.mahjong_nanikiru_dora, string.Join(',',dorasEmoji)));
-                }
-                if (seat != "" || round != "" || turn != "" || doras != "")
-                {
-                    sb.AppendLine(string.Join(" | ", context));
-                }
-
+                var context = getHandContext(seat, round, turn, dorasEmoji);
+                sb.AppendLine(context);
                 //sb.AppendLine(Resources.mahjong_nanikiru_wwyd);
 
                 var stream = ImageToolbox.GetImageFromTiles(closedHand, melds, separateLastTile: true);
@@ -149,6 +137,71 @@ namespace kandora.bot.commands.slash
                     var thread = await ctx.Channel.CreateThreadAsync(msg, $"nanikiru {handStr}", AutoArchiveDuration.Day).ConfigureAwait(true);
                     await thread.SendMessageAsync(Resources.mahjong_nanikiru_discussHere).ConfigureAwait(true);
                 }
+            }
+            catch (Exception e)
+            {
+                replyWithException(ctx, e);
+            }
+        }
+
+        private string getHandContext(string seat, string round, string turn, IEnumerable<DiscordEmoji> doras)
+        {
+            var context = new List<string>();
+            if (seat != "")
+            {
+                context.Add(string.Format(Resources.mahjong_nanikiru_seat, seat));
+            }
+            if (round != "")
+            {
+                context.Add(string.Format(Resources.mahjong_nanikiru_round, this.RoundToString(round)));
+            }
+            if (turn != "")
+            {
+                context.Add(string.Format(Resources.mahjong_nanikiru_turn, turn));
+            }
+            if (doras.Count()>0)
+            {
+                context.Add(string.Format(Resources.mahjong_nanikiru_dora, string.Join(',', doras)));
+            }
+            if (seat != "" || round != "" || turn != "" || doras.Count() > 0)
+            {
+                return string.Join(" | ", context);
+            }
+            return string.Empty;
+        }
+
+        private async void GetStoredProblem(InteractionContext ctx)
+        {
+            try
+            {
+                var rb = new DiscordInteractionResponseBuilder().WithContent("bla");
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
+                
+                var problem = StoredNanikiru.Instance.NextProblem();
+
+                var handEmoji = HandParser.GetHandEmojiCodes(problem.Hand, ctx.Client);
+                var doras = HandParser.GetHandEmojiCodes(problem.Dora, ctx.Client);
+                var sb = new StringBuilder();
+                sb.AppendLine(getHandContext(problem.Seat,problem.Round,problem.Turn, doras));
+                var answer = string.Join(',', HandParser.GetHandEmojiCodes(problem.Answer, ctx.Client));
+                var basicHand = HandParser.GetSimpleHand(problem.Hand);
+                var closedHand = basicHand[0];
+                var melds = basicHand[1];
+
+                var stream = ImageToolbox.GetImageFromTiles(closedHand, melds, separateLastTile: true);
+
+                sb.AppendLine($"Answer: ||{answer}||");
+                if(Resources.cultureInfoStr == "fr-FR" && problem.ExplanationFr.Length > 0)
+                {
+                    sb.AppendLine($"Explanation: ||{problem.ExplanationFr}||");
+                }else
+                {
+                    sb.AppendLine($"ExplanationEng: ||{problem.ExplanationEng}||");
+                }
+                rb = new DiscordInteractionResponseBuilder().WithContent(sb.ToString()).AddFile(stream).AsEphemeral();
+                var wb = new DiscordWebhookBuilder().WithContent(sb.ToString()).AddFile(stream);
+                await ctx.EditResponseAsync(wb).ContinueWith(precedent => stream.Dispose()).ConfigureAwait(true);
+
             }
             catch (Exception e)
             {
