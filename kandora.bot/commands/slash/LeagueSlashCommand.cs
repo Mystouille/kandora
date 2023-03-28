@@ -229,7 +229,7 @@ namespace kandora.bot.commands.slash
                 {
                     if (server.Users.Where(x => x.Id == id).Count() == 0)
                     {
-                        throw new Exception($"{String.Format(Resources.commandError_CouldNotFindGameUser, id)}");
+                        throw new Exception($"{String.Format(Resources.commandError_PlayerUnknown, id)}");
                     }
                 }
                 var scoreSum = scores.Sum();
