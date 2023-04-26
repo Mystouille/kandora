@@ -81,9 +81,9 @@ namespace kandora.bot.services
 
                 var game = GetGameFromGameName(logId, server);
 
-                //only take game into account if it's between the league timePeriod
-                if (timeStamp.CompareTo(leagueConfig.StartTime) > 0
-                    && timeStamp.CompareTo(leagueConfig.EndTime) < 0)
+                //only take game into account if it's in the league timeframe
+                if (game.Timestamp.CompareTo(leagueConfig.StartTime) > 0
+                    && game.Timestamp.CompareTo(leagueConfig.EndTime) < 0)
                 {
                     var rankings = RankingDbService.UpdateRankings(game, leagueConfig);
                     return (game, rankings);
