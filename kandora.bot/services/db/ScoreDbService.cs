@@ -61,12 +61,13 @@ namespace kandora.bot.services
                     ? ""
                     : $", @score1, @score2, @score3{(scores.Length > 3 ? $", @score4" : "")}";
 
-                command.CommandText = $"INSERT INTO {GameTableName} ({NameCol}, {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {PlatformCol}, {IsSanmaCol}, {ServerIdCol}, {TimestampCol}{scoreColumns}, {User1ChomboCol}, {User2ChomboCol}, {User3ChomboCol}, {User4ChomboCol}) " +
-                    $"VALUES (@gameName, \'{members[0]}\', \'{members[1]}\', \'{members[2]}\', \'{members[3]}\', @gameType, @isSanma, @serverId, @timestamp{scoreValues}, {chombos[0]}, {chombos[1]}, {chombos[2]}, {chombos[3]});";
+                command.CommandText = $"INSERT INTO {GameTableName} ({NameCol}, {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {PlatformCol}, {LocationCol}, {IsSanmaCol}, {ServerIdCol}, {TimestampCol}{scoreColumns}, {User1ChomboCol}, {User2ChomboCol}, {User3ChomboCol}, {User4ChomboCol}) " +
+                    $"VALUES (@gameName, \'{members[0]}\', \'{members[1]}\', \'{members[2]}\', \'{members[3]}\', @gameType, @location, @isSanma, @serverId, @timestamp{scoreValues}, {chombos[0]}, {chombos[1]}, {chombos[2]}, {chombos[3]}) RETURNING {IdCol};";
                 command.CommandType = CommandType.Text;
 
                 command.Parameters.AddWithValue("@gameName", NpgsqlDbType.Varchar, logId);
                 command.Parameters.AddWithValue("@gameType", NpgsqlDbType.Varchar, GameType.IRL.ToString());
+                command.Parameters.AddWithValue("@location", NpgsqlDbType.Varchar, location);
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, server.Id);
                 command.Parameters.AddWithValue("@isSanma", NpgsqlDbType.Boolean, members.Length == 3);
                 command.Parameters.AddWithValue("@timestamp", NpgsqlDbType.Timestamp, timeStamp);
@@ -77,9 +78,14 @@ namespace kandora.bot.services
                         command.Parameters.AddWithValue($"@score{i + 1}", NpgsqlDbType.Integer, scores[i]);
                     }
                 }
-                command.ExecuteNonQuery();
+                var reader = command.ExecuteReader();
 
-                var game = GetGameFromGameName(logId, server);
+                //Read one line only
+                reader.Read();
+                int gameId = reader.GetInt32(0); ;
+                reader.Close();
+
+                var game = GetGameFromValue(IdCol, NpgsqlDbType.Integer, gameId, server);
 
                 //only take game into account if it's in the league timeframe
                 if (game.Timestamp.CompareTo(leagueConfig.StartTime) > 0
@@ -212,7 +218,7 @@ namespace kandora.bot.services
                 {
                     UserDbService.SetMahjsoulUserId(playerIds[idx], playerMjIds[idx]);
                 }
-                var game = GetGameFromGameName(logId, serverWithUsers);
+                var game = GetGameFromValue(NameCol, NpgsqlDbType.Varchar, logId, serverWithUsers);
 
 
                 //only take game into account if it's between the league timePeriod
@@ -234,7 +240,6 @@ namespace kandora.bot.services
 
         protected static string GetIRLLogName(string serverId, string locationParam)
         {
-            var location = locationParam.Length == 0 ? "IRLGame" : locationParam;
 
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -244,7 +249,7 @@ namespace kandora.bot.services
                 command.CommandText = $"SELECT {LocationCol} FROM {GameTableName} WHERE {ServerIdCol} = @serverId AND {LocationCol} = @location ";
                 command.CommandType = CommandType.Text;
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
-                command.Parameters.AddWithValue("@location", NpgsqlDbType.Varchar, location);
+                command.Parameters.AddWithValue("@location", NpgsqlDbType.Varchar, locationParam);
                 Reader = command.ExecuteReader();
                 int nb = 0;
                 while (Reader.Read())
@@ -253,6 +258,7 @@ namespace kandora.bot.services
                 }
                 var index = $"{nb}".PadLeft(4, '0');
                 Reader.Close();
+                var location = locationParam.Length == 0 ? "IRLGame" : locationParam;
                 return $"{location}-{index}";
             }
             throw (new DbConnectionException());
@@ -335,7 +341,7 @@ namespace kandora.bot.services
         {
             try
             {
-                var game = GetGameFromGameName(gameName, server);
+                var game = GetGameFromValue(NameCol, NpgsqlDbType.Varchar, gameName, server);
                 return true;
             }
             catch (Exception)
@@ -396,22 +402,22 @@ namespace kandora.bot.services
             return games;
         }
 
-        public static Game GetGameFromGameName(string gameName, Server server)
+        public static Game GetGameFromValue<T>(string valueName, NpgsqlDbType valueType, T value, Server server)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 AddGameQueryCommandText(command);
-                command.CommandText = command.CommandText + $" WHERE {NameCol} = @name AND {ServerIdCol} = @serverId";
+                command.CommandText = command.CommandText + $" WHERE {valueName} = @value AND {ServerIdCol} = @serverId";
 
-                command.Parameters.AddWithValue("@name", NpgsqlDbType.Varchar, gameName);
+                command.Parameters.AddWithValue("@value", valueType, value);
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, server.Id);
                 Reader = command.ExecuteReader();
                 var games = getGameQueryResult(Reader);
                 if (games.Count() == 0)
                 {
-                    throw (new Exception($"Game with gameName:{gameName} was not found on this league"));
+                    throw (new Exception($"Game with {valueName}:{value} was not found on this league"));
                 }
                 return games.FirstOrDefault();
             }
