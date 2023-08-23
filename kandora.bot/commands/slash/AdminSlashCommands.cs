@@ -41,6 +41,36 @@ namespace kandora.bot.commands.slash
             }
         }
 
+        //[SlashCommand("updateDisplayNames", "updateDisplayNames")]
+        public async Task Updatenames(InteractionContext ctx)
+        {
+            try
+            {
+                var serverDiscordId = ctx.Guild.Id.ToString();
+                var users = UserDbService.GetUsers();
+                var nbUpdated = 0;
+                var discordUsers = await ctx.Guild.GetAllMembersAsync();
+                foreach (var user in users){
+                    if(user.Value.DisplayName != null && user.Value.DisplayName.Length > 0)
+                    {
+                        continue;
+                    }
+                    var discordUser = discordUsers.Where(x => x.Id.ToString() == user.Key).FirstOrDefault();
+                    if(discordUser != null)
+                    {
+                        ServerDbService.SetUserDisplayName(serverDiscordId, user.Key, discordUser.DisplayName);
+                        nbUpdated++;
+                    }
+                }
+                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format("Player display names updated: {0}", nbUpdated)).AsEphemeral();
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
+            }
+            catch (Exception e)
+            {
+                replyWithException(ctx, e);
+            }
+        }
+
         [SlashCommand("endLeague", Resources.admin_endLeague_description)]
         public async Task EndLeague(InteractionContext ctx)
         {
@@ -302,8 +332,8 @@ namespace kandora.bot.commands.slash
         [SlashCommand("addUser", Resources.admin_addPlayer_description)]
         public async Task AddGuestPlayer(InteractionContext ctx,
             [Option(Resources.admin_addPlayer_nickname, Resources.admin_addPlayer_nickname_description)] string name,
-            [Option(Resources.league_register_mahjsoulName, Resources.league_register_mahjsoulName_description)] string mahjsoulName = "",
-            [Option(Resources.league_register_tenhouName, Resources.league_register_tenhouName_description)] string tenhouName = ""
+            [Option(Resources.leaderboard_register_mahjsoulName, Resources.leaderboard_register_mahjsoulName_description)] string mahjsoulName = "",
+            [Option(Resources.leaderboard_register_tenhouName, Resources.leaderboard_register_tenhouName_description)] string tenhouName = ""
             )
         {
             try
@@ -324,9 +354,8 @@ namespace kandora.bot.commands.slash
 
                 if (!users.Keys.Contains(userId))
                 {
-                    UserDbService.CreateUser(userId, serverDiscordId, config);
+                    UserDbService.CreateUser(userId, name, serverDiscordId, config);
                 }
-                ServerDbService.AddUserToServer(userId, serverDiscordId);
                 RankingDbService.InitUserRanking(userId, serverDiscordId, config);
                 
 
@@ -386,11 +415,11 @@ namespace kandora.bot.commands.slash
                 //Create new user in server/db if he's not here already
                 if (!users.Keys.Contains(targetuserId))
                 {
-                    UserDbService.CreateUser(targetuserId, serverId, config);
+                    UserDbService.CreateUser(targetuserId, targetName, serverId, config);
                 }
                 else if (!server.Users.Select(x => x.Id).Contains(targetuserId))
                 {
-                    ServerDbService.AddUserToServer(targetuserId, serverId);
+                    ServerDbService.AddUserToServer(targetuserId, serverId, targetName);
                 }
 
                 //Change rankings reference to user

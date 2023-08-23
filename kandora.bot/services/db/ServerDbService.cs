@@ -27,6 +27,7 @@ namespace kandora.bot.services
         //ServerUser
         public static string userIdCol = "userId";
         public static string serverIdCol = "serverId";
+        public static string serverUserDisplayNameCol = "displayName";
         public static string isAdminCol = "isAdmin";
 
 
@@ -177,10 +178,33 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
+
+        public static void SetUserDisplayName(string serverId, string userId, string name)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.Connection = dbCon.Connection;
+                command.CommandType = CommandType.Text;
+                command.CommandText = $"UPDATE {ServerUserTableName} SET {serverUserDisplayNameCol} = @name WHERE {serverIdCol} = @serverId AND {userIdCol} = @userId;";
+
+                command.Parameters.AddWithValue("@name", NpgsqlDbType.Varchar, name);
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
+                command.Parameters.AddWithValue("@userId", NpgsqlDbType.Varchar, userId);
+                command.CommandType = CommandType.Text;
+
+                command.ExecuteNonQuery();
+                return;
+            }
+            throw (new DbConnectionException());
+        }
+
         public static void SetDisplayName(string serverId, string name)
         {
             UpdateFieldInTable(serverTableName, displayNameCol, serverId, name);
         }
+
         public static void SetLeagueInfo(string serverId, string name, string id)
         {
             UpdateFieldInTable(serverTableName, leagueNameCol, serverId, name);
@@ -216,18 +240,19 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static void AddUserToServer(string userId, string serverId, bool isAdmin = false)
+        public static void AddUserToServer(string userId, string serverId, string displayName, bool isAdmin = false)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"INSERT INTO {ServerUserTableName} ({userIdCol}, {serverIdCol}, {isAdminCol}) " +
-                    $"VALUES (@userId, @serverId, @isAdmin);";
+                command.CommandText = $"INSERT INTO {ServerUserTableName} ({userIdCol}, {serverIdCol}, {serverUserDisplayNameCol}, {isAdminCol}) " +
+                    $"VALUES (@userId, @serverId, @displayName, @isAdmin);";
 
                 command.Parameters.AddWithValue("@userId", NpgsqlDbType.Varchar, userId);
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
+                command.Parameters.AddWithValue("@displayName", NpgsqlDbType.Varchar, displayName);
                 command.Parameters.AddWithValue("@isAdmin", NpgsqlDbType.Boolean, isAdmin || Bypass.isSuperUser(userId));
                 command.CommandType = CommandType.Text;
 

@@ -83,73 +83,73 @@ namespace kandora.bot.resources
         public const string admin_migratePlayer_success = "Le joueur {0} a bien été renommé en {1}.";
 
         //League commands
-        public const string league_register_description = "S'inscrire à la ligue ou modifier ses infos";
-        public const string league_register_mahjsoulName = "mahjsoulname";
-        public const string league_register_mahjsoulName_description = "Ton pseudo Mahjong Soul";
-        public const string league_register_mahjsoulFriendId = "mahjsoulid";
-        public const string league_register_mahjsoulFriendId_description = "Ton ID Mahjong Soul";
-        public const string league_register_tenhouName = "tenhouname";
-        public const string league_register_tenhouName_description = "Ton pseudo Tenhou";
-        public const string league_register_response_newUser = "Tu fais maintenant partie de la ligue de ce serveur";
-        public const string league_register_response_newRanking = "Tu fais maintenant partie de la ligue de ce serveur. Attention, tes pseudos Tenhou et Mahjong Soul sont communs avec les ligues d'autres serveurs";
-        public const string league_register_response_userAlreadyRegistered = "Les nouvelles infos ont été prise en compte";
+        public const string leaderboard_register_description = "S'inscrire à la ligue ou modifier ses infos";
+        public const string leaderboard_register_mahjsoulName = "mahjsoulname";
+        public const string leaderboard_register_mahjsoulName_description = "Ton pseudo Mahjong Soul";
+        public const string leaderboard_register_mahjsoulFriendId = "mahjsoulid";
+        public const string leaderboard_register_mahjsoulFriendId_description = "Ton ID Mahjong Soul";
+        public const string leaderboard_register_tenhouName = "tenhouname";
+        public const string leaderboard_register_tenhouName_description = "Ton pseudo Tenhou";
+        public const string leaderboard_register_response_newUser = "Tu fais maintenant partie de la ligue de ce serveur";
+        public const string leaderboard_register_response_newRanking = "Tu fais maintenant partie de la ligue de ce serveur. Attention, tes pseudos Tenhou et Mahjong Soul sont communs avec les ligues d'autres serveurs";
+        public const string leaderboard_register_response_userAlreadyRegistered = "Les nouvelles infos ont été prise en compte";
 
-        public const string league_logInfo_description = "Affiche les infos d'une partie à partir de son ID";
-        public const string league_option_gameId = "id";
-        public const string league_option_gameId_description = "L'ID de la partie (tenhou ou mahjsoul)";
-        public const string league_title = "Titre"; 
-        public const string league_date = "Date";
-        public const string league_results = "Résultats"; 
-        public const string league_bestHand = "Meilleure main:  {0}({1}) (manche {2}) avec {3} pour un total de {4} ";
+        public const string leaderboard_logInfo_description = "Affiche les infos d'une partie à partir de son ID";
+        public const string leaderboard_option_gameId = "id";
+        public const string leaderboard_option_gameId_description = "L'ID de la partie (tenhou ou mahjsoul)";
+        public const string leaderboard_title = "Titre"; 
+        public const string leaderboard_date = "Date";
+        public const string leaderboard_results = "Résultats"; 
+        public const string leaderboard_bestHand = "Meilleure main:  {0}({1}) (manche {2}) avec {3} pour un total de {4} ";
 
-        public const string league_getGames_description = "Télécharge un fichier csv des parties jouées pendant la ligue";
-        public const string league_getGames_fileHeader = "logId,nomPartie,lieu,date,joueur1,score1,chombo1,joueur2,score2,chombo2,joueur3,score3,chombo3,joueur4,score4,chombo4";
-        public const string league_getGames_message = "Voila le log des parties jouées entre le {0} et le {1}";
+        public const string leaderboard_getGames_description = "Télécharge un fichier csv des parties jouées pendant la ligue";
+        public const string leaderboard_getGames_fileHeader = "logId,nomPartie,lieu,date,joueur1,score1,chombo1,joueur2,score2,chombo2,joueur3,score3,chombo3,joueur4,score4,chombo4";
+        public const string leaderboard_getGames_message = "Voila le log des parties jouées entre le {0} et le {1}";
 
-        public const string league_submitResult_description = "Enregistre une partie comptant dans le classement";
-        public const string league_option_player1 = "Joueur1";
-        public const string league_option_player2 = "Joueur2";
-        public const string league_option_player3 = "Joueur3";
-        public const string league_option_player4 = "Joueur4";
-        public const string league_option_player1Score = "Score1";
-        public const string league_option_player2Score = "Score2";
-        public const string league_option_player3Score = "Score3";
-        public const string league_option_player4Score = "Score4";
-        public const string league_option_player1Chombo = "Chombo1";
-        public const string league_option_player2Chombo = "Chombo2";
-        public const string league_option_player3Chombo = "Chombo3";
-        public const string league_option_player4Chombo = "Chombo4";
-        public const string league_option_date = "Date";
-        public const string league_option_date_description = "Date de la partie (au format YYYY/MM/DD)";
-        public const string league_option_location = "Lieu";
-        public const string league_option_location_description = "Endroit ou s'est passée la partie";
-        public const string league_option_anyPlayer_description = "Mention (@) du joueur";
-        public const string league_option_anyScore_description = "Score final sans uma (ex: 44300 ou 44.3)";
-        public const string league_option_chombo1_description = "Nombre de chombos pour le Joueur1";
-        public const string league_option_chombo2_description = "Nombre de chombos pour le Joueur2";
-        public const string league_option_chombo3_description = "Nombre de chombos pour le Joueur3";
-        public const string league_option_chombo4_description = "Nombre de chombos pour le Joueur4";
+        public const string leaderboard_submitResult_description = "Enregistre une partie comptant dans le classement";
+        public const string leaderboard_option_player1 = "Joueur1";
+        public const string leaderboard_option_player2 = "Joueur2";
+        public const string leaderboard_option_player3 = "Joueur3";
+        public const string leaderboard_option_player4 = "Joueur4";
+        public const string leaderboard_option_player1Score = "Score1";
+        public const string leaderboard_option_player2Score = "Score2";
+        public const string leaderboard_option_player3Score = "Score3";
+        public const string leaderboard_option_player4Score = "Score4";
+        public const string leaderboard_option_player1Chombo = "Chombo1";
+        public const string leaderboard_option_player2Chombo = "Chombo2";
+        public const string leaderboard_option_player3Chombo = "Chombo3";
+        public const string leaderboard_option_player4Chombo = "Chombo4";
+        public const string leaderboard_option_date = "Date";
+        public const string leaderboard_option_date_description = "Date de la partie (au format YYYY/MM/DD)";
+        public const string leaderboard_option_location = "Lieu";
+        public const string leaderboard_option_location_description = "Endroit ou s'est passée la partie";
+        public const string leaderboard_option_anyPlayer_description = "Mention (@) du joueur";
+        public const string leaderboard_option_anyScore_description = "Score final sans uma (ex: 44300 ou 44.3)";
+        public const string leaderboard_option_chombo1_description = "Nombre de chombos pour le Joueur1";
+        public const string leaderboard_option_chombo2_description = "Nombre de chombos pour le Joueur2";
+        public const string leaderboard_option_chombo3_description = "Nombre de chombos pour le Joueur3";
+        public const string leaderboard_option_chombo4_description = "Nombre de chombos pour le Joueur4";
 
-        public const string league_submitResult_voteMessage = "Tous les joueurs doivent :o: pour valider ou :x: pour annuler l'enregistrement de la partie.";
-        public const string league_submitResult_messageHeader = "*place: nomJoueur (nbparties): score => score final*";
-        public const string league_submitResult_NameAndId = "Nom: {0}, Id: {1}";
-        public const string league_submitResult_Date = "Partie du : {0}";
-        public const string league_submitResult_SimilarGameFound = "\n**ATTENTION**\n({0}) parties similaires ont été trouvées sur la league, voici les details de la dernière en date:"; 
-        public const string league_submitResult_canceledMessage = "Tous les joueurs ont voté {0}, cette partie ne sera pas enregistrée";
-        public const string league_submitResult_validatedMessage = "Tous les joueurs ont voté {0}, cette partie a été enregistrée!";
+        public const string leaderboard_submitResult_voteMessage = "Tous les joueurs doivent :o: pour valider ou :x: pour annuler l'enregistrement de la partie.";
+        public const string leaderboard_submitResult_messageHeader = "*place: nomJoueur (nbparties): score => score final*";
+        public const string leaderboard_submitResult_NameAndId = "Nom: {0}, Id: {1}";
+        public const string leaderboard_submitResult_Date = "Partie du : {0}";
+        public const string leaderboard_submitResult_SimilarGameFound = "\n**ATTENTION**\n({0}) parties similaires ont été trouvées sur la league, voici les details de la dernière en date:"; 
+        public const string leaderboard_submitResult_canceledMessage = "Tous les joueurs ont voté {0}, cette partie ne sera pas enregistrée";
+        public const string leaderboard_submitResult_validatedMessage = "Tous les joueurs ont voté {0}, cette partie a été enregistrée!";
 
-        public const string league_submitOnlineResult_description = "Enregistre une partie mahjsoul ou tenhou comptant dans le classement";
-        public const string league_submitOnlineResult_gameId = "gameId";
-        public const string league_submitOnlineResult_gameId_description = "L'ID de la partie Mahjsoul ou Tenhou";
+        public const string leaderboard_submitOnlineResult_description = "Enregistre une partie mahjsoul ou tenhou comptant dans le classement";
+        public const string leaderboard_submitOnlineResult_gameId = "gameId";
+        public const string leaderboard_submitOnlineResult_gameId_description = "L'ID de la partie Mahjsoul ou Tenhou";
 
 
-        public const string league_seeRanking_description = "Affiche le classement actuel de la ligue";
-        public const string league_seeRanking_minGames = "nbPartiesMin";
-        public const string league_seeRanking_minGames_description = "Nombre de parties minimum pour être dans le classement (défaut: 10)";
-        public const string league_seeRanking_youAreHere = "Tu es là";
+        public const string leaderboard_seeRanking_description = "Affiche le classement actuel de la ligue";
+        public const string leaderboard_seeRanking_minGames = "nbPartiesMin";
+        public const string leaderboard_seeRanking_minGames_description = "Nombre de parties minimum pour être dans le classement (défaut: 10)";
+        public const string leaderboard_seeRanking_youAreHere = "Tu es là";
 
-        public const string league_seeLastGames_description = "Affiche les 10 dernières parties jouées";
-        public const string league_seeLastGames_noGames = "Aucune partie n'a été jouée entre le {0} et le {1}";
+        public const string leaderboard_seeLastGames_description = "Affiche les 10 dernières parties jouées";
+        public const string leaderboard_seeLastGames_noGames = "Aucune partie n'a été jouée entre le {0} et le {1}";
         
 
 

@@ -104,7 +104,7 @@ namespace kandora.bot.services.discord
             }
             if (game.IsCancelled)
             {
-                await msg.ModifyAsync(String.Format(Resources.league_submitResult_canceledMessage,noEmoji));
+                await msg.ModifyAsync(String.Format(Resources.leaderboard_submitResult_canceledMessage,noEmoji));
                 kanContext.PendingGames.Remove(msgId);
             }
             if (game.IsValidated)
@@ -130,7 +130,7 @@ namespace kandora.bot.services.discord
                     kanContext.PendingGames.Remove(msgId);
 
                     DbService.Commit("recordgame");
-                    await msg.ModifyAsync($"{msg.Content.ToString()}\n{String.Format(Resources.league_submitResult_validatedMessage, okEmoji)}");
+                    await msg.ModifyAsync($"{msg.Content.ToString()}\n{String.Format(Resources.leaderboard_submitResult_validatedMessage, okEmoji)}");
                     await msg.DeleteReactionsEmojiAsync(okEmoji);
                     await msg.DeleteReactionsEmojiAsync(noEmoji);
                 }

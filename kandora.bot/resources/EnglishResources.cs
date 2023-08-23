@@ -82,73 +82,73 @@ namespace kandora.bot.resources
         public const string admin_migratePlayer_targetName_description = "His new name or a mention of a user in the server";
 
         //League commands
-        public const string league_register_description = "Register to the league or change your info";
-        public const string league_register_mahjsoulName = "mahjsoulname";
-        public const string league_register_mahjsoulName_description = "Your Mahjong Soul nickname";
-        public const string league_register_mahjsoulFriendId = "mahjsoulid";
-        public const string league_register_mahjsoulFriendId_description = "Your Mahjong Soul ID";
-        public const string league_register_tenhouName = "tenhouname";
-        public const string league_register_tenhouName_description = "Your Tenhou nickname";
-        public const string league_register_response_newUser = "You are now registered to this server's league";
-        public const string league_register_response_newRanking = "You are now registered to this server's league. Your tenhou and mahjsoul names are shared between other servers leagues";
-        public const string league_register_response_userAlreadyRegistered = "Your new info has been recorded";
+        public const string leaderboard_register_description = "Register to the league or change your info";
+        public const string leaderboard_register_mahjsoulName = "mahjsoulname";
+        public const string leaderboard_register_mahjsoulName_description = "Your Mahjong Soul nickname";
+        public const string leaderboard_register_mahjsoulFriendId = "mahjsoulid";
+        public const string leaderboard_register_mahjsoulFriendId_description = "Your Mahjong Soul ID";
+        public const string leaderboard_register_tenhouName = "tenhouname";
+        public const string leaderboard_register_tenhouName_description = "Your Tenhou nickname";
+        public const string leaderboard_register_response_newUser = "You are now registered to this server's league";
+        public const string leaderboard_register_response_newRanking = "You are now registered to this server's league. Your tenhou and mahjsoul names are shared between other servers leagues";
+        public const string leaderboard_register_response_userAlreadyRegistered = "Your new info has been recorded";
 
-        public const string league_logInfo_description = "Display a game's info from its ID";
-        public const string league_option_gameId = "id";
-        public const string league_option_gameId_description = "The game's ID (tenhou or mahjsoul)";
-        public const string league_title = "Title";
-        public const string league_date = "Date";
-        public const string league_results = "Results";
-        public const string league_bestHand = "Best hand: {0}({1}) (round {2}) with {3}, total:{4}";
+        public const string leaderboard_logInfo_description = "Display a game's info from its ID";
+        public const string leaderboard_option_gameId = "id";
+        public const string leaderboard_option_gameId_description = "The game's ID (tenhou or mahjsoul)";
+        public const string leaderboard_title = "Title";
+        public const string leaderboard_date = "Date";
+        public const string leaderboard_results = "Results";
+        public const string leaderboard_bestHand = "Best hand: {0}({1}) (round {2}) with {3}, total:{4}";
         
-        public const string league_getGames_description = "Download a csv file containing the games played during this current league";
-        public const string league_getGames_fileHeader = "logId,gameName,location,date,player1,score1,chombo1,player2,score2,chombo2,player3,score3,chombo3,player4,score4,chombo4";
-        public const string league_getGames_message = "Here's the log of the games played between {0} and {1}";
+        public const string leaderboard_getGames_description = "Download a csv file containing the games played during this current league";
+        public const string leaderboard_getGames_fileHeader = "logId,gameName,location,date,player1,score1,chombo1,player2,score2,chombo2,player3,score3,chombo3,player4,score4,chombo4";
+        public const string leaderboard_getGames_message = "Here's the log of the games played between {0} and {1}";
 
-        public const string league_submitResult_description = "Record a game contributing to the ranking";
-        public const string league_option_player1 = "Player1";
-        public const string league_option_player2 = "Player2";
-        public const string league_option_player3 = "Player3";
-        public const string league_option_player4 = "Player4";
-        public const string league_option_player1Score = "Score1";
-        public const string league_option_player2Score = "Score2";
-        public const string league_option_player3Score = "Score3";
-        public const string league_option_player4Score = "Score4";
-        public const string league_option_player1Chombo = "Chombo1";
-        public const string league_option_player2Chombo = "Chombo2";
-        public const string league_option_player3Chombo = "Chombo3";
-        public const string league_option_player4Chombo = "Chombo4";
-        public const string league_option_date = "Date";
-        public const string league_option_date_description = "Time of the game (YYYY/MM/DD format)";
-        public const string league_option_location = "Location";
-        public const string league_option_location_description = "Where the game took place";
-        public const string league_option_anyPlayer_description = "Mention (@) of the player";
-        public const string league_option_anyScore_description = "Final score without uma (ie. 44300 or 44.3)";
-        public const string league_option_chombo1_description = "Number of chombos done by Player1";
-        public const string league_option_chombo2_description = "Number of chombos done by Player2";
-        public const string league_option_chombo3_description = "Number of chombos done by Player3";
-        public const string league_option_chombo4_description = "Number of chombos done by Player4";
+        public const string leaderboard_submitResult_description = "Record a game contributing to the ranking";
+        public const string leaderboard_option_player1 = "Player1";
+        public const string leaderboard_option_player2 = "Player2";
+        public const string leaderboard_option_player3 = "Player3";
+        public const string leaderboard_option_player4 = "Player4";
+        public const string leaderboard_option_player1Score = "Score1";
+        public const string leaderboard_option_player2Score = "Score2";
+        public const string leaderboard_option_player3Score = "Score3";
+        public const string leaderboard_option_player4Score = "Score4";
+        public const string leaderboard_option_player1Chombo = "Chombo1";
+        public const string leaderboard_option_player2Chombo = "Chombo2";
+        public const string leaderboard_option_player3Chombo = "Chombo3";
+        public const string leaderboard_option_player4Chombo = "Chombo4";
+        public const string leaderboard_option_date = "Date";
+        public const string leaderboard_option_date_description = "Time of the game (YYYY/MM/DD format)";
+        public const string leaderboard_option_location = "Location";
+        public const string leaderboard_option_location_description = "Where the game took place";
+        public const string leaderboard_option_anyPlayer_description = "Mention (@) of the player";
+        public const string leaderboard_option_anyScore_description = "Final score without uma (ie. 44300 or 44.3)";
+        public const string leaderboard_option_chombo1_description = "Number of chombos done by Player1";
+        public const string leaderboard_option_chombo2_description = "Number of chombos done by Player2";
+        public const string leaderboard_option_chombo3_description = "Number of chombos done by Player3";
+        public const string leaderboard_option_chombo4_description = "Number of chombos done by Player4";
 
-        public const string league_submitResult_voteMessage = "All players must :o: to confirm or :x: to cancel the game recording";
-        public const string league_submitResult_messageHeader = "*place: playerName (nbGames): score => final score";
-        public const string league_submitResult_NameAndId = "Name: {0}, Id: {1}";
-        public const string league_submitResult_Date = "Played the : {0}";
-        public const string league_submitResult_SimilarGameFound = "\n**ATTENTION**\n({0}) similar games have been found on the league, here are some details about the last one:";
-        public const string league_submitResult_canceledMessage = "All players have voted {0}, this game won't be recorded";
-        public const string league_submitResult_validatedMessage = "All players have voted {0}, this game has been recorded!";
+        public const string leaderboard_submitResult_voteMessage = "All players must :o: to confirm or :x: to cancel the game recording";
+        public const string leaderboard_submitResult_messageHeader = "*place: playerName (nbGames): score => final score";
+        public const string leaderboard_submitResult_NameAndId = "Name: {0}, Id: {1}";
+        public const string leaderboard_submitResult_Date = "Played the : {0}";
+        public const string leaderboard_submitResult_SimilarGameFound = "\n**ATTENTION**\n({0}) similar games have been found on the league, here are some details about the last one:";
+        public const string leaderboard_submitResult_canceledMessage = "All players have voted {0}, this game won't be recorded";
+        public const string leaderboard_submitResult_validatedMessage = "All players have voted {0}, this game has been recorded!";
 
 
-        public const string league_submitOnlineResult_description = "Record a mahjsoul or tenhou game for the league";
-        public const string league_submitOnlineResult_gameId = "gameId";
-        public const string league_submitOnlineResult_gameId_description = "The tenhou or mahjsoul game id";
+        public const string leaderboard_submitOnlineResult_description = "Record a mahjsoul or tenhou game for the league";
+        public const string leaderboard_submitOnlineResult_gameId = "gameId";
+        public const string leaderboard_submitOnlineResult_gameId_description = "The tenhou or mahjsoul game id";
 
-        public const string league_seeRanking_description = "Affiche le classement actuel de la ligue";
-        public const string league_seeRanking_minGames = "nbMinGames";
-        public const string league_seeRanking_minGames_description = "Minimum number of games to be in the rankings (default: 10)";
-        public const string league_seeRanking_youAreHere = "You are here";
+        public const string leaderboard_seeRanking_description = "Affiche le classement actuel de la ligue";
+        public const string leaderboard_seeRanking_minGames = "nbMinGames";
+        public const string leaderboard_seeRanking_minGames_description = "Minimum number of games to be in the rankings (default: 10)";
+        public const string leaderboard_seeRanking_youAreHere = "You are here";
 
-        public const string league_seeLastGames_description = "Displays the 10 last games played";
-        public const string league_seeLastGames_noGames = "No game has been played between {0} and {1}";
+        public const string leaderboard_seeLastGames_description = "Displays the 10 last games played";
+        public const string leaderboard_seeLastGames_noGames = "No game has been played between {0} and {1}";
 
         //Quizz commands
         public const string quizz_groupDescription = "Starts a quizz";

@@ -35,7 +35,7 @@ namespace kandora.bot
             slashCommands.RegisterCommands<QuizzSlashCommands>();
             slashCommands.RegisterCommands<MahjongSlashCommands>();
             slashCommands.RegisterCommands<AdminSlashCommands>();
-            slashCommands.RegisterCommands<LeagueSlashCommands>();
+            slashCommands.RegisterCommands<LeaderboardSlashCommands>();
 
             //nopes
             //slashCommands.RegisterCommands<TestSlashCommands>();

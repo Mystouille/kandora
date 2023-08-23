@@ -38,7 +38,7 @@ namespace kandora.bot.services
                 {
                     string id = reader.GetString(0);
                     var user = new User(id);
-                    user.MahjsoulName = reader.IsDBNull(1)? null : reader.GetString(1);
+                    user.MahjsoulName = reader.IsDBNull(1) ? null : reader.GetString(1);
                     user.MahjsoulFriendId = reader.IsDBNull(2) ? null : reader.GetString(2);
                     user.MahjsoulUserId = reader.IsDBNull(3) ? null : reader.GetString(3);
                     user.TenhouName = reader.IsDBNull(4) ? null : reader.GetString(4);
@@ -74,7 +74,7 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static void CreateUser(string userId, string serverId, LeagueConfig leagueConfig)
+        public static void CreateUser(string userId, string userName, string serverId, LeagueConfig leagueConfig)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -87,7 +87,7 @@ namespace kandora.bot.services
                 command.CommandType = CommandType.Text;
 
                 command.ExecuteNonQuery();
-                ServerDbService.AddUserToServer(userId, serverId);
+                ServerDbService.AddUserToServer(userId, serverId, userName);
 
                 return;
             }

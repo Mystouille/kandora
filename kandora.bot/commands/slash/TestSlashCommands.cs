@@ -48,28 +48,24 @@ namespace kandora.bot.commands.slash
                 var benoit = "159371527115112448";
                 if (!users.ContainsKey(arrcival))
                 {
-                    UserDbService.CreateUser(arrcival, serverDiscordId, config);
+                    UserDbService.CreateUser(arrcival, "arrcival", serverDiscordId, config);
                     RankingDbService.InitUserRanking(arrcival, serverDiscordId, config);
                 }
                 if (!users.ContainsKey(dustray))
                 {
-                    UserDbService.CreateUser(dustray, serverDiscordId, config);
+                    UserDbService.CreateUser(dustray, "dustray", serverDiscordId, config);
                     RankingDbService.InitUserRanking(dustray, serverDiscordId, config);
                 }
                 if (!users.ContainsKey(ivy))
                 {
-                    UserDbService.CreateUser(ivy, serverDiscordId, config);
+                    UserDbService.CreateUser(ivy, "ivy", serverDiscordId, config);
                     RankingDbService.InitUserRanking(ivy, serverDiscordId, config);
                 }
                 if (!users.ContainsKey(benoit))
                 {
-                    UserDbService.CreateUser(benoit, serverDiscordId, config);
+                    UserDbService.CreateUser(benoit, "benoit", serverDiscordId, config);
                     RankingDbService.InitUserRanking(benoit, serverDiscordId, config);
                 }
-                ServerDbService.AddUserToServer(arrcival, serverDiscordId, false); //Heatiro
-                ServerDbService.AddUserToServer(dustray, serverDiscordId, false); //clubapero
-                ServerDbService.AddUserToServer(ivy, serverDiscordId, false); //Neral
-                ServerDbService.AddUserToServer(benoit, serverDiscordId, false); //Neral
                 UserDbService.SetMahjsoulName(arrcival, "Arrcival");
                 UserDbService.SetMahjsoulName(dustray, "Dustray");
                 UserDbService.SetMahjsoulName(ivy, "Ivyyy");

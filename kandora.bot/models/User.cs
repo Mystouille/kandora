@@ -13,6 +13,7 @@ namespace kandora.bot.models
         public string Id { get; }
         public string MahjsoulFriendId { get; set; }
         public string MahjsoulUserId { get; set; }
+        public string DisplayName { get; set; }
         public string MahjsoulName { get; set; }
         public string TenhouName { get; set; }
     }
