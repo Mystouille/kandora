@@ -8,15 +8,22 @@ namespace kandora.bot.resources
 
         //Admin commands
         public const string admin_groupDescription = "Admin commands";
-        public const string admin_startLeague_description = "Starts a mahjong league";
-        public const string admin_startLeague_leagueStarted = "A mahjong league just started on {0}!";
-        public const string admin_endLeague_description = "Delete the existing mahjong league and all eisting users and games";
+        public const string admin_startLeaderboard_description = "Starts a mahjong leaderboard";
+        public const string admin_startLeaderboard_leaderboardStarted = "A mahjong leaderboard has been created on {0}!";
+        public const string admin_startLeaderboard_leaderboardAlreadyExists = "A leaderboard already exists on {0}!";
+        public const string admin_startLeague_description = "Starts a mahjong team league";
+        public const string admin_startLeague_leagueStarted = "A mahjong league has been created on {0}!";
         public const string admin_startLeague_leagueAlreadyExists = "A league already exists on {0}!";
-        public const string admin_endLeague_unauthorized = "This commands deletes every game and every player data, so let's not do that for now.";
-        public const string admin_endLeague_leagueEnded = "The mahjong league got deleted!";
+        public const string admin_flushServer_description = "Delete everything on a server";
+        public const string admin_flushServer_unauthorized = "This commands deletes every game and every player data, so let's not do that for now.";
+        public const string admin_flushServer_leagueEnded = "The mahjong league got deleted!";
         public const string admin_testLeague_description = "Delete the current mahjong league and create one with 4 existing players";
         public const string admin_testLeague_testLeagueStarted = "A test league got created with these players:\n{0}";
-        public const string admin_showLeagueConfig_description = "Display the league's current parameters";
+        public const string admin_showConfig_description = "Display the league's or leaderboard current parameters";
+        public const string admin_seeConfig_type_league = "Team League";
+        public const string admin_seeConfig_type_leaderboard = "Leaderboard";
+        public const string admin_seeConfig_type = "type";
+        public const string admin_seeConfig_type_description = "The desired config";
         public const string admin_setLeagueConfig_description = "Configure the league";
         public const string admin_setLeagueConfig_allowSanma = "allowSanma";
         public const string admin_setLeagueConfig_allowSanma_description = "Allow 3 player games";
@@ -82,6 +89,10 @@ namespace kandora.bot.resources
         public const string admin_migratePlayer_targetName_description = "His new name or a mention of a user in the server";
 
         //League commands
+        public const string league_groupDescription = "league commands";
+
+        //League commands
+        public const string leaderboard_groupDescription = "Leaderboard commands";
         public const string leaderboard_register_description = "Register to the league or change your info";
         public const string leaderboard_register_mahjsoulName = "mahjsoulname";
         public const string leaderboard_register_mahjsoulName_description = "Your Mahjong Soul nickname";
@@ -129,13 +140,13 @@ namespace kandora.bot.resources
         public const string leaderboard_option_chombo3_description = "Number of chombos done by Player3";
         public const string leaderboard_option_chombo4_description = "Number of chombos done by Player4";
 
-        public const string leaderboard_submitResult_voteMessage = "All players must :o: to confirm or :x: to cancel the game recording";
+        public const string leaderboard_submitResult_voteMessage = "2 players must :o: to confirm or :x: to cancel the game recording";
         public const string leaderboard_submitResult_messageHeader = "*place: playerName (nbGames): score => final score";
         public const string leaderboard_submitResult_NameAndId = "Name: {0}, Id: {1}";
         public const string leaderboard_submitResult_Date = "Played the : {0}";
         public const string leaderboard_submitResult_SimilarGameFound = "\n**ATTENTION**\n({0}) similar games have been found on the league, here are some details about the last one:";
-        public const string leaderboard_submitResult_canceledMessage = "All players have voted {0}, this game won't be recorded";
-        public const string leaderboard_submitResult_validatedMessage = "All players have voted {0}, this game has been recorded!";
+        public const string leaderboard_submitResult_canceledMessage = "2 players have voted {0}, this game won't be recorded";
+        public const string leaderboard_submitResult_validatedMessage = "2 players have voted {0}, this game has been recorded!";
 
 
         public const string leaderboard_submitOnlineResult_description = "Record a mahjsoul or tenhou game for the league";
@@ -230,6 +241,10 @@ namespace kandora.bot.resources
         public const string commandError_ValueAlreadyExists = "A user with {0} {1} exists already! Contact the admin if you want to fix that.";
         public const string commandError_CouldntExtractDateFromLog = "Couldn't extract date from this log, it won't be recorded";
         public const string commandError_PlayerUnknown = "The user {0} isn't registered";
+        public const string commandError_leaderboardNotInitialized = "The leaderboard hasn't been created yet";
+        public const string commandError_leagueNotInitialized = "No league has been created";
+        public const string commandError_leaderboardAlreadyInitialized = "The lieaderboard has already been created";
+        public const string commandError_leagueAlreadyInitialized = "The league has already been created";
 
 
         //League

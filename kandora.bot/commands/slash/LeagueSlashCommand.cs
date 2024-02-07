@@ -21,8 +21,8 @@ using System.Threading.Tasks;
 
 namespace kandora.bot.commands.slash
 {
-    [SlashCommandGroup("leaderboard", Resources.leaderboard_groupDescription, defaultPermission: false)]
-    class LeaderboardSlashCommands : KandoraSlashCommandModule
+    [SlashCommandGroup("ranking", Resources.league_groupDescription, defaultPermission: false)]
+    class LeagueSlashCommands : KandoraSlashCommandModule
     {
         [SlashCommand("register", Resources.leaderboard_register_description)]
         public async Task Register(InteractionContext ctx,
@@ -37,6 +37,11 @@ namespace kandora.bot.commands.slash
                 var servers = ServerDbService.GetServers(allUsers);
                 var server = servers[serverId];
                 var userId = ctx.User.Id.ToString();
+
+                if (server.LeagueConfigId == null)
+                {
+                    throw new Exception(String.Format(Resources.commandError_ValueAlreadyExists, Resources.leaderboard_register_mahjsoulName, mahjsoulName));
+                }
 
 
                 var discordUsers = await ctx.Guild.GetAllMembersAsync();
@@ -69,8 +74,7 @@ namespace kandora.bot.commands.slash
                 {
                     throw new Exception(Resources.commandError_leaderboardNotInitialized);
                 }
-                var configId = (int)(server.LeaderboardConfigId);
-                var config = ConfigDbService.GetConfig(configId);
+                var config = ConfigDbService.GetConfig((int)(server.LeaderboardConfigId));
                 var responseMessage = "";
                 if (ServerDbService.IsUserInServer(userId, serverId))
                 {
@@ -136,7 +140,6 @@ namespace kandora.bot.commands.slash
         {
             try
             {
-
                 var serverId = ctx.Guild.Id.ToString();
                 var allUsers = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(allUsers);
@@ -147,8 +150,7 @@ namespace kandora.bot.commands.slash
                 {
                     throw new Exception(Resources.commandError_leaderboardNotInitialized);
                 }
-                var configId = (int)(server.LeaderboardConfigId);
-                var config = ConfigDbService.GetConfig(configId);
+                var config = ConfigDbService.GetConfig((int)(server.LeaderboardConfigId));
                 var logs = ScoreDbService.GetLastNRecordedGame(serverId, config);
                 logs.Reverse();
 
@@ -209,7 +211,7 @@ namespace kandora.bot.commands.slash
                 {
                     throw new Exception(Resources.commandError_leaderboardNotInitialized);
                 }
-                var leagueConfig = ConfigDbService.GetConfig((int)(server.LeaderboardConfigId));
+                var config = ConfigDbService.GetConfig((int)(server.LeaderboardConfigId));
 
 
                 var player1Id = getIdFromPlayerParam(player1);
@@ -221,7 +223,7 @@ namespace kandora.bot.commands.slash
 
 
 
-                var usersScores = new (string, string, long, string)[] { (player1Id, score1, chombo1, player1), (player2Id, score2, chombo2, player2), (player3Id, score3, chombo3, player3), (player4Id, score4, chombo4, player4) };
+                var usersScores = new (string, string, long)[] { (player1Id, score1, chombo1), (player2Id, score2, chombo2), (player3Id, score3, chombo3), (player4Id, score4, chombo4) };
 
                 var sortedScores = usersScores.ToList();
                 sortedScores.Sort((tuple1, tuple2) => tuple2.Item2.CompareTo(tuple1.Item2));
@@ -229,7 +231,6 @@ namespace kandora.bot.commands.slash
                 var userIds = sortedScores.Select(x => x.Item1).ToArray();
                 var scoresStr = sortedScores.Select(x => x.Item2).ToArray();
                 var chombos = sortedScores.Select(x => (int)(x.Item3)).ToArray();
-                var playerNameInput = sortedScores.Select(x => x.Item4).ToArray();
                 int[] scores = null;
                 if (scoresStr != null)
                 {
@@ -245,25 +246,25 @@ namespace kandora.bot.commands.slash
                         scores = tempScores.Select(x => (int)(x)).ToArray();
                     }
                 }
-                foreach (var tuple in usersScores)
+                foreach (var id in userIds)
                 {
-                    if (server.Users.Where(x => x.Id == tuple.Item1).Count() == 0)
+                    if (server.Users.Where(x => x.Id == id).Count() == 0)
                     {
-                        throw new Exception($"{String.Format(Resources.commandError_PlayerUnknown, tuple.Item4)}");
+                        throw new Exception($"{String.Format(Resources.commandError_PlayerUnknown, id)}");
                     }
                 }
                 var scoreSum = scores.Sum();
-                var targetScoreSum = leagueConfig.StartingPoints * 1000 * 4;
+                var targetScoreSum = config.StartingPoints * 1000 * 4;
                 if (scoreSum != targetScoreSum)
                 {
                     
                     throw new Exception(String.Format(Resources.commandError_Wrong_Scores, scoreSum, targetScoreSum));
                 }
-                if (leagueConfig.CountPoints && scores == null)
+                if (config.CountPoints && scores == null)
                 {
                     throw new Exception(Resources.commandError_LeagueConfigRequiresScore);
                 }
-                if (!leagueConfig.AllowSanma && userIds.Length == 3)
+                if (!config.AllowSanma && userIds.Length == 3)
                 {
                     throw new Exception(Resources.commandError_sanmaNotAllowed);
                 }
@@ -442,7 +443,6 @@ namespace kandora.bot.commands.slash
         {
             var serverId = ctx.Guild.Id.ToString();
             var server = ServerDbService.GetServer(serverId);
-
             if (server.LeaderboardConfigId == null)
             {
                 throw new Exception(Resources.commandError_leaderboardNotInitialized);
@@ -613,7 +613,6 @@ namespace kandora.bot.commands.slash
 
         private static string PrintGameResult(Game game, List<Game> similarGames, Server server)
         {
-
             if (server.LeaderboardConfigId == null)
             {
                 throw new Exception(Resources.commandError_leaderboardNotInitialized);
@@ -647,7 +646,7 @@ namespace kandora.bot.commands.slash
         {
             if(score < 8000)
             {
-                return DiscordEmoji.FromName(client, Reactions.WOW);
+                return DiscordEmoji.FromName(client, Reactions.THINK);
             }
             return DiscordEmoji.FromName(client, Reactions.WOW);
         }

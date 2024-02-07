@@ -54,14 +54,14 @@ namespace kandora.bot.services.discord
         public bool IsCancelled
         {
             get {
-                return usersNo.Count == UserIds.Count() || usersNo.Where(x => Bypass.isSuperUser(x)).Any();
+                return usersNo.Count == 2 || usersNo.Where(x => Bypass.isSuperUser(x)).Any();
             }
         }
         public bool IsValidated
         {
             get
             {
-                return usersOk.Count == UserIds.Count() || usersOk.Where(x=>Bypass.isSuperUser(x)).Any();
+                return usersOk.Count == 2 || usersOk.Where(x=>Bypass.isSuperUser(x)).Any();
             }
         }
         private bool TryChangeSet(ISet<string> set, string userId, bool isAdd)
@@ -116,8 +116,13 @@ namespace kandora.bot.services.discord
                     var serverId = msg.Channel.GuildId.ToString();
                     var users = UserDbService.GetUsers();
                     var servers = ServerDbService.GetServers(users);
-                    var server = servers[serverId];
-                    var leagueConfig = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+                    var server = servers[serverId]; 
+                    if (server.LeaderboardConfigId == null)
+                    {
+                        throw new Exception(Resources.commandError_leaderboardNotInitialized);
+                    }
+                    var leagueConfig = ConfigDbService.GetConfig((int)(server.LeaderboardConfigId));
+
 
                     if (game.Log == null)
                     {

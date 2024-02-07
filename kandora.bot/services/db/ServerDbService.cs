@@ -7,6 +7,7 @@ using NpgsqlTypes;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Xml.Linq;
 
 namespace kandora.bot.services
 {
@@ -22,7 +23,8 @@ namespace kandora.bot.services
         public static string displayNameCol = "displayName";
         public static string leagueRoleIdCol = "leagueRoleId";
         public static string leagueNameCol = "leagueName";
-        public static string leagueConfigIdCol = "leagueId";
+        public static string leaderboardConfigIdCol = "leaderboardConfigId";
+        public static string leagueConfigIdCol = "leagueConfigId";
 
         //ServerUser
         public static string userIdCol = "userId";
@@ -38,7 +40,7 @@ namespace kandora.bot.services
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {displayNameCol}, {leagueRoleIdCol}, {leagueNameCol}, {leagueConfigIdCol} FROM {serverTableName} WHERE {idCol} = \'{serverId}\'";
+                command.CommandText = $"SELECT {displayNameCol}, {leagueRoleIdCol}, {leagueNameCol}, {leaderboardConfigIdCol}, {leagueConfigIdCol} FROM {serverTableName} WHERE {idCol} = \'{serverId}\'";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();
@@ -48,10 +50,11 @@ namespace kandora.bot.services
                     string displayName = reader.IsDBNull(0) ? null : reader.GetString(0);
                     string leagueRoleId = reader.IsDBNull(1) ? null : reader.GetString(1);
                     string leagueName = reader.IsDBNull(2) ? null : reader.GetString(2);
-                    int leagueConfigId = reader.GetInt32(3);
+                    int leaderBoardConfigId = reader.IsDBNull(3) ? -1 : reader.GetInt32(3);
+                    int leagueConfigId = reader.IsDBNull(4) ? -1 : reader.GetInt32(4);
 
                     reader.Close();
-                    return new Server(serverId, displayName, leagueRoleId, leagueName, leagueConfigId); ;
+                    return new Server(serverId, displayName, leagueRoleId, leagueName, leagueConfigId == -1 ? null : leagueConfigId, leaderBoardConfigId == -1 ? null: leaderBoardConfigId); ;
                 }
                 reader.Close();
                 throw (new EntityNotFoundException("Server", serverId));
@@ -90,7 +93,7 @@ namespace kandora.bot.services
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {idCol}, {displayNameCol}, {leagueRoleIdCol}, {leagueNameCol} , {leagueConfigIdCol} FROM {serverTableName}";
+                command.CommandText = $"SELECT {idCol}, {displayNameCol}, {leagueRoleIdCol}, {leagueNameCol} , {leaderboardConfigIdCol}, {leagueConfigIdCol} FROM {serverTableName}";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();
@@ -100,8 +103,9 @@ namespace kandora.bot.services
                     string displayName = reader.GetString(1);
                     string leagueRoleId = reader.GetString(2);
                     string leagueName = reader.GetString(3);
-                    int leagueConfigId = reader.GetInt32(4);
-                    serverMap.Add(id, new Server(id, displayName, leagueRoleId, leagueName, leagueConfigId));
+                    int leaderBoardConfigId = reader.IsDBNull(4) ? -1 : reader.GetInt32(4);
+                    int leagueConfigId = reader.IsDBNull(5) ? -1 : reader.GetInt32(5);
+                    serverMap.Add(id, new Server(id, displayName, leagueRoleId, leagueName, leagueConfigId == -1 ? null : leagueConfigId, leaderBoardConfigId == -1 ? null : leaderBoardConfigId));
                 }
                 reader.Close();
 
@@ -127,21 +131,58 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static void AddServer(string discordId, string displayName, string leagueRoleId, string leagueName, int leagueConfigId)
+        public static void AddServer(string discordId, string displayName)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
-                var sql = $"INSERT INTO {serverTableName} ({displayNameCol}, {leagueRoleIdCol}, {leagueNameCol}, {idCol}, {leagueConfigIdCol}) " +
-                    $"VALUES (@displayName, @leagueRoleId, @leagueName, @discordId, @leagueConfigId);";
+                var sql = $"INSERT INTO {serverTableName} ({idCol}, {displayNameCol}) " +
+                    $"VALUES (@discordId, @displayName);";
 
                 using var command = new NpgsqlCommand(sql, dbCon.Connection);
 
                 command.Parameters.AddWithValue("@displayName", NpgsqlDbType.Varchar, displayName);
-                command.Parameters.AddWithValue("@leagueRoleId", NpgsqlDbType.Varchar, leagueRoleId);
-                command.Parameters.AddWithValue("@leagueName", NpgsqlDbType.Varchar, leagueName);
                 command.Parameters.AddWithValue("@discordId", NpgsqlDbType.Varchar, discordId);
-                command.Parameters.AddWithValue("@leagueConfigId", NpgsqlDbType.Integer, leagueConfigId);
+                command.CommandType = CommandType.Text;
+
+                command.ExecuteNonQuery();
+                return;
+            }
+            throw (new DbConnectionException());
+        }
+
+        public static void StartLeagueOnServer(string serverId, int leagueConfigId)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.Connection = dbCon.Connection;
+                command.CommandType = CommandType.Text;
+                command.CommandText = $"UPDATE {serverTableName} SET {leagueConfigIdCol} = @configId WHERE {idCol} = @serverId;";
+
+                command.Parameters.AddWithValue("@configId", NpgsqlDbType.Integer, leagueConfigId);
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
+                command.CommandType = CommandType.Text;
+
+                command.ExecuteNonQuery();
+                return;
+            }
+            throw (new DbConnectionException());
+        }
+
+        public static void StartLeaderboardOnServer(string serverId, int leaderboardConfigId)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.Connection = dbCon.Connection;
+                command.CommandType = CommandType.Text;
+                command.CommandText = $"UPDATE {serverTableName} SET {leaderboardConfigIdCol} = @configId WHERE {idCol} = @serverId;";
+
+                command.Parameters.AddWithValue("@configId", NpgsqlDbType.Integer, leaderboardConfigId);
+                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
                 command.CommandType = CommandType.Text;
 
                 command.ExecuteNonQuery();
@@ -210,9 +251,9 @@ namespace kandora.bot.services
             UpdateFieldInTable(serverTableName, leagueNameCol, serverId, name);
             UpdateFieldInTable(serverTableName, leagueRoleIdCol, serverId, id);
         }
-        public static void SetLeagueConfig(string serverId, int id)
+        public static void SetLeaderboardConfig(string serverId, int id)
         {
-            UpdateFieldInTable(serverTableName, leagueConfigIdCol, serverId, id);
+            UpdateFieldInTable(serverTableName, leaderboardConfigIdCol, serverId, id);
         }
         public static void SetIsAdmin(string serverId, string userId, bool isAdmin)
         {

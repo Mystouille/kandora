@@ -17,6 +17,36 @@ namespace kandora.bot.commands.slash
     [SlashCommandGroup("admin", Resources.admin_groupDescription, defaultPermission: false)]
     class AdminSlashCommands : KandoraSlashCommandModule
     {
+        [SlashCommand("startLeaderboard", Resources.admin_startLeaderboard_description)]
+        public async Task StartLeaderboard(InteractionContext ctx)
+        {
+            try
+            {
+                var serverDiscordId = ctx.Guild.Id.ToString();
+                var users = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(users);
+                if (!servers.ContainsKey(serverDiscordId))
+                {
+                    ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name);
+                }
+                else
+                {
+                    if (servers[serverDiscordId].LeaderboardConfigId != null)
+                    {
+                        throw new Exception(Resources.commandError_leaderboardAlreadyInitialized);
+                    }
+                }
+                var leagueConfigId = ConfigDbService.CreateConfig();
+                ServerDbService.StartLeaderboardOnServer(serverDiscordId, leagueConfigId);
+                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_startLeaderboard_leaderboardStarted, ctx.Guild.Name)).AsEphemeral();
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
+            }
+            catch (Exception e)
+            {
+                replyWithException(ctx, e);
+            }
+        }
+
         [SlashCommand("startLeague", Resources.admin_startLeague_description)]
         public async Task StartLeague(InteractionContext ctx)
         {
@@ -25,13 +55,21 @@ namespace kandora.bot.commands.slash
                 var serverDiscordId = ctx.Guild.Id.ToString();
                 var users = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(users);
-                if (servers.ContainsKey(serverDiscordId))
+                if (!servers.ContainsKey(serverDiscordId))
                 {
-                    throw new Exception(string.Format(Resources.admin_startLeague_leagueAlreadyExists, ctx.Guild.Name));
+                    ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name);
                 }
-                var leagueConfigId = LeagueConfigDbService.CreateLeague();
-                var roleName = Resources.kandoraLeague_roleName;
-                ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name, "dummyRoleId", roleName, leagueConfigId);
+                else
+                {
+                    if (servers[serverDiscordId].LeagueConfigId != null)
+                    {
+                        throw new Exception(Resources.commandError_leagueAlreadyInitialized);
+                    }
+                }
+
+                var leagueConfigId = ConfigDbService.CreateConfig();
+                ServerDbService.StartLeagueOnServer(serverDiscordId, leagueConfigId);
+
                 var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_startLeague_leagueStarted, ctx.Guild.Name)).AsEphemeral();
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
@@ -71,7 +109,7 @@ namespace kandora.bot.commands.slash
             }
         }
 
-        [SlashCommand("endLeague", Resources.admin_endLeague_description)]
+        [SlashCommand("flushServer", Resources.admin_flushServer_description)]
         public async Task EndLeague(InteractionContext ctx)
         {
             try
@@ -81,16 +119,23 @@ namespace kandora.bot.commands.slash
 
                 if (!Bypass.isSuperUser(ctx.User.Id.ToString()))
                 {
-                    throw new Exception(Resources.admin_endLeague_unauthorized);
+                    throw new Exception(Resources.admin_flushServer_unauthorized);
                 }
 
                 RankingDbService.DeleteRankings(serverDiscordId);
                 ScoreDbService.DeleteGamesFromServer(serverDiscordId);
                 ServerDbService.DeleteUsersFromServer(serverDiscordId);
                 ServerDbService.DeleteServer(serverDiscordId);
-                LeagueConfigDbService.DeleteLeagueConfig(server.LeagueConfigId);
+                if (server.LeagueConfigId != null)
+                {
+                    ConfigDbService.DeleteConfig((int)server.LeagueConfigId);
+                }
+                if (server.LeaderboardConfigId != null)
+                {
+                    ConfigDbService.DeleteConfig((int)server.LeaderboardConfigId);
+                }
 
-                var rb = new DiscordInteractionResponseBuilder().WithContent(Resources.admin_endLeague_leagueEnded);
+                var rb = new DiscordInteractionResponseBuilder().WithContent(Resources.admin_flushServer_leagueEnded);
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
             catch (Exception e)
@@ -99,12 +144,15 @@ namespace kandora.bot.commands.slash
             }
         }
 
-        [SlashCommand("seeConfig", Resources.admin_showLeagueConfig_description)]
-        public async Task ShowLeagueConfig(InteractionContext ctx)
+        [SlashCommand("seeConfig", Resources.admin_showConfig_description)]
+        public async Task ShowConfig(InteractionContext ctx,
+            [Choice(Resources.admin_seeConfig_type_leaderboard,"Leaderboard")]
+            [Choice(Resources.admin_seeConfig_type_league,"League")]
+            [Option(Resources.admin_seeConfig_type, Resources.admin_seeConfig_type_description)] string type)
         {
             try
             {
-                var configStr = GetLeagueConfig(ctx);
+                var configStr = GetConfig(ctx, type);
                 var rb = new DiscordInteractionResponseBuilder().WithContent(configStr).AsEphemeral();
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
@@ -114,13 +162,28 @@ namespace kandora.bot.commands.slash
             }
         }
 
-        private string GetLeagueConfig(InteractionContext ctx)
+        private string GetConfig(InteractionContext ctx, string type)
         {
             var serverDiscordId = ctx.Guild.Id.ToString();
             var server = ServerDbService.GetServer(serverDiscordId);
-            var userId = ctx.User.Id.ToString();
-            var configId = server.LeagueConfigId;
-            var config = LeagueConfigDbService.GetLeagueConfig(configId);
+            int configId;
+            if (type == "League")
+            {
+                if (server.LeagueConfigId == null)
+                {
+                    throw new Exception(Resources.commandError_leagueNotInitialized);
+                }
+                configId = (int)(server.LeagueConfigId);
+            }
+            else
+            {
+                if (server.LeaderboardConfigId == null)
+                {
+                    throw new Exception(Resources.commandError_leaderboardNotInitialized);
+                }
+                configId = (int)(server.LeaderboardConfigId);
+            }
+            var config = ConfigDbService.GetConfig(configId);
             var sb = new StringBuilder();
             
             var mod = "**";
@@ -156,6 +219,9 @@ namespace kandora.bot.commands.slash
 
         [SlashCommand("setConfig", Resources.admin_setLeagueConfig_description)]
         public async Task SetLeagueConfig(InteractionContext ctx,
+            [Choice(Resources.admin_seeConfig_type_leaderboard,"Leaderboard")]
+            [Choice(Resources.admin_seeConfig_type_league,"League")]
+            [Option(Resources.admin_seeConfig_type, Resources.admin_seeConfig_type_description)] string type,
             [Option(Resources.admin_setLeagueConfig_countPoints, Resources.admin_setLeagueConfig_countPoints_description)] bool countPoints,
             [Choice(Resources.admin_setLeagueConfig_eloSystem_Average,"Average")]
             [Choice(Resources.admin_setLeagueConfig_eloSystem_None,"None")]
@@ -183,139 +249,149 @@ namespace kandora.bot.commands.slash
             [Option(Resources.admin_setLeagueConfig_trialPeriodDuration, Resources.admin_setLeagueConfig_trialPeriodDuration_description)] long trialPeriodDuration = -1)
         {
             var guid = Guid.NewGuid();
-            var transactionName = $"setLeagueConfig/{guid}";
-            DbService.Begin(transactionName);
+            int configId;
+            var serverDiscordId = ctx.Guild.Id.ToString();
             try
             {
-                var serverDiscordId = ctx.Guild.Id.ToString();
                 var server = ServerDbService.GetServer(serverDiscordId);
-                var userId = ctx.User.Id.ToString();
-                var configId = server.LeagueConfigId;
-                var config = LeagueConfigDbService.GetLeagueConfig(configId);
-
-                if (startTime.Length > 0)
+                if (type == "League")
                 {
-                    var startDateTime = DateTime.ParseExact(startTime, "yyyy/MM/dd",
-                                       System.Globalization.CultureInfo.InvariantCulture);
-                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.startDateCol, configId, startDateTime);
-                }
-                if (endTime.Length > 0)
-                {
-                    var endDateTime = DateTime.ParseExact(endTime, "yyyy/MM/dd",
-                                       System.Globalization.CultureInfo.InvariantCulture);
-                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.endDateCol, configId, endDateTime);
-                }
-                //hardcoding this for now since it's gonna be pretty much useless until the bot becomes worldwide famous
-                var allowSanma = false;
-                if (allowSanma)
-                {
-                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.allowSanmaCol, configId, true);
-                    if (uma3p1 != -1)
+                    if (server.LeagueConfigId == null)
                     {
-                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.uma3p1Col, configId, uma3p1);
+                        throw new Exception(Resources.commandError_leagueNotInitialized);
                     }
-                    if (uma3p2 != -1)
+                    configId = (int)(server.LeagueConfigId);
+                }
+                else
+                {
+                    if (server.LeaderboardConfigId == null)
                     {
-                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.uma3p2Col, configId, uma3p2);
+                        throw new Exception(Resources.commandError_leaderboardNotInitialized);
                     }
-                    if (uma3p3 != -1)
+                    configId = (int)(server.LeaderboardConfigId);
+                }
+                var config = ConfigDbService.GetConfig(configId);
+
+                var transactionName = $"setLeagueConfig/{guid}";
+                DbService.Begin(transactionName);
+                try
+                {
+                    if (startTime.Length > 0)
                     {
-                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.uma3p3Col, configId, uma3p3);
+                        var startDateTime = DateTime.ParseExact(startTime, "yyyy/MM/dd",
+                                           System.Globalization.CultureInfo.InvariantCulture);
+                        ConfigDbService.SetConfigValue(ConfigDbService.startDateCol, configId, startDateTime);
                     }
-                }
-
-                if (uma4p1 != -1)
-                {
-                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.uma4p1Col, configId, uma4p1);
-                }
-                if (uma4p2 != -1)
-                {
-                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.uma4p2Col, configId, uma4p2);
-                }
-                if (uma4p3 != -1)
-                {
-                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.uma4p3Col, configId, uma4p3);
-                }
-                if (uma4p3 != -1)
-                {
-                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.uma4p4Col, configId, uma4p4);
-                }
-
-                if (countPoints)
-                {
-                    LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.countPointsCol, configId, true);
-                    if( startingPoints != -1)
+                    if (endTime.Length > 0)
                     {
-                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.startingPointsCol, configId, startingPoints);
+                        var endDateTime = DateTime.ParseExact(endTime, "yyyy/MM/dd",
+                                           System.Globalization.CultureInfo.InvariantCulture);
+                        ConfigDbService.SetConfigValue(ConfigDbService.endDateCol, configId, endDateTime);
+                    }
+                    //hardcoding this for now since it's gonna be pretty much useless until the bot becomes worldwide famous
+                    var allowSanma = false;
+                    if (allowSanma)
+                    {
+                        ConfigDbService.SetConfigValue(ConfigDbService.allowSanmaCol, configId, true);
+                        if (uma3p1 != -1)
+                        {
+                            ConfigDbService.SetConfigValue(ConfigDbService.uma3p1Col, configId, uma3p1);
+                        }
+                        if (uma3p2 != -1)
+                        {
+                            ConfigDbService.SetConfigValue(ConfigDbService.uma3p2Col, configId, uma3p2);
+                        }
+                        if (uma3p3 != -1)
+                        {
+                            ConfigDbService.SetConfigValue(ConfigDbService.uma3p3Col, configId, uma3p3);
+                        }
                     }
 
-                    if (oka != -1)
+                    if (uma4p1 != -1)
                     {
-                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.okaCol, configId, oka);
+                        ConfigDbService.SetConfigValue(ConfigDbService.uma4p1Col, configId, uma4p1);
                     }
-                    if (penaltyLast != -1)
+                    if (uma4p2 != -1)
                     {
-                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.penaltyLastCol, configId, penaltyLast);
+                        ConfigDbService.SetConfigValue(ConfigDbService.uma4p2Col, configId, uma4p2);
                     }
-                    if (penaltyChombo != -1)
+                    if (uma4p3 != -1)
                     {
-                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.penaltyChomboCol, configId, penaltyChombo);
+                        ConfigDbService.SetConfigValue(ConfigDbService.uma4p3Col, configId, uma4p3);
                     }
+                    if (uma4p3 != -1)
+                    {
+                        ConfigDbService.SetConfigValue(ConfigDbService.uma4p4Col, configId, uma4p4);
+                    }
+
+                    if (countPoints)
+                    {
+                        ConfigDbService.SetConfigValue(ConfigDbService.countPointsCol, configId, true);
+                        if( startingPoints != -1)
+                        {
+                            ConfigDbService.SetConfigValue(ConfigDbService.startingPointsCol, configId, startingPoints);
+                        }
+
+                        if (oka != -1)
+                        {
+                            ConfigDbService.SetConfigValue(ConfigDbService.okaCol, configId, oka);
+                        }
+                        if (penaltyLast != -1)
+                        {
+                            ConfigDbService.SetConfigValue(ConfigDbService.penaltyLastCol, configId, penaltyLast);
+                        }
+                        if (penaltyChombo != -1)
+                        {
+                            ConfigDbService.SetConfigValue(ConfigDbService.penaltyChomboCol, configId, penaltyChombo);
+                        }
                     
-                }
-                LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.EloSystemCol, configId, eloSystem);
+                    }
+                    ConfigDbService.SetConfigValue(ConfigDbService.EloSystemCol, configId, eloSystem);
 
-                if (eloSystem == "Full" || eloSystem == "Simple")
+                    if (eloSystem == "Full" || eloSystem == "Simple")
+                    {
+                        if (initialElo != -1)
+                        {
+                            ConfigDbService.SetConfigValue(ConfigDbService.initialEloCol, configId, initialElo);
+                        }
+                        if (eloChangeDampening != -1)
+                        {
+                            ConfigDbService.SetConfigValue(ConfigDbService.baseEloChangeDampeningCol, configId, eloChangeDampening);
+                        }
+                        if (eloSystem == "Full")
+                        {
+                            if (minElo != -1)
+                            {
+                                ConfigDbService.SetConfigValue(ConfigDbService.minEloCol, configId, minElo);
+                            }
+                            if (eloChangeStartRatio != -1)
+                            {
+                                ConfigDbService.SetConfigValue(ConfigDbService.eloChangeStartRatioCol, configId, eloChangeStartRatio);
+                            }
+                            if (eloChangeEndRatio != -1)
+                            {
+                                ConfigDbService.SetConfigValue(ConfigDbService.eloChangeEndRatioCol, configId, eloChangeEndRatio);
+                            }
+                            if (trialPeriodDuration != -1)
+                            {
+                                ConfigDbService.SetConfigValue(ConfigDbService.trialPeriodDurationCol, configId, trialPeriodDuration);
+                            }
+                        }
+                    }
+                    var configStr1 = GetConfig(ctx, type);
+                    var rb = new DiscordInteractionResponseBuilder().WithContent(String.Format(Resources.admin_setLeagueConfig_backfillInProgress, configStr1)).AsEphemeral();
+                    await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
+
+                }
+                catch (Exception e)
                 {
-                    if (initialElo != -1)
-                    {
-                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.initialEloCol, configId, initialElo);
-                    }
-                    if (eloChangeDampening != -1)
-                    {
-                        LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.baseEloChangeDampeningCol, configId, eloChangeDampening);
-                    }
-                    if (eloSystem == "Full")
-                    {
-                        if (minElo != -1)
-                        {
-                            LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.minEloCol, configId, minElo);
-                        }
-                        if (eloChangeStartRatio != -1)
-                        {
-                            LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.eloChangeStartRatioCol, configId, eloChangeStartRatio);
-                        }
-                        if (eloChangeEndRatio != -1)
-                        {
-                            LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.eloChangeEndRatioCol, configId, eloChangeEndRatio);
-                        }
-                        if (trialPeriodDuration != -1)
-                        {
-                            LeagueConfigDbService.SetConfigValue(LeagueConfigDbService.trialPeriodDurationCol, configId, trialPeriodDuration);
-                        }
-                    }
+                    DbService.Rollback(transactionName);
+                    throw e;
                 }
-                var configStr = GetLeagueConfig(ctx);
-                var rb = new DiscordInteractionResponseBuilder().WithContent(String.Format(Resources.admin_setLeagueConfig_backfillInProgress, configStr)).AsEphemeral();
-                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
 
-            }
-            catch (Exception e)
-            {
-                DbService.Rollback(transactionName);
-                replyWithException(ctx, e);
-            }
+                DbService.Commit(transactionName);
 
-            DbService.Commit(transactionName);
-
-            try
-            {
-                var serverDiscordId = ctx.Guild.Id.ToString();
-                var server = ServerDbService.GetServer(serverDiscordId);
-                var userId = ctx.User.Id.ToString();
-                var configId = server.LeagueConfigId;
-                var config = LeagueConfigDbService.GetLeagueConfig(configId);
-                var configStr = GetLeagueConfig(ctx);
+                var configStr = GetConfig(ctx, type);
                 StringBuilder sb = new StringBuilder();
                 var response = await ctx.GetOriginalResponseAsync();
 
@@ -343,8 +419,12 @@ namespace kandora.bot.commands.slash
                 var users = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(users);
                 var server = servers[serverDiscordId];
-                var configId = server.LeagueConfigId;
-                var config = LeagueConfigDbService.GetLeagueConfig(configId);
+                if (server.LeaderboardConfigId == null)
+                {
+                    throw new Exception(Resources.commandError_leaderboardNotInitialized);
+                }
+                var configId = (int)(server.LeaderboardConfigId);
+                var config = ConfigDbService.GetConfig(configId);
 
                 if (server.Users.Select(x => x.Id).Contains(userId))
                 {
@@ -400,9 +480,13 @@ namespace kandora.bot.commands.slash
                 var serverId = ctx.Guild.Id.ToString();
                 var users = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(users);
-                var server = servers[serverId];
-                var configId = server.LeagueConfigId;
-                var config = LeagueConfigDbService.GetLeagueConfig(configId);
+                var server = servers[serverId]; 
+                if (server.LeaderboardConfigId == null)
+                {
+                    throw new Exception(Resources.commandError_leaderboardNotInitialized);
+                }
+                var configId = (int)(server.LeaderboardConfigId);
+                var config = ConfigDbService.GetConfig(configId);
                 var userId = getIdFromPlayerParam(sourceName);
                 var targetuserId = getIdFromPlayerParam(targetName);
 

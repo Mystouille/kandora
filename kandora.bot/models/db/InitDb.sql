@@ -32,10 +32,12 @@ CREATE TABLE LeagueConfig (
 CREATE TABLE Server (
     Id VARCHAR(20) PRIMARY KEY NOT NULL UNIQUE,
     displayName VARCHAR(200) NOT NULL,
-    leagueRoleId VARCHAR(20) NOT NULL,
-    leagueName VARCHAR(30) NOT NULL,
-    leagueId INT NOT NULL,
-    FOREIGN KEY (leagueId) REFERENCES LeagueConfig (Id)
+    leagueRoleId VARCHAR(20) NULL,
+    leagueName VARCHAR(30) NULL,
+    leaderboardConfigId INT NULL,
+    leagueConfigId INT NULL,
+    FOREIGN KEY (leaderboardConfigId) REFERENCES LeagueConfig (Id),
+    FOREIGN KEY (leagueConfigId) REFERENCES LeagueConfig (Id)
 );
 CREATE TABLE Team (
     Id SERIAL PRIMARY KEY,

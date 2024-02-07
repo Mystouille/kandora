@@ -29,17 +29,23 @@ namespace kandora.bot.commands.slash
                 ServerDbService.DeleteServer(serverDiscordId);
                 var users = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(users);
+                var server = ServerDbService.GetServer(serverDiscordId);
+                if (server.LeaderboardConfigId == null)
+                {
+                    throw new Exception(Resources.commandError_leaderboardNotInitialized);
+                }
+                var config = ConfigDbService.GetConfig((int)(server.LeaderboardConfigId));
                 if (servers.ContainsKey(serverDiscordId))
                 {
-                    LeagueConfigDbService.DeleteLeagueConfig(servers[serverDiscordId].LeagueConfigId);
+                    ConfigDbService.DeleteConfig(config.Id);
                 }
 
                 //Add new
-                var leagueConfigId = LeagueConfigDbService.CreateLeague();
+                var leagueConfigId = ConfigDbService.CreateConfig();
                 
-                ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name, "unknownRoleId", "unknownRole", leagueConfigId);
-                var server = ServerDbService.GetServer(serverDiscordId);
-                var config = LeagueConfigDbService.GetLeagueConfig(server.LeagueConfigId);
+                ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name);
+                ServerDbService.SetLeaderboardConfig(serverDiscordId, leagueConfigId);
+                server = ServerDbService.GetServer(serverDiscordId);
 
                 var discordId = ctx.User.Id.ToString();
                 var arrcival = "88011881498812416";

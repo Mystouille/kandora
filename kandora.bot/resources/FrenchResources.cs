@@ -8,15 +8,22 @@ namespace kandora.bot.resources
 
         //Admin commands
         public const string admin_groupDescription = "Commandes d'administation";
-        public const string admin_startLeague_description = "Commence une ligue de mahjong";
-        public const string admin_startLeague_leagueStarted = "Une ligue de mahjong vient de commencer sur {0}!";
-        public const string admin_startLeague_leagueAlreadyExists = "Une ligue existe déjà sur {0}!";
-        public const string admin_endLeague_description = "Supprime une ligue de mahjong ainsi que l'historique des parties";
-        public const string admin_endLeague_unauthorized = "Cette commande supprime tout l'historique, on va éviter pour le moment.";
-        public const string admin_endLeague_leagueEnded = "La ligue de mahjong a été supprimée!";
+        public const string admin_startLeaderboard_description = "Commence un leaderboard de mahjong";
+        public const string admin_startLeaderboard_leaderboardStarted = "Un leaderboard vient de commencer sur {0}!";
+        public const string admin_startLeaderboard_leaderboardAlreadyExists = "Un leaderboard existe déjà sur {0}!";
+        public const string admin_startLeague_description = "Commence une ligue en equipe de mahjong";
+        public const string admin_startLeague_leagueStarted = "Une ligue vient de commencer sur {0}!";
+        public const string admin_startLeague_leagueAlreadyExists = "Une ligue  existe déjà sur {0}!";
+        public const string admin_flushServer_description = "Supprime une ligue de mahjong ainsi que l'historique des parties";
+        public const string admin_flushServer_unauthorized = "Cette commande supprime tout l'historique, on va éviter pour le moment.";
+        public const string admin_flushServer_leagueEnded = "La ligue de mahjong a été supprimée!";
         public const string admin_testLeague_description = "Supprime la ligue actuelle et en crée une composée de 4 joueurs";
         public const string admin_testLeague_testLeagueStarted = "Une ligue de test a été créée avec ces joueurs:\n{0}";
-        public const string admin_showLeagueConfig_description = "Affiche les paramètres actuels de la ligue";
+        public const string admin_showConfig_description = "Affiche les paramètres actuels de la ligue ou du leaderboard";
+        public const string admin_seeConfig_type_league = "Ligue en équipe";
+        public const string admin_seeConfig_type_leaderboard = "Leaderboard";
+        public const string admin_seeConfig_type = "type";
+        public const string admin_seeConfig_type_description = "La config voulue";
         public const string admin_setLeagueConfig_description = "Configure la ligue";
         public const string admin_setLeagueConfig_allowSanma = "allowSanma";
         public const string admin_setLeagueConfig_allowSanma_description = "Accepte les parties à 3 joueurs";
@@ -83,6 +90,11 @@ namespace kandora.bot.resources
         public const string admin_migratePlayer_success = "Le joueur {0} a bien été renommé en {1}.";
 
         //League commands
+        public const string league_groupDescription = "Commandes de ligue";
+
+
+        //Leaderboard commands
+        public const string leaderboard_groupDescription = "Commandes du leaderboard";
         public const string leaderboard_register_description = "S'inscrire à la ligue ou modifier ses infos";
         public const string leaderboard_register_mahjsoulName = "mahjsoulname";
         public const string leaderboard_register_mahjsoulName_description = "Ton pseudo Mahjong Soul";
@@ -130,13 +142,13 @@ namespace kandora.bot.resources
         public const string leaderboard_option_chombo3_description = "Nombre de chombos pour le Joueur3";
         public const string leaderboard_option_chombo4_description = "Nombre de chombos pour le Joueur4";
 
-        public const string leaderboard_submitResult_voteMessage = "Tous les joueurs doivent :o: pour valider ou :x: pour annuler l'enregistrement de la partie.";
+        public const string leaderboard_submitResult_voteMessage = "2 joueurs doivent :o: pour valider ou :x: pour annuler l'enregistrement de la partie.";
         public const string leaderboard_submitResult_messageHeader = "*place: nomJoueur (nbparties): score => score final*";
         public const string leaderboard_submitResult_NameAndId = "Nom: {0}, Id: {1}";
         public const string leaderboard_submitResult_Date = "Partie du : {0}";
         public const string leaderboard_submitResult_SimilarGameFound = "\n**ATTENTION**\n({0}) parties similaires ont été trouvées sur la league, voici les details de la dernière en date:"; 
-        public const string leaderboard_submitResult_canceledMessage = "Tous les joueurs ont voté {0}, cette partie ne sera pas enregistrée";
-        public const string leaderboard_submitResult_validatedMessage = "Tous les joueurs ont voté {0}, cette partie a été enregistrée!";
+        public const string leaderboard_submitResult_canceledMessage = "2 joueurs ont voté {0}, cette partie ne sera pas enregistrée";
+        public const string leaderboard_submitResult_validatedMessage = "2 joueurs ont voté {0}, cette partie a été enregistrée!";
 
         public const string leaderboard_submitOnlineResult_description = "Enregistre une partie mahjsoul ou tenhou comptant dans le classement";
         public const string leaderboard_submitOnlineResult_gameId = "gameId";
@@ -234,6 +246,10 @@ namespace kandora.bot.resources
         public const string commandError_ValueAlreadyExists = "Un joueur ayant comme {0}: {1} existe déjà! Contacte un admin si nécessaire.";
         public const string commandError_CouldntExtractDateFromLog = "La date de ce log n'a pas pu être extraite. la partie ne sera pas enregistrée";
         public const string commandError_PlayerUnknown = "Le joueur {0} n'est pas encore inscrit";
+        public const string commandError_leaderboardNotInitialized = "Le leaderboard n'a pas été encore crée";
+        public const string commandError_leagueNotInitialized = "La ligue de n'a pas été encore crée";
+        public const string commandError_leaderboardAlreadyInitialized = "Le leaderboard a déjà été créé";
+        public const string commandError_leagueAlreadyInitialized = "La ligue a déjà été créée";
 
 
 

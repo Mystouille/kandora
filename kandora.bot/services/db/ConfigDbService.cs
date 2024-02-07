@@ -11,7 +11,7 @@ using System.Data.SqlClient;
 
 namespace kandora.bot.services
 {
-    class LeagueConfigDbService: DbService
+    class ConfigDbService: DbService
     {
         public static string tableName = "LeagueConfig";
         public static string idCol = "Id";
@@ -38,7 +38,7 @@ namespace kandora.bot.services
         public static string startDateCol = "startDate";
         public static string endDateCol = "endDate";
 
-        public static LeagueConfig GetLeagueConfig(int leagueConfigId)
+        public static LeagueConfig GetConfig(int leaderboardConfigId)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -50,9 +50,9 @@ namespace kandora.bot.services
                     + $"{eloChangeStartRatioCol}, {eloChangeEndRatioCol}, {trialPeriodDurationCol}, {allowSanmaCol}, " //16-19
                     + $"{startDateCol}, {endDateCol}, {penaltyChomboCol} " // 20-22
                     + $"FROM {tableName} "
-                    + $"WHERE {idCol} = @leagueId";
+                    + $"WHERE {idCol} = @configId";
                 command.CommandType = CommandType.Text;
-                command.Parameters.AddWithValue("@leagueId", NpgsqlDbType.Integer, leagueConfigId);
+                command.Parameters.AddWithValue("@configId", NpgsqlDbType.Integer, leaderboardConfigId);
 
                 var reader = command.ExecuteReader();
 
@@ -94,12 +94,12 @@ namespace kandora.bot.services
                     return league;
                 }
                 reader.Close();
-                throw new Exception($"Couldn't find league with id {leagueConfigId}");
+                throw new Exception($"Couldn't find config with id {leaderboardConfigId}");
             }
             throw (new DbConnectionException());
         }
 
-        public static int CreateLeague()
+        public static int CreateConfig()
         {
 
             var settings = ConfigurationManager.AppSettings;
@@ -124,30 +124,30 @@ namespace kandora.bot.services
             var eloChangeEndRatio = Double.Parse(settings.Get("eloChangeEndRatio"));
             var trialPeriodDuration = Double.Parse(settings.Get("trialPeriodDuration"));
 
-            var leagueId = CreateLeague(countPoints, eloSystem);
-            SetConfigValue(startingPointsCol, leagueId, startingPoints);
-            SetConfigValue(allowSanmaCol, leagueId, allowSanma);
-            SetConfigValue(uma3p1Col, leagueId, uma3p1);
-            SetConfigValue(uma3p2Col, leagueId, uma3p2);
-            SetConfigValue(uma3p3Col, leagueId, uma3p3);
-            SetConfigValue(uma4p1Col, leagueId, uma4p1);
-            SetConfigValue(uma4p2Col, leagueId, uma4p2);
-            SetConfigValue(uma4p3Col, leagueId, uma4p3);
-            SetConfigValue(uma4p4Col, leagueId, uma4p4);
-            SetConfigValue(okaCol, leagueId, oka);
-            SetConfigValue(penaltyLastCol, leagueId, penaltyLast);
-            SetConfigValue(penaltyChomboCol, leagueId, penaltyChombo);
-            SetConfigValue(initialEloCol, leagueId, initialElo);
-            SetConfigValue(minEloCol, leagueId, minElo);
-            SetConfigValue(baseEloChangeDampeningCol, leagueId, baseEloChangeDampening);
-            SetConfigValue(eloChangeStartRatioCol, leagueId, eloChangeStartRatio);
-            SetConfigValue(eloChangeEndRatioCol, leagueId, eloChangeEndRatio);
-            SetConfigValue(trialPeriodDurationCol, leagueId, trialPeriodDuration);
+            var configId = CreateConfig(countPoints, eloSystem);
+            SetConfigValue(startingPointsCol, configId, startingPoints);
+            SetConfigValue(allowSanmaCol, configId, allowSanma);
+            SetConfigValue(uma3p1Col, configId, uma3p1);
+            SetConfigValue(uma3p2Col, configId, uma3p2);
+            SetConfigValue(uma3p3Col, configId, uma3p3);
+            SetConfigValue(uma4p1Col, configId, uma4p1);
+            SetConfigValue(uma4p2Col, configId, uma4p2);
+            SetConfigValue(uma4p3Col, configId, uma4p3);
+            SetConfigValue(uma4p4Col, configId, uma4p4);
+            SetConfigValue(okaCol, configId, oka);
+            SetConfigValue(penaltyLastCol, configId, penaltyLast);
+            SetConfigValue(penaltyChomboCol, configId, penaltyChombo);
+            SetConfigValue(initialEloCol, configId, initialElo);
+            SetConfigValue(minEloCol, configId, minElo);
+            SetConfigValue(baseEloChangeDampeningCol, configId, baseEloChangeDampening);
+            SetConfigValue(eloChangeStartRatioCol, configId, eloChangeStartRatio);
+            SetConfigValue(eloChangeEndRatioCol, configId, eloChangeEndRatio);
+            SetConfigValue(trialPeriodDurationCol, configId, trialPeriodDuration);
 
-            return leagueId;
+            return configId;
         }
 
-        public static void DeleteLeagueConfig(int leagueConfigId)
+        public static void DeleteConfig(int leagueConfigId)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -161,7 +161,7 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        private static int CreateLeague(bool countPoints, string eloSystem)
+        private static int CreateConfig(bool countPoints, string eloSystem)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
