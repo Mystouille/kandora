@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace kandora.bot.models
 {
-    public partial class LeagueConfig
+    public partial class LeaderboardConfig
     {
-        public LeagueConfig(int id, bool countPoints, string eloSystem)
+        public LeaderboardConfig(int id, bool countPoints, string eloSystem)
         {
             Id = id;
             CountPoints = countPoints;

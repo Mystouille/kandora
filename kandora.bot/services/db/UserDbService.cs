@@ -18,6 +18,8 @@ namespace kandora.bot.services
         public static string mahjsoulFriendIdCol = "mahjsoulFriendId";
         public static string mahjsoulUserIdCol = "mahjsoulUserId";
         public static string tenhouNameCol = "tenhouName";
+        public static string riichiCityNameCol = "riichiCityName";
+        public static string riichiCityIdCol = "riichiCityId";
         
         public static string isAdminCol = "isAdmin";
 
@@ -74,7 +76,7 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static void CreateUser(string userId, string userName, string serverId, LeagueConfig leagueConfig)
+        public static void CreateUser(string userId, string userName, string serverId, LeaderboardConfig leaderboardConfig)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -110,6 +112,14 @@ namespace kandora.bot.services
         {
             UpdateFieldInTable(tableName, tenhouNameCol, userId, value);
         }
+        public static void SetRiichiCityId(string userId, string value)
+        {
+            UpdateFieldInTable(tableName, riichiCityIdCol, userId, value);
+        }
+        public static void SetRiichiCityName(string userId, string value)
+        {
+            UpdateFieldInTable(tableName, riichiCityNameCol, userId, value);
+        }
 
         public static bool MahjsoulNameExistAlready(string userId, string serverId, string value)
         {
@@ -124,6 +134,17 @@ namespace kandora.bot.services
         public static bool TenhouNameExistAlready(string userId, string serverId, string value)
         {
             return ValueExistAlready(userId, serverId, tenhouNameCol, value);
+        }
+
+        public static bool RiichiCityNameExistAlready(string userId, string serverId, string value)
+        {
+            return ValueExistAlready(userId, serverId, riichiCityNameCol, value);
+        }
+
+
+        public static bool RiichiCityIdExistAlready(string userId, string serverId, string value)
+        {
+            return ValueExistAlready(userId, serverId, riichiCityIdCol, value);
         }
 
         private static bool ValueExistAlready(string userId, string serverId, string columnName, string value)

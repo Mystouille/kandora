@@ -36,8 +36,8 @@ namespace kandora.bot.commands.slash
                         throw new Exception(Resources.commandError_leaderboardAlreadyInitialized);
                     }
                 }
-                var leagueConfigId = ConfigDbService.CreateConfig();
-                ServerDbService.StartLeaderboardOnServer(serverDiscordId, leagueConfigId);
+                var leaderboardConfigId = ConfigDbService.CreateConfig();
+                ServerDbService.StartLeaderboardOnServer(serverDiscordId, leaderboardConfigId);
                 var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_startLeaderboard_leaderboardStarted, ctx.Guild.Name)).AsEphemeral();
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
@@ -61,14 +61,13 @@ namespace kandora.bot.commands.slash
                 }
                 else
                 {
-                    if (servers[serverDiscordId].LeagueConfigId != null)
+                    if (servers[serverDiscordId].LeaderboardConfigId != null)
                     {
                         throw new Exception(Resources.commandError_leagueAlreadyInitialized);
                     }
                 }
 
-                var leagueConfigId = ConfigDbService.CreateConfig();
-                ServerDbService.StartLeagueOnServer(serverDiscordId, leagueConfigId);
+                ServerDbService.StartLeagueOnServer(serverDiscordId, 0);
 
                 var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_startLeague_leagueStarted, ctx.Guild.Name)).AsEphemeral();
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
@@ -110,7 +109,7 @@ namespace kandora.bot.commands.slash
         }
 
         [SlashCommand("flushServer", Resources.admin_flushServer_description)]
-        public async Task EndLeague(InteractionContext ctx)
+        public async Task EndLeaderboard(InteractionContext ctx)
         {
             try
             {
@@ -126,16 +125,16 @@ namespace kandora.bot.commands.slash
                 ScoreDbService.DeleteGamesFromServer(serverDiscordId);
                 ServerDbService.DeleteUsersFromServer(serverDiscordId);
                 ServerDbService.DeleteServer(serverDiscordId);
-                if (server.LeagueConfigId != null)
+                if (server.LeaderboardConfigId != null)
                 {
-                    ConfigDbService.DeleteConfig((int)server.LeagueConfigId);
+                    ConfigDbService.DeleteConfig((int)server.LeaderboardConfigId);
                 }
                 if (server.LeaderboardConfigId != null)
                 {
                     ConfigDbService.DeleteConfig((int)server.LeaderboardConfigId);
                 }
 
-                var rb = new DiscordInteractionResponseBuilder().WithContent(Resources.admin_flushServer_leagueEnded);
+                var rb = new DiscordInteractionResponseBuilder().WithContent(Resources.admin_flushServer_leaderboardEnded);
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
             catch (Exception e)
@@ -145,14 +144,11 @@ namespace kandora.bot.commands.slash
         }
 
         [SlashCommand("seeConfig", Resources.admin_showConfig_description)]
-        public async Task ShowConfig(InteractionContext ctx,
-            [Choice(Resources.admin_seeConfig_type_leaderboard,"Leaderboard")]
-            [Choice(Resources.admin_seeConfig_type_league,"League")]
-            [Option(Resources.admin_seeConfig_type, Resources.admin_seeConfig_type_description)] string type)
+        public async Task ShowConfig(InteractionContext ctx)
         {
             try
             {
-                var configStr = GetConfig(ctx, type);
+                var configStr = GetConfig(ctx);
                 var rb = new DiscordInteractionResponseBuilder().WithContent(configStr).AsEphemeral();
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
@@ -162,27 +158,17 @@ namespace kandora.bot.commands.slash
             }
         }
 
-        private string GetConfig(InteractionContext ctx, string type)
+        private string GetConfig(InteractionContext ctx)
         {
             var serverDiscordId = ctx.Guild.Id.ToString();
             var server = ServerDbService.GetServer(serverDiscordId);
             int configId;
-            if (type == "League")
+            if (server.LeaderboardConfigId == null)
             {
-                if (server.LeagueConfigId == null)
-                {
-                    throw new Exception(Resources.commandError_leagueNotInitialized);
-                }
-                configId = (int)(server.LeagueConfigId);
+                throw new Exception(Resources.commandError_leaderboardNotInitialized);
             }
-            else
-            {
-                if (server.LeaderboardConfigId == null)
-                {
-                    throw new Exception(Resources.commandError_leaderboardNotInitialized);
-                }
-                configId = (int)(server.LeaderboardConfigId);
-            }
+            configId = (int)server.LeaderboardConfigId;
+            
             var config = ConfigDbService.GetConfig(configId);
             var sb = new StringBuilder();
             
@@ -217,36 +203,36 @@ namespace kandora.bot.commands.slash
             return sb.ToString();
         }
 
-        [SlashCommand("setConfig", Resources.admin_setLeagueConfig_description)]
-        public async Task SetLeagueConfig(InteractionContext ctx,
+        [SlashCommand("setConfig", Resources.admin_setLeaderboardConfig_description)]
+        public async Task SetLeaderboardConfig(InteractionContext ctx,
             [Choice(Resources.admin_seeConfig_type_leaderboard,"Leaderboard")]
-            [Choice(Resources.admin_seeConfig_type_league,"League")]
+            [Choice(Resources.admin_seeConfig_type_leaderboard,"Leaderboard")]
             [Option(Resources.admin_seeConfig_type, Resources.admin_seeConfig_type_description)] string type,
-            [Option(Resources.admin_setLeagueConfig_countPoints, Resources.admin_setLeagueConfig_countPoints_description)] bool countPoints,
-            [Choice(Resources.admin_setLeagueConfig_eloSystem_Average,"Average")]
-            [Choice(Resources.admin_setLeagueConfig_eloSystem_None,"None")]
-            [Choice(Resources.admin_setLeagueConfig_eloSystem_Simple,"Simple")]
-            [Choice(Resources.admin_setLeagueConfig_eloSystem_Full,"Full")]
-            [Option(Resources.admin_setLeagueConfig_eloSystem, Resources.admin_setLeagueConfig_eloSystem_description)] string eloSystem,
-            [Option(Resources.admin_setLeagueConfig_startTime, Resources.admin_setLeagueConfig_startTime_description)] string startTime = "",
-            [Option(Resources.admin_setLeagueConfig_endTime, Resources.admin_setLeagueConfig_endTime_description)] string endTime = "",
-            [Option(Resources.admin_setLeagueConfig_startingPoints, Resources.admin_setLeagueConfig_startingPoints_description)] long startingPoints = -1,
-            [Option(Resources.admin_setLeagueConfig_uma3p1, Resources.admin_setLeagueConfig_uma3p1_description)] double uma3p1 = -1,
-            [Option(Resources.admin_setLeagueConfig_uma3p2, Resources.admin_setLeagueConfig_uma3p2_description)] double uma3p2 = -1,
-            [Option(Resources.admin_setLeagueConfig_uma3p3, Resources.admin_setLeagueConfig_uma3p3_description)] double uma3p3 = -1,
-            [Option(Resources.admin_setLeagueConfig_uma4p1, Resources.admin_setLeagueConfig_uma4p1_description)] double uma4p1 = -1,
-            [Option(Resources.admin_setLeagueConfig_uma4p2, Resources.admin_setLeagueConfig_uma4p2_description)] double uma4p2 = -1,
-            [Option(Resources.admin_setLeagueConfig_uma4p3, Resources.admin_setLeagueConfig_uma4p3_description)] double uma4p3 = -1,
-            [Option(Resources.admin_setLeagueConfig_uma4p4, Resources.admin_setLeagueConfig_uma4p4_description)] double uma4p4 = -1,
-            [Option(Resources.admin_setLeagueConfig_oka, Resources.admin_setLeagueConfig_oka_description)] double oka = -1,
-            [Option(Resources.admin_setLeagueConfig_penaltyLast, Resources.admin_setLeagueConfig_penaltyLast_description)] double penaltyLast = -1,
-            [Option(Resources.admin_setLeagueConfig_penaltyChombo, Resources.admin_setLeagueConfig_penaltyChombo_description)] double penaltyChombo = -1,
-            [Option(Resources.admin_setLeagueConfig_initialElo, Resources.admin_setLeagueConfig_initialElo_description)] long initialElo = -1,
-            [Option(Resources.admin_setLeagueConfig_minElo, Resources.admin_setLeagueConfig_minElo_description)] long minElo = -1,
-            [Option(Resources.admin_setLeagueConfig_eloChangeDampening, Resources.admin_setLeagueConfig_eloChangeDampening_description)] double eloChangeDampening = -1,
-            [Option(Resources.admin_setLeagueConfig_eloChangeStartRatio, Resources.admin_setLeagueConfig_eloChangeStartRatio_description)] double eloChangeStartRatio = -1,
-            [Option(Resources.admin_setLeagueConfig_eloChangeEndRatio, Resources.admin_setLeagueConfig_eloChangeEndRatio_description)] double eloChangeEndRatio = -1,
-            [Option(Resources.admin_setLeagueConfig_trialPeriodDuration, Resources.admin_setLeagueConfig_trialPeriodDuration_description)] long trialPeriodDuration = -1)
+            [Option(Resources.admin_setLeaderboardConfig_countPoints, Resources.admin_setLeaderboardConfig_countPoints_description)] bool countPoints,
+            [Choice(Resources.admin_setLeaderboardConfig_eloSystem_Average,"Average")]
+            [Choice(Resources.admin_setLeaderboardConfig_eloSystem_None,"None")]
+            [Choice(Resources.admin_setLeaderboardConfig_eloSystem_Simple,"Simple")]
+            [Choice(Resources.admin_setLeaderboardConfig_eloSystem_Full,"Full")]
+            [Option(Resources.admin_setLeaderboardConfig_eloSystem, Resources.admin_setLeaderboardConfig_eloSystem_description)] string eloSystem,
+            [Option(Resources.admin_setLeaderboardConfig_startTime, Resources.admin_setLeaderboardConfig_startTime_description)] string startTime = "",
+            [Option(Resources.admin_setLeaderboardConfig_endTime, Resources.admin_setLeaderboardConfig_endTime_description)] string endTime = "",
+            [Option(Resources.admin_setLeaderboardConfig_startingPoints, Resources.admin_setLeaderboardConfig_startingPoints_description)] long startingPoints = -1,
+            [Option(Resources.admin_setLeaderboardConfig_uma3p1, Resources.admin_setLeaderboardConfig_uma3p1_description)] double uma3p1 = -1,
+            [Option(Resources.admin_setLeaderboardConfig_uma3p2, Resources.admin_setLeaderboardConfig_uma3p2_description)] double uma3p2 = -1,
+            [Option(Resources.admin_setLeaderboardConfig_uma3p3, Resources.admin_setLeaderboardConfig_uma3p3_description)] double uma3p3 = -1,
+            [Option(Resources.admin_setLeaderboardConfig_uma4p1, Resources.admin_setLeaderboardConfig_uma4p1_description)] double uma4p1 = -1,
+            [Option(Resources.admin_setLeaderboardConfig_uma4p2, Resources.admin_setLeaderboardConfig_uma4p2_description)] double uma4p2 = -1,
+            [Option(Resources.admin_setLeaderboardConfig_uma4p3, Resources.admin_setLeaderboardConfig_uma4p3_description)] double uma4p3 = -1,
+            [Option(Resources.admin_setLeaderboardConfig_uma4p4, Resources.admin_setLeaderboardConfig_uma4p4_description)] double uma4p4 = -1,
+            [Option(Resources.admin_setLeaderboardConfig_oka, Resources.admin_setLeaderboardConfig_oka_description)] double oka = -1,
+            [Option(Resources.admin_setLeaderboardConfig_penaltyLast, Resources.admin_setLeaderboardConfig_penaltyLast_description)] double penaltyLast = -1,
+            [Option(Resources.admin_setLeaderboardConfig_penaltyChombo, Resources.admin_setLeaderboardConfig_penaltyChombo_description)] double penaltyChombo = -1,
+            [Option(Resources.admin_setLeaderboardConfig_initialElo, Resources.admin_setLeaderboardConfig_initialElo_description)] long initialElo = -1,
+            [Option(Resources.admin_setLeaderboardConfig_minElo, Resources.admin_setLeaderboardConfig_minElo_description)] long minElo = -1,
+            [Option(Resources.admin_setLeaderboardConfig_eloChangeDampening, Resources.admin_setLeaderboardConfig_eloChangeDampening_description)] double eloChangeDampening = -1,
+            [Option(Resources.admin_setLeaderboardConfig_eloChangeStartRatio, Resources.admin_setLeaderboardConfig_eloChangeStartRatio_description)] double eloChangeStartRatio = -1,
+            [Option(Resources.admin_setLeaderboardConfig_eloChangeEndRatio, Resources.admin_setLeaderboardConfig_eloChangeEndRatio_description)] double eloChangeEndRatio = -1,
+            [Option(Resources.admin_setLeaderboardConfig_trialPeriodDuration, Resources.admin_setLeaderboardConfig_trialPeriodDuration_description)] long trialPeriodDuration = -1)
         {
             var guid = Guid.NewGuid();
             int configId;
@@ -254,13 +240,13 @@ namespace kandora.bot.commands.slash
             try
             {
                 var server = ServerDbService.GetServer(serverDiscordId);
-                if (type == "League")
+                if (type == "Leaderboard")
                 {
-                    if (server.LeagueConfigId == null)
+                    if (server.LeaderboardConfigId == null)
                     {
-                        throw new Exception(Resources.commandError_leagueNotInitialized);
+                        throw new Exception(Resources.commandError_leaderboardNotInitialized);
                     }
-                    configId = (int)(server.LeagueConfigId);
+                    configId = (int)(server.LeaderboardConfigId);
                 }
                 else
                 {
@@ -272,7 +258,7 @@ namespace kandora.bot.commands.slash
                 }
                 var config = ConfigDbService.GetConfig(configId);
 
-                var transactionName = $"setLeagueConfig/{guid}";
+                var transactionName = $"setLeaderboardConfig/{guid}";
                 DbService.Begin(transactionName);
                 try
                 {
@@ -379,7 +365,7 @@ namespace kandora.bot.commands.slash
                         }
                     }
                     var configStr1 = GetConfig(ctx, type);
-                    var rb = new DiscordInteractionResponseBuilder().WithContent(String.Format(Resources.admin_setLeagueConfig_backfillInProgress, configStr1)).AsEphemeral();
+                    var rb = new DiscordInteractionResponseBuilder().WithContent(String.Format(Resources.admin_setLeaderboardConfig_backfillInProgress, configStr1)).AsEphemeral();
                     await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
 
                 }
@@ -395,7 +381,7 @@ namespace kandora.bot.commands.slash
                 StringBuilder sb = new StringBuilder();
                 var response = await ctx.GetOriginalResponseAsync();
 
-                var wb = new DiscordWebhookBuilder().WithContent(String.Format(Resources.admin_setLeagueConfig_backfillFinished, configStr));
+                var wb = new DiscordWebhookBuilder().WithContent(String.Format(Resources.admin_setLeaderboardConfig_backfillFinished, configStr));
                 RankingDbService.BackfillRankings(serverDiscordId, config);
                 await ctx.EditResponseAsync(wb);
             }

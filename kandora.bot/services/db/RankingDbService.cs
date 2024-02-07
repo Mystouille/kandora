@@ -24,7 +24,7 @@ namespace kandora.bot.services
         private const string timeStampCol = "timeStamp";
         private const string gameIdCol = "gameId";
 
-        internal static List<Ranking> UpdateRankings(Game game, LeagueConfig config)
+        internal static List<Ranking> UpdateRankings(Game game, LeaderboardConfig config)
         {
            var dataList = getFullUserGameInfos(game, config);
 
@@ -62,7 +62,7 @@ namespace kandora.bot.services
             return newRkList.ToList();
         }
 
-        private static List<UserGameData> getFullUserGameInfos(Game game, LeagueConfig config)
+        private static List<UserGameData> getFullUserGameInfos(Game game, LeaderboardConfig config)
         {
             var dataList = new List<UserGameData>();
 
@@ -111,7 +111,7 @@ namespace kandora.bot.services
         }
 
 
-        public static bool BackfillRankings(string serverId, LeagueConfig config)
+        public static bool BackfillRankings(string serverId, LeaderboardConfig config)
         {
             DeleteRankings(serverId, butNotTheInitial: false);
             var games = ScoreDbService.GetLastNRecordedGame(serverId, config);
@@ -147,7 +147,7 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        internal static void InitUserRanking(string userId, string serverId, LeagueConfig leagueConfig)
+        internal static void InitUserRanking(string userId, string serverId, LeaderboardConfig leaderboardConfig)
         {
             List<Ranking> userRankings = GetUserRankingHistory(userId, serverId, latest: true);
             if (userRankings.Any())
@@ -164,7 +164,7 @@ namespace kandora.bot.services
 
                 command.Parameters.AddWithValue("@userId", NpgsqlDbType.Varchar, userId);
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
-                command.Parameters.AddWithValue("@rank", NpgsqlDbType.Double, leagueConfig.EloSystem == "Full" ? leagueConfig.InitialElo : 0);
+                command.Parameters.AddWithValue("@rank", NpgsqlDbType.Double, leaderboardConfig.EloSystem == "Full" ? leaderboardConfig.InitialElo : 0);
                 command.CommandType = CommandType.Text;
                 command.ExecuteNonQuery();
                 return;

@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[LeagueConfig] (
+﻿CREATE TABLE [dbo].[LeaderboardConfig] (
     [Id] INT IDENTITY(1,1) PRIMARY KEY,
     [countPoints] BIT NOT NULL,
     [allowSanma] BIT DEFAULT 0 NOT NULL,

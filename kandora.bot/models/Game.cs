@@ -7,6 +7,7 @@ namespace kandora.bot.models
     {
         Mahjsoul,
         Tenhou,
+        RiichiCity,
         IRL,
     }
 

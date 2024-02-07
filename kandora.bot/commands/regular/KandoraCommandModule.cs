@@ -32,7 +32,7 @@ namespace kandora.bot.commands.regular
                 }
                 if (userMustBeRegistered && !ServerDbService.isUserOnServer(userId, serverId))
                 {
-                    throw new Exception($"<@{userId}> is not registered yet, use !register to enter the league.");
+                    throw new Exception($"<@{userId}> is not registered yet, use !register to be part of the leaderboard.");
                 }
                 DbService.Begin(commandStr);
                 await command.Invoke();

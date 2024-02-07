@@ -33,7 +33,7 @@ namespace kandora.bot.models
             ScoreWithBonus = finalScore;
         }
 
-        public Ranking(string userId, List<UserGameData> dataList, int gameId, string serverId, LeagueConfig config)
+        public Ranking(string userId, List<UserGameData> dataList, int gameId, string serverId, LeaderboardConfig config)
         {
             var userData = dataList.Where(x => x.UserId == userId).FirstOrDefault();
             UserId = userId;
@@ -54,7 +54,7 @@ namespace kandora.bot.models
             ScoreWithBonus = config.getFinalPoints(Position, Score, dataList.Count, userData.UserChombo);
         }
 
-        public static Ranking[] getPartialRanking(Game game, LeagueConfig config)
+        public static Ranking[] getPartialRanking(Game game, LeaderboardConfig config)
         {
 
             var dataList = getPartialUserGameInfos(game);

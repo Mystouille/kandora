@@ -16,8 +16,8 @@ namespace kandora.bot.commands.slash
     [SlashCommandGroup("test", Resources.admin_groupDescription, defaultPermission: false)]
     class TestSlashCommands : KandoraSlashCommandModule
     {
-        [SlashCommand("testLeague", Resources.admin_testLeague_description)]
-        public async Task TestLeague(InteractionContext ctx)
+        [SlashCommand("testLeaderboard", Resources.admin_testLeaderboard_description)]
+        public async Task TestLeaderboard(InteractionContext ctx)
         {
             try
             {
@@ -41,10 +41,10 @@ namespace kandora.bot.commands.slash
                 }
 
                 //Add new
-                var leagueConfigId = ConfigDbService.CreateConfig();
+                var leaderboardConfigId = ConfigDbService.CreateConfig();
                 
                 ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name);
-                ServerDbService.SetLeaderboardConfig(serverDiscordId, leagueConfigId);
+                ServerDbService.SetLeaderboardConfig(serverDiscordId, leaderboardConfigId);
                 server = ServerDbService.GetServer(serverDiscordId);
 
                 var discordId = ctx.User.Id.ToString();
@@ -83,7 +83,7 @@ namespace kandora.bot.commands.slash
                 int[] chombos = { 0, 0, 0, 0 };
                 string location = "nowhere";
                 ScoreDbService.RecordIRLGame(players, scores, chombos, DateTime.Now, location, server, config);
-                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_testLeague_testLeagueStarted, playersStr));
+                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_testLeaderboard_testLeaderboardStarted, playersStr));
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
             catch (Exception e)

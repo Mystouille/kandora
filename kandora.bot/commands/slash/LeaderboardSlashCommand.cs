@@ -28,7 +28,9 @@ namespace kandora.bot.commands.slash
         public async Task Register(InteractionContext ctx,
              [Option(Resources.leaderboard_register_mahjsoulName, Resources.leaderboard_register_mahjsoulName_description)] string mahjsoulName = "",
              [Option(Resources.leaderboard_register_mahjsoulFriendId, Resources.leaderboard_register_mahjsoulFriendId_description)] string mahjsoulFriendId = "",
-             [Option(Resources.leaderboard_register_tenhouName, Resources.leaderboard_register_tenhouName_description)] string tenhouName = "")
+             [Option(Resources.leaderboard_register_tenhouName, Resources.leaderboard_register_tenhouName_description)] string tenhouName = "",
+             [Option(Resources.leaderboard_register_riichiCityId, Resources.leaderboard_register_riichiCityId_description)] string riichiCityId = "",
+             [Option(Resources.leaderboard_register_riichiCityName, Resources.leaderboard_register_riichiCityName_description)] string riichiCityName = "")
         {
             try
             {
@@ -62,6 +64,27 @@ namespace kandora.bot.commands.slash
                     if (UserDbService.TenhouNameExistAlready(userId, serverId, tenhouName))
                     {
                         throw new Exception(String.Format(Resources.commandError_ValueAlreadyExists, Resources.leaderboard_register_tenhouName, tenhouName));
+                    }
+                }
+                if (tenhouName.Length > 0)
+                {
+                    if (UserDbService.TenhouNameExistAlready(userId, serverId, tenhouName))
+                    {
+                        throw new Exception(String.Format(Resources.commandError_ValueAlreadyExists, Resources.leaderboard_register_tenhouName, tenhouName));
+                    }
+                }
+                if (riichiCityId.Length > 0)
+                {
+                    if (UserDbService.RiichiCityIdExistAlready(userId, serverId, riichiCityId))
+                    {
+                        throw new Exception(String.Format(Resources.commandError_ValueAlreadyExists, Resources.leaderboard_register_riichiCityId, riichiCityId));
+                    }
+                }
+                if (riichiCityName.Length > 0)
+                {
+                    if (UserDbService.RiichiCityIdExistAlready(userId, serverId, riichiCityName))
+                    {
+                        throw new Exception(String.Format(Resources.commandError_ValueAlreadyExists, Resources.leaderboard_register_riichiCityName, riichiCityName));
                     }
                 }
 
@@ -102,6 +125,14 @@ namespace kandora.bot.commands.slash
                 if (tenhouName.Length > 0)
                 {
                     UserDbService.SetTenhouName(userId, tenhouName);
+                }
+                if (riichiCityId.Length > 0)
+                {
+                    UserDbService.SetRiichiCityId(userId, riichiCityId);
+                }
+                if (riichiCityName.Length > 0)
+                {
+                    UserDbService.SetRiichiCityName(userId, riichiCityName);
                 }
                 var rb = new DiscordInteractionResponseBuilder().WithContent(responseMessage).AsEphemeral();
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
@@ -167,9 +198,9 @@ namespace kandora.bot.commands.slash
                 }
                 var startTime = config.StartTime.ToString("yyyy/MM/dd");
                 var endTime = config.EndTime.ToString("yyyy/MM/dd");
-                var leagueTime = $"{startTime}-{endTime}";
+                var leaderboardTime = $"{startTime}-{endTime}";
                 var rb = new DiscordInteractionResponseBuilder()
-                    .AddFile($"{ctx.Guild.Name}league{leagueTime}.csv",FileUtils.GenerateStreamFromString(sb.ToString()))
+                    .AddFile($"{ctx.Guild.Name}leaderboard{leaderboardTime}.csv",FileUtils.GenerateStreamFromString(sb.ToString()))
                     .WithContent(String.Format(Resources.leaderboard_getGames_message, startTime, endTime))
                     .AsEphemeral(); ;
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
@@ -209,7 +240,7 @@ namespace kandora.bot.commands.slash
                 {
                     throw new Exception(Resources.commandError_leaderboardNotInitialized);
                 }
-                var leagueConfig = ConfigDbService.GetConfig((int)(server.LeaderboardConfigId));
+                var leaderboardConfig = ConfigDbService.GetConfig((int)(server.LeaderboardConfigId));
 
 
                 var player1Id = getIdFromPlayerParam(player1);
@@ -253,17 +284,17 @@ namespace kandora.bot.commands.slash
                     }
                 }
                 var scoreSum = scores.Sum();
-                var targetScoreSum = leagueConfig.StartingPoints * 1000 * 4;
+                var targetScoreSum = leaderboardConfig.StartingPoints * 1000 * 4;
                 if (scoreSum != targetScoreSum)
                 {
                     
                     throw new Exception(String.Format(Resources.commandError_Wrong_Scores, scoreSum, targetScoreSum));
                 }
-                if (leagueConfig.CountPoints && scores == null)
+                if (leaderboardConfig.CountPoints && scores == null)
                 {
-                    throw new Exception(Resources.commandError_LeagueConfigRequiresScore);
+                    throw new Exception(Resources.commandError_LeaderboardConfigRequiresScore);
                 }
-                if (!leagueConfig.AllowSanma && userIds.Length == 3)
+                if (!leaderboardConfig.AllowSanma && userIds.Length == 3)
                 {
                     throw new Exception(Resources.commandError_sanmaNotAllowed);
                 }
@@ -378,7 +409,7 @@ namespace kandora.bot.commands.slash
                 var serverId = ctx.Guild.Id.ToString();
                 var users = UserDbService.GetUsers();
                 var server = ServerDbService.GetServer(serverId);
-                var configId = server.LeagueConfigId;
+                var configId = server.LeaderboardConfigId;
                 if (server.LeaderboardConfigId == null)
                 {
                     throw new Exception(Resources.commandError_leaderboardNotInitialized);
@@ -480,7 +511,7 @@ namespace kandora.bot.commands.slash
             await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
         }
 
-        //Checks if a log has all its player in the league and return them
+        //Checks if a log has all its player in the leaderboard and return them
         private async Task<List<User>> GetUsersFromLog(RiichiGame log, List<User> users, InteractionContext ctx)
         {
             int nbPlayers = log.Names.Length;

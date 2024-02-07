@@ -12,75 +12,75 @@ namespace kandora.bot.resources
         public const string admin_startLeaderboard_leaderboardStarted = "A mahjong leaderboard has been created on {0}!";
         public const string admin_startLeaderboard_leaderboardAlreadyExists = "A leaderboard already exists on {0}!";
         public const string admin_startLeague_description = "Starts a mahjong team league";
-        public const string admin_startLeague_leagueStarted = "A mahjong league has been created on {0}!";
+        public const string admin_startLeague_leagueStarted = "A mahjong team league has been created on {0}!";
         public const string admin_startLeague_leagueAlreadyExists = "A league already exists on {0}!";
         public const string admin_flushServer_description = "Delete everything on a server";
         public const string admin_flushServer_unauthorized = "This commands deletes every game and every player data, so let's not do that for now.";
-        public const string admin_flushServer_leagueEnded = "The mahjong league got deleted!";
-        public const string admin_testLeague_description = "Delete the current mahjong league and create one with 4 existing players";
-        public const string admin_testLeague_testLeagueStarted = "A test league got created with these players:\n{0}";
-        public const string admin_showConfig_description = "Display the league's or leaderboard current parameters";
-        public const string admin_seeConfig_type_league = "Team League";
+        public const string admin_flushServer_leaderboardEnded = "The mahjong leaderboard got deleted!";
+        public const string admin_testLeaderboard_description = "Delete the current mahjong leaderboard and create one with 4 existing players";
+        public const string admin_testLeaderboard_testLeaderboardStarted = "A test leaderboard got created with these players:\n{0}";
+        public const string admin_showConfig_description = "Display the leaderboard's or leaderboard current parameters";
+        public const string admin_seeConfig_type_league = "Team league";
         public const string admin_seeConfig_type_leaderboard = "Leaderboard";
         public const string admin_seeConfig_type = "type";
         public const string admin_seeConfig_type_description = "The desired config";
-        public const string admin_setLeagueConfig_description = "Configure the league";
-        public const string admin_setLeagueConfig_allowSanma = "allowSanma";
-        public const string admin_setLeagueConfig_allowSanma_description = "Allow 3 player games";
-        public const string admin_setLeagueConfig_countPoints = "countPoints";
-        public const string admin_setLeagueConfig_eloSystem_None = "None";
-        public const string admin_setLeagueConfig_eloSystem_Average = "Average";
-        public const string admin_setLeagueConfig_eloSystem_Simple = "Simple";
-        public const string admin_setLeagueConfig_eloSystem_Full = "Full";
-        public const string admin_setLeagueConfig_countPoints_description = "Take players points into account";
-        public const string admin_setLeagueConfig_eloSystem = "eloSystem";
-        public const string admin_setLeagueConfig_eloSystem_description = "Select the ELO system";
-        public const string admin_setLeagueConfig_startTime = "startDate";
-        public const string admin_setLeagueConfig_startTime_description = "League's start date (format: YYYY/MM/DD)";
-        public const string admin_setLeagueConfig_endTime = "endDate";
-        public const string admin_setLeagueConfig_endTime_description = "League's end date (format: YYYY/MM/DD)";
-        public const string admin_setLeagueConfig_startingPoints = "startingPoints";
-        public const string admin_setLeagueConfig_startingPoints_description = "Player's starting points (in thousands)";
-        public const string admin_setLeagueConfig_uma3p1 = "uma3p1";
-        public const string admin_setLeagueConfig_uma3p1_description = "First player's uma (if sanma and points are activated)";
-        public const string admin_setLeagueConfig_uma3p2 = "uma3p2";
-        public const string admin_setLeagueConfig_uma3p2_description = "Second player's uma (if sanma and points are activated)";
-        public const string admin_setLeagueConfig_uma3p3 = "uma3p3";
-        public const string admin_setLeagueConfig_uma3p3_description = "Last player's uma (if sanma and points are activated)";
-        public const string admin_setLeagueConfig_uma4p1 = "uma4p1";
-        public const string admin_setLeagueConfig_uma4p1_description = "First player's uma (if points are activated)";
-        public const string admin_setLeagueConfig_uma4p2 = "uma4p2";
-        public const string admin_setLeagueConfig_uma4p2_description = "Second player's uma (if points are activated)";
-        public const string admin_setLeagueConfig_uma4p3 = "uma4p3";
-        public const string admin_setLeagueConfig_uma4p3_description = "Third player's uma (if points are activated)";
-        public const string admin_setLeagueConfig_uma4p4 = "uma4p4";
-        public const string admin_setLeagueConfig_uma4p4_description = "Last player's uma (if points are activated)";
-        public const string admin_setLeagueConfig_oka = "oka";
-        public const string admin_setLeagueConfig_oka_description = "Oka (payment to the first player, if points are activated)";
-        public const string admin_setLeagueConfig_penaltyLast = "penaltyLast";
-        public const string admin_setLeagueConfig_penaltyLast_description = "Last place penalty (if points are activated)";
-        public const string admin_setLeagueConfig_penaltyChombo = "penaltyChombo";
-        public const string admin_setLeagueConfig_penaltyChombo_description = "Penalty per chombo";
-        public const string admin_setLeagueConfig_initialElo = "initialElo";
-        public const string admin_setLeagueConfig_initialElo_description = "Initial ELO (if ELO is activated)";
-        public const string admin_setLeagueConfig_minElo = "minElo";
-        public const string admin_setLeagueConfig_minElo_description = "Minimum ELO (if ELO is activated)";
-        public const string admin_setLeagueConfig_eloChangeDampening = "eloChangeDampening";
-        public const string admin_setLeagueConfig_eloChangeDampening_description = "ELO change dampening (if ELO is activated)";
-        public const string admin_setLeagueConfig_eloChangeStartRatio = "eloChangeStartRatio";
-        public const string admin_setLeagueConfig_eloChangeStartRatio_description = "ELO/Points change dampening at first game (if ELO or points are activated)";
-        public const string admin_setLeagueConfig_eloChangeEndRatio = "eloChangeEndRatio";
-        public const string admin_setLeagueConfig_eloChangeEndRatio_description = "ELO/Points change dampening after trial period (if ELO or points are activated)";
-        public const string admin_setLeagueConfig_trialPeriodDuration = "trialPeriodDuration";
-        public const string admin_setLeagueConfig_trialPeriodDuration_description = "Number of game during which the ELO/points dampening changes (if ELO or points are activated)";
-        public const string admin_setLeagueConfig_backfillInProgress = "The league config has been changed.\n{0}\n\n :bangbang: Kandora is recomputing the rankings... ";
-        public const string admin_setLeagueConfig_backfillFinished = "The league config has been changed.\n{0}\n\n :white_check_mark: Kandora has finished recomputing the rankings! ";
+        public const string admin_setLeaderboardConfig_description = "Configure the leaderboard";
+        public const string admin_setLeaderboardConfig_allowSanma = "allowSanma";
+        public const string admin_setLeaderboardConfig_allowSanma_description = "Allow 3 player games";
+        public const string admin_setLeaderboardConfig_countPoints = "countPoints";
+        public const string admin_setLeaderboardConfig_eloSystem_None = "None";
+        public const string admin_setLeaderboardConfig_eloSystem_Average = "Average";
+        public const string admin_setLeaderboardConfig_eloSystem_Simple = "Simple";
+        public const string admin_setLeaderboardConfig_eloSystem_Full = "Full";
+        public const string admin_setLeaderboardConfig_countPoints_description = "Take players points into account";
+        public const string admin_setLeaderboardConfig_eloSystem = "eloSystem";
+        public const string admin_setLeaderboardConfig_eloSystem_description = "Select the ELO system";
+        public const string admin_setLeaderboardConfig_startTime = "startDate";
+        public const string admin_setLeaderboardConfig_startTime_description = "Leaderboard's start date (format: YYYY/MM/DD)";
+        public const string admin_setLeaderboardConfig_endTime = "endDate";
+        public const string admin_setLeaderboardConfig_endTime_description = "Leaderboard's end date (format: YYYY/MM/DD)";
+        public const string admin_setLeaderboardConfig_startingPoints = "startingPoints";
+        public const string admin_setLeaderboardConfig_startingPoints_description = "Player's starting points (in thousands)";
+        public const string admin_setLeaderboardConfig_uma3p1 = "uma3p1";
+        public const string admin_setLeaderboardConfig_uma3p1_description = "First player's uma (if sanma and points are activated)";
+        public const string admin_setLeaderboardConfig_uma3p2 = "uma3p2";
+        public const string admin_setLeaderboardConfig_uma3p2_description = "Second player's uma (if sanma and points are activated)";
+        public const string admin_setLeaderboardConfig_uma3p3 = "uma3p3";
+        public const string admin_setLeaderboardConfig_uma3p3_description = "Last player's uma (if sanma and points are activated)";
+        public const string admin_setLeaderboardConfig_uma4p1 = "uma4p1";
+        public const string admin_setLeaderboardConfig_uma4p1_description = "First player's uma (if points are activated)";
+        public const string admin_setLeaderboardConfig_uma4p2 = "uma4p2";
+        public const string admin_setLeaderboardConfig_uma4p2_description = "Second player's uma (if points are activated)";
+        public const string admin_setLeaderboardConfig_uma4p3 = "uma4p3";
+        public const string admin_setLeaderboardConfig_uma4p3_description = "Third player's uma (if points are activated)";
+        public const string admin_setLeaderboardConfig_uma4p4 = "uma4p4";
+        public const string admin_setLeaderboardConfig_uma4p4_description = "Last player's uma (if points are activated)";
+        public const string admin_setLeaderboardConfig_oka = "oka";
+        public const string admin_setLeaderboardConfig_oka_description = "Oka (payment to the first player, if points are activated)";
+        public const string admin_setLeaderboardConfig_penaltyLast = "penaltyLast";
+        public const string admin_setLeaderboardConfig_penaltyLast_description = "Last place penalty (if points are activated)";
+        public const string admin_setLeaderboardConfig_penaltyChombo = "penaltyChombo";
+        public const string admin_setLeaderboardConfig_penaltyChombo_description = "Penalty per chombo";
+        public const string admin_setLeaderboardConfig_initialElo = "initialElo";
+        public const string admin_setLeaderboardConfig_initialElo_description = "Initial ELO (if ELO is activated)";
+        public const string admin_setLeaderboardConfig_minElo = "minElo";
+        public const string admin_setLeaderboardConfig_minElo_description = "Minimum ELO (if ELO is activated)";
+        public const string admin_setLeaderboardConfig_eloChangeDampening = "eloChangeDampening";
+        public const string admin_setLeaderboardConfig_eloChangeDampening_description = "ELO change dampening (if ELO is activated)";
+        public const string admin_setLeaderboardConfig_eloChangeStartRatio = "eloChangeStartRatio";
+        public const string admin_setLeaderboardConfig_eloChangeStartRatio_description = "ELO/Points change dampening at first game (if ELO or points are activated)";
+        public const string admin_setLeaderboardConfig_eloChangeEndRatio = "eloChangeEndRatio";
+        public const string admin_setLeaderboardConfig_eloChangeEndRatio_description = "ELO/Points change dampening after trial period (if ELO or points are activated)";
+        public const string admin_setLeaderboardConfig_trialPeriodDuration = "trialPeriodDuration";
+        public const string admin_setLeaderboardConfig_trialPeriodDuration_description = "Number of game during which the ELO/points dampening changes (if ELO or points are activated)";
+        public const string admin_setLeaderboardConfig_backfillInProgress = "The leaderboard config has been changed.\n{0}\n\n :bangbang: Kandora is recomputing the rankings... ";
+        public const string admin_setLeaderboardConfig_backfillFinished = "The leaderboard config has been changed.\n{0}\n\n :white_check_mark: Kandora has finished recomputing the rankings! ";
 
-        public const string admin_addPlayer_description = "Register a user to the server's league";
+        public const string admin_addPlayer_description = "Register a user to the server's leaderboard";
         public const string admin_addPlayer_nickname = "name";
         public const string admin_addPlayer_nickname_description = "The user's mention (with @) or his name if he's not on discord";
 
-        public const string admin_addPlayer_Success = "The player {0} has been added to the league";
+        public const string admin_addPlayer_Success = "The player {0} has been added to the leaderboard";
 
         public const string admin_migratePlayer_description = "Change a user's name, and migrate all his game history";
         public const string admin_migratePlayer_sourceName = "currentName";
@@ -89,19 +89,23 @@ namespace kandora.bot.resources
         public const string admin_migratePlayer_targetName_description = "His new name or a mention of a user in the server";
 
         //League commands
-        public const string league_groupDescription = "league commands";
+        public const string league_groupDescription = "League commands";
 
-        //League commands
+        //Leaderboard commands
         public const string leaderboard_groupDescription = "Leaderboard commands";
-        public const string leaderboard_register_description = "Register to the league or change your info";
+        public const string leaderboard_register_description = "Register to the leaderboard or change your info";
         public const string leaderboard_register_mahjsoulName = "mahjsoulname";
         public const string leaderboard_register_mahjsoulName_description = "Your Mahjong Soul nickname";
         public const string leaderboard_register_mahjsoulFriendId = "mahjsoulid";
         public const string leaderboard_register_mahjsoulFriendId_description = "Your Mahjong Soul ID";
         public const string leaderboard_register_tenhouName = "tenhouname";
         public const string leaderboard_register_tenhouName_description = "Your Tenhou nickname";
-        public const string leaderboard_register_response_newUser = "You are now registered to this server's league";
-        public const string leaderboard_register_response_newRanking = "You are now registered to this server's league. Your tenhou and mahjsoul names are shared between other servers leagues";
+        public const string leaderboard_register_riichiCityId = "riichicityid";
+        public const string leaderboard_register_riichiCityId_description = "Your Riichi City ID";
+        public const string leaderboard_register_riichiCityName = "riichicityname";
+        public const string leaderboard_register_riichiCityName_description = "Your Riichi City nickname";
+        public const string leaderboard_register_response_newUser = "You are now registered to this server's leaderboard";
+        public const string leaderboard_register_response_newRanking = "You are now registered to this server's leaderboard. Your tenhou and mahjsoul names are shared between other servers leaderboards";
         public const string leaderboard_register_response_userAlreadyRegistered = "Your new info has been recorded";
 
         public const string leaderboard_logInfo_description = "Display a game's info from its ID";
@@ -112,7 +116,7 @@ namespace kandora.bot.resources
         public const string leaderboard_results = "Results";
         public const string leaderboard_bestHand = "Best hand: {0}({1}) (round {2}) with {3}, total:{4}";
         
-        public const string leaderboard_getGames_description = "Download a csv file containing the games played during this current league";
+        public const string leaderboard_getGames_description = "Download a csv file containing the games played during this current leaderboard";
         public const string leaderboard_getGames_fileHeader = "logId,gameName,location,date,player1,score1,chombo1,player2,score2,chombo2,player3,score3,chombo3,player4,score4,chombo4";
         public const string leaderboard_getGames_message = "Here's the log of the games played between {0} and {1}";
 
@@ -144,12 +148,12 @@ namespace kandora.bot.resources
         public const string leaderboard_submitResult_messageHeader = "*place: playerName (nbGames): score => final score";
         public const string leaderboard_submitResult_NameAndId = "Name: {0}, Id: {1}";
         public const string leaderboard_submitResult_Date = "Played the : {0}";
-        public const string leaderboard_submitResult_SimilarGameFound = "\n**ATTENTION**\n({0}) similar games have been found on the league, here are some details about the last one:";
+        public const string leaderboard_submitResult_SimilarGameFound = "\n**ATTENTION**\n({0}) similar games have been found on the leaderboard, here are some details about the last one:";
         public const string leaderboard_submitResult_canceledMessage = "2 players have voted {0}, this game won't be recorded";
         public const string leaderboard_submitResult_validatedMessage = "2 players have voted {0}, this game has been recorded!";
 
 
-        public const string leaderboard_submitOnlineResult_description = "Record a mahjsoul or tenhou game for the league";
+        public const string leaderboard_submitOnlineResult_description = "Record a mahjsoul or tenhou game for the leaderboard";
         public const string leaderboard_submitOnlineResult_gameId = "gameId";
         public const string leaderboard_submitOnlineResult_gameId_description = "The tenhou or mahjsoul game id";
 
@@ -227,27 +231,27 @@ namespace kandora.bot.resources
         public const string commandError_title = "An error happened";
         public const string commandError_InvalidKanFormat = "A kan is not correct: {0}";
         public const string commandError_TooManyTiles = "Too many tiles: {0}";
-        public const string commandError_CouldNotFindGameUser = "There is no league-registered user with the {0} nickname : {1}";
-        public const string commandError_LeagueConfigRequiresScore = "The current league configuration requires players scores to record the game";
+        public const string commandError_CouldNotFindGameUser = "There is no leaderboard-registered user with the {0} nickname : {1}";
+        public const string commandError_LeaderboardConfigRequiresScore = "The current leaderboard configuration requires players scores to record the game";
         public const string commandError_Wrong_Scores = "The sum of the scores is {0} (normally {1})";
-        public const string commandError_sanmaNotAllowed = "The current league configuration doesn't accept sanma games";
-        public const string commandError_badPlayerNumber = "The current league configuration does not support {0} player games";
+        public const string commandError_sanmaNotAllowed = "The current leaderboard configuration doesn't accept sanma games";
+        public const string commandError_badPlayerNumber = "The current leaderboard configuration does not support {0} player games";
         public const string commandError_badDistinctPlayerNumber = "There are only {0} distinct players mentioned";
-        public const string commandError_unknownOnlinePlayerName = "The log has players that do not match with any current league members: {0}";
+        public const string commandError_unknownOnlinePlayerName = "The log has players that do not match with any current leaderboard members: {0}";
         public const string commandError_unknownLogFormat = "This log ID doesn't seem to be a mahjsoul or tenhou format";
         public const string commandError_mahjsoulUserNameChanged = "Detected old user name for <@{0}>. Automatically updated from {1} to {2}, don't thank me ;)";
-        public const string commandError_gameAlreadyExists = "The game with ID: {0} already exists. A game can be recorded only once, and contribute to only one league.";
+        public const string commandError_gameAlreadyExists = "The game with ID: {0} already exists. A game can be recorded only once, and contribute to only one leaderboard.";
         public const string commandError_UserNicknameAlreadyExists = "A user with this name already exists and has {0} games recorded on this server.";
         public const string commandError_ValueAlreadyExists = "A user with {0} {1} exists already! Contact the admin if you want to fix that.";
         public const string commandError_CouldntExtractDateFromLog = "Couldn't extract date from this log, it won't be recorded";
         public const string commandError_PlayerUnknown = "The user {0} isn't registered";
+        public const string commandError_leagueNotInitialized = "The league hasn't been created yet";
         public const string commandError_leaderboardNotInitialized = "The leaderboard hasn't been created yet";
-        public const string commandError_leagueNotInitialized = "No league has been created";
-        public const string commandError_leaderboardAlreadyInitialized = "The lieaderboard has already been created";
-        public const string commandError_leagueAlreadyInitialized = "The league has already been created";
+        public const string commandError_leagueAlreadyInitialized = "An league is still ongoing on this server";
+        public const string commandError_leaderboardAlreadyInitialized = "The leaderboard has already been created";
 
 
-        //League
-        public const string kandoraLeague_roleName = "Kandora League";
+        //Leaderboard
+        public const string kandoraLeaderboard_roleName = "Kandora Leaderboard";
     }
 }

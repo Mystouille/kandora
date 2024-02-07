@@ -3,8 +3,8 @@ DROP TABLE Game;
 DROP TABLE ServerUser;
 DROP TABLE Server;
 DROP TABLE DiscordUser;
-DROP TABLE LeagueConfig;
-CREATE TABLE LeagueConfig (
+DROP TABLE LeaderboardConfig;
+CREATE TABLE LeaderboardConfig (
     Id SERIAL PRIMARY KEY,
     countPoints BOOL NOT NULL,
     allowSanma BOOL DEFAULT false NOT NULL,
@@ -32,18 +32,33 @@ CREATE TABLE LeagueConfig (
 CREATE TABLE Server (
     Id VARCHAR(20) PRIMARY KEY NOT NULL UNIQUE,
     displayName VARCHAR(200) NOT NULL,
-    leagueRoleId VARCHAR(20) NULL,
-    leagueName VARCHAR(30) NULL,
+    leaderboardRoleId VARCHAR(20) NULL,
+    leaderboardName VARCHAR(30) NULL,
     leaderboardConfigId INT NULL,
-    leagueConfigId INT NULL,
-    FOREIGN KEY (leaderboardConfigId) REFERENCES LeagueConfig (Id),
-    FOREIGN KEY (leagueConfigId) REFERENCES LeagueConfig (Id)
+    FOREIGN KEY (leaderboardConfigId) REFERENCES LeagueConfig (Id)
+);
+CREATE TABLE League (
+    Id INT PRIMARY KEY NOT NULL UNIQUE,
+    displayName VARCHAR(200) NOT NULL,
+    serverId VARCHAR(20) NOT NULL,
+    isOngoing BOOL NOT NULL,
+    FOREIGN KEY (serverId) REFERENCES Server (Id)
 );
 CREATE TABLE Team (
     Id SERIAL PRIMARY KEY,
     teamName VARCHAR(20) NOT NULL,
     serverId VARCHAR(20) NOT NULL,
+    leagueId INT NOT NULL,
+    FOREIGN KEY (leagueId) REFERENCES League (Id),
     FOREIGN KEY (serverId) REFERENCES Server (Id)
+);
+CREATE TABLE TeamUser (
+    Id SERIAL PRIMARY KEY,
+    isCaptain BOOL NOT NULL,
+    teamId INT NOT NULL,
+    userId VARCHAR(20) NOT NULL,
+    FOREIGN KEY (teamId) REFERENCES Team (Id),
+    FOREIGN KEY (userId) REFERENCES DiscordUser (Id)
 );
 CREATE TABLE DiscordUser
 (
@@ -52,7 +67,9 @@ CREATE TABLE DiscordUser
     mahjsoulUserId VARCHAR(30) NULL,
     mahjsoulName VARCHAR(30) NULL,
     tenhouName VARCHAR(30) NULL,
-    leaguePassword VARCHAR NULL
+    riichiCityId VARCHAR(30) NULL,
+    riichiCityName VARCHAR(30) NULL,
+    leaderboardPassword VARCHAR NULL
 );
 CREATE TABLE ServerUser (
     Id SERIAL PRIMARY KEY,
@@ -84,10 +101,12 @@ CREATE TABLE Game (
     serverId    VARCHAR (20) NOT NULL,
     fullLog     VARCHAR NULL, 
     isSanma     BOOL default false NOT NULL,
+    leagueId    INT NULL,
     FOREIGN KEY (user1Id) REFERENCES DiscordUser (Id),
     FOREIGN KEY (user2Id) REFERENCES DiscordUser (Id),
     FOREIGN KEY (user3Id) REFERENCES DiscordUser (Id),
     FOREIGN KEY (user4Id) REFERENCES DiscordUser (Id),
+    FOREIGN KEY (leagueId) REFERENCES League (Id),
     FOREIGN KEY (serverId) REFERENCES Server (Id)
 );
 CREATE TABLE Ranking (
@@ -104,40 +123,9 @@ CREATE TABLE Ranking (
     FOREIGN KEY (gameId) REFERENCES Game (Id),
     FOREIGN KEY (serverId) REFERENCES Server (Id)
 );
-CREATE TABLE TeamGame (
-    Id SERIAL PRIMARY KEY,
-    name        VARCHAR (100),
-    platform    VARCHAR (100) NOT NULL,
-    location    VARCHAR (100) DEFAULT '' NOT NULL,
-    team1Id     VARCHAR (20) NOT NULL,
-    team1Score  INT NOT NULL,
-    team1Chombo INT DEFAULT 0,
-    team2Id     VARCHAR (20) NOT NULL,
-    team2Score  INT NOT NULL,
-    team2Chombo INT DEFAULT 0,
-    team3Id     VARCHAR (20) NOT NULL,
-    team3Score  INT NOT NULL,
-    team3Chombo INT DEFAULT 0,
-    team4Id     VARCHAR (20) NOT NULL,
-    team4Score  INT NOT NULL,
-    team4Chombo INT DEFAULT 0,
-    timestamp timestamp default current_timestamp,
-    serverId    VARCHAR (20) NOT NULL,
-    fullLog     VARCHAR NULL, 
-    isSanma     BOOL default false NOT NULL,
-    FOREIGN KEY (team1Id) REFERENCES Team (Id),
-    FOREIGN KEY (team2Id) REFERENCES Team (Id),
-    FOREIGN KEY (team3Id) REFERENCES Team (Id),
-    FOREIGN KEY (team4Id) REFERENCES Team (Id),
-    FOREIGN KEY (user1Id) REFERENCES DiscordUser (Id),
-    FOREIGN KEY (user2Id) REFERENCES DiscordUser (Id),
-    FOREIGN KEY (user3Id) REFERENCES DiscordUser (Id),
-    FOREIGN KEY (user4Id) REFERENCES DiscordUser (Id),
-    FOREIGN KEY (serverId) REFERENCES Server (Id)
-);
 CREATE TABLE TeamRanking (
     Id SERIAL PRIMARY KEY,
-    teamId VARCHAR(20) NOT NULL,
+    teamId INT NOT NULL,
     oldElo    FLOAT NULL,
     newElo    FLOAT NOT NULL,
 	position  VARCHAR (20),
@@ -145,7 +133,7 @@ CREATE TABLE TeamRanking (
     timestamp timestamp default current_timestamp,
     gameId    INT   NULL,
     serverId  VARCHAR(20) NOT NULL,
-    FOREIGN KEY (userId) REFERENCES DiscordUser (Id),
+    FOREIGN KEY (teamId) REFERENCES Team (Id),
     FOREIGN KEY (gameId) REFERENCES Game (Id),
     FOREIGN KEY (serverId) REFERENCES Server (Id)
 );

@@ -42,7 +42,7 @@ namespace kandora.bot.services
         private const string IsSanmaCol = "isSanma"; 
 
 
-        public static (Game, List<Ranking>) RecordIRLGame(string[] members, int[] scores, int[] chombos, DateTime timeStamp, string location, Server server, LeagueConfig leagueConfig)
+        public static (Game, List<Ranking>) RecordIRLGame(string[] members, int[] scores, int[] chombos, DateTime timeStamp, string location, Server server, LeaderboardConfig leaderboardConfig)
         {
             var dbCon = DBConnection.Instance();
 
@@ -87,11 +87,11 @@ namespace kandora.bot.services
 
                 var game = GetGameFromValue(IdCol, NpgsqlDbType.Integer, gameId, server);
 
-                //only take game into account if it's in the league timeframe
-                if (game.Timestamp.CompareTo(leagueConfig.StartTime) > 0
-                    && game.Timestamp.CompareTo(leagueConfig.EndTime) < 0)
+                //only take game into account if it's in the leaderboard timeframe
+                if (game.Timestamp.CompareTo(leaderboardConfig.StartTime) > 0
+                    && game.Timestamp.CompareTo(leaderboardConfig.EndTime) < 0)
                 {
-                    var rankings = RankingDbService.UpdateRankings(game, leagueConfig);
+                    var rankings = RankingDbService.UpdateRankings(game, leaderboardConfig);
                     return (game, rankings);
                 }
                 else
@@ -136,7 +136,7 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static (Game, List<Ranking>) RecordOnlineGame(RiichiGame gameLog, Server serverWithUsers, LeagueConfig config)
+        public static (Game, List<Ranking>) RecordOnlineGame(RiichiGame gameLog, Server serverWithUsers, LeaderboardConfig config)
         {
             var dbCon = DBConnection.Instance();
 
@@ -221,7 +221,7 @@ namespace kandora.bot.services
                 var game = GetGameFromValue(NameCol, NpgsqlDbType.Varchar, logId, serverWithUsers);
 
 
-                //only take game into account if it's between the league timePeriod
+                //only take game into account if it's between the leaderboard timePeriod
                 if (game.Timestamp.CompareTo(config.StartTime) > 0
                     && game.Timestamp.CompareTo(config.EndTime) < 0)
                 {
@@ -278,7 +278,7 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static List<Game> GetLastNRecordedGame(string serverId, LeagueConfig config, int numberOfGames = -1)
+        public static List<Game> GetLastNRecordedGame(string serverId, LeaderboardConfig config, int numberOfGames = -1)
         {
             var dbCon = DBConnection.Instance();
             var games = new List<Game>();
@@ -417,7 +417,7 @@ namespace kandora.bot.services
                 var games = getGameQueryResult(Reader);
                 if (games.Count() == 0)
                 {
-                    throw (new Exception($"Game with {valueName}:{value} was not found on this league"));
+                    throw (new Exception($"Game with {valueName}:{value} was not found on this leaderboard"));
                 }
                 return games.FirstOrDefault();
             }

@@ -13,7 +13,7 @@ namespace kandora.bot.services
 {
     class ConfigDbService: DbService
     {
-        public static string tableName = "LeagueConfig";
+        public static string tableName = "LeaderboardConfig";
         public static string idCol = "Id";
         public static string countPointsCol = "countPoints";
         public static string startingPointsCol = "startingPoints";
@@ -38,7 +38,7 @@ namespace kandora.bot.services
         public static string startDateCol = "startDate";
         public static string endDateCol = "endDate";
 
-        public static LeagueConfig GetConfig(int leaderboardConfigId)
+        public static LeaderboardConfig GetConfig(int leaderboardConfigId)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -61,37 +61,37 @@ namespace kandora.bot.services
                     var id = reader.GetInt32(0);
                     var countPoints = reader.GetBoolean(1);
                     var eloSystem = reader.GetString(12);
-                    var league = new LeagueConfig(id, countPoints, eloSystem); ;
+                    var leaderboard = new LeaderboardConfig(id, countPoints, eloSystem); ;
 
-                    league.StartingPoints = reader.GetDouble(2);
+                    leaderboard.StartingPoints = reader.GetDouble(2);
 
-                    league.Uma3p1 = reader.IsDBNull(3) ? -9999 : reader.GetDouble(3);
-                    league.Uma3p2 = reader.IsDBNull(4) ? -9999 : reader.GetDouble(4);
-                    league.Uma3p3 = reader.IsDBNull(5) ? -9999 : reader.GetDouble(5);
-                    league.Uma4p1 = reader.IsDBNull(6) ? -9999 : reader.GetDouble(6);
-                    league.Uma4p2 = reader.IsDBNull(7) ? -9999 : reader.GetDouble(7);
-                    league.Uma4p3 = reader.IsDBNull(8) ? -9999 : reader.GetDouble(8);
-                    league.Uma4p4 = reader.IsDBNull(9) ? -9999 : reader.GetDouble(9);
+                    leaderboard.Uma3p1 = reader.IsDBNull(3) ? -9999 : reader.GetDouble(3);
+                    leaderboard.Uma3p2 = reader.IsDBNull(4) ? -9999 : reader.GetDouble(4);
+                    leaderboard.Uma3p3 = reader.IsDBNull(5) ? -9999 : reader.GetDouble(5);
+                    leaderboard.Uma4p1 = reader.IsDBNull(6) ? -9999 : reader.GetDouble(6);
+                    leaderboard.Uma4p2 = reader.IsDBNull(7) ? -9999 : reader.GetDouble(7);
+                    leaderboard.Uma4p3 = reader.IsDBNull(8) ? -9999 : reader.GetDouble(8);
+                    leaderboard.Uma4p4 = reader.IsDBNull(9) ? -9999 : reader.GetDouble(9);
 
-                    league.Oka = reader.IsDBNull(10) ? -9999 : reader.GetDouble(10);
-                    league.PenaltyLast = reader.IsDBNull(11) ? -9999 : reader.GetDouble(11);
-                    league.InitialElo = reader.IsDBNull(13) ? -9999 : reader.GetDouble(13);
-                    league.MinElo = reader.IsDBNull(14) ? -9999 : reader.GetDouble(14);
-                    league.BaseEloChangeDampening = reader.IsDBNull(15) ? -9999 : reader.GetDouble(15);
+                    leaderboard.Oka = reader.IsDBNull(10) ? -9999 : reader.GetDouble(10);
+                    leaderboard.PenaltyLast = reader.IsDBNull(11) ? -9999 : reader.GetDouble(11);
+                    leaderboard.InitialElo = reader.IsDBNull(13) ? -9999 : reader.GetDouble(13);
+                    leaderboard.MinElo = reader.IsDBNull(14) ? -9999 : reader.GetDouble(14);
+                    leaderboard.BaseEloChangeDampening = reader.IsDBNull(15) ? -9999 : reader.GetDouble(15);
 
-                    league.EloChangeStartRatio = reader.IsDBNull(16) ? -9999 : reader.GetDouble(16);
-                    league.EloChangeEndRatio = reader.IsDBNull(17) ? -9999 : reader.GetDouble(17);
-                    league.TrialPeriodDuration = reader.IsDBNull(18) ? -9999 : reader.GetInt32(18);
-                    league.AllowSanma = reader.GetBoolean(19);
+                    leaderboard.EloChangeStartRatio = reader.IsDBNull(16) ? -9999 : reader.GetDouble(16);
+                    leaderboard.EloChangeEndRatio = reader.IsDBNull(17) ? -9999 : reader.GetDouble(17);
+                    leaderboard.TrialPeriodDuration = reader.IsDBNull(18) ? -9999 : reader.GetInt32(18);
+                    leaderboard.AllowSanma = reader.GetBoolean(19);
 
                     DateTime startDate = reader.GetDateTime(20);
                     DateTime endDate = reader.GetDateTime(21);
-                    league.StartTime = reader.GetDateTime(20);
-                    league.EndTime = reader.GetDateTime(21);
-                    league.PenaltyChombo = reader.IsDBNull(22) ? -9999 : reader.GetDouble(22);
+                    leaderboard.StartTime = reader.GetDateTime(20);
+                    leaderboard.EndTime = reader.GetDateTime(21);
+                    leaderboard.PenaltyChombo = reader.IsDBNull(22) ? -9999 : reader.GetDouble(22);
 
                     reader.Close();
-                    return league;
+                    return leaderboard;
                 }
                 reader.Close();
                 throw new Exception($"Couldn't find config with id {leaderboardConfigId}");
@@ -147,13 +147,13 @@ namespace kandora.bot.services
             return configId;
         }
 
-        public static void DeleteConfig(int leagueConfigId)
+        public static void DeleteConfig(int leaderboardConfigId)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.CommandText = $"DELETE FROM {tableName} WHERE {idCol} = {leagueConfigId};";
+                command.CommandText = $"DELETE FROM {tableName} WHERE {idCol} = {leaderboardConfigId};";
                 command.CommandType = CommandType.Text;
                 var reader = command.ExecuteNonQuery();
                 return;

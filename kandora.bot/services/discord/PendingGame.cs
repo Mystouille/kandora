@@ -121,16 +121,16 @@ namespace kandora.bot.services.discord
                     {
                         throw new Exception(Resources.commandError_leaderboardNotInitialized);
                     }
-                    var leagueConfig = ConfigDbService.GetConfig((int)(server.LeaderboardConfigId));
+                    var leaderboardConfig = ConfigDbService.GetConfig((int)(server.LeaderboardConfigId));
 
 
                     if (game.Log == null)
                     {
-                        ScoreDbService.RecordIRLGame(game.UserIds, game.Scores, game.Chombos, game.TimeStamp, game.Location, server, leagueConfig);
+                        ScoreDbService.RecordIRLGame(game.UserIds, game.Scores, game.Chombos, game.TimeStamp, game.Location, server, leaderboardConfig);
                     }
                     else
                     {
-                        ScoreDbService.RecordOnlineGame(game.Log, server, leagueConfig);
+                        ScoreDbService.RecordOnlineGame(game.Log, server, leaderboardConfig);
                     }
                     kanContext.PendingGames.Remove(msgId);
 
