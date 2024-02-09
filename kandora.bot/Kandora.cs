@@ -25,7 +25,7 @@ namespace kandora.bot
             var token = ConfigurationManager.AppSettings.Get("ClientToken");
             client = new DiscordClient(new DiscordConfiguration
             {
-                Token = ConfigurationManager.AppSettings.Get("ClientToken"),
+                Token = token,
                 TokenType = TokenType.Bot,
                 MinimumLogLevel = LogLevel.Debug
             });
@@ -36,6 +36,7 @@ namespace kandora.bot
             slashCommands.RegisterCommands<MahjongSlashCommands>();
             slashCommands.RegisterCommands<AdminSlashCommands>();
             slashCommands.RegisterCommands<LeaderboardSlashCommands>();
+            slashCommands.RegisterCommands<LeagueSlashCommands>();
 
             //nopes
             //slashCommands.RegisterCommands<TestSlashCommands>();

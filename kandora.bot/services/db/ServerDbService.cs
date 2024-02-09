@@ -171,26 +171,6 @@ namespace kandora.bot.services
             throw (new DbConnectionException());
         }
 
-        public static void StartLeagueOnServer(string serverId, int leagueId)
-        {
-            var dbCon = DBConnection.Instance();
-            if (dbCon.IsConnect())
-            {
-                using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.Connection = dbCon.Connection;
-                command.CommandType = CommandType.Text;
-                command.CommandText = $"UPDATE {serverTableName} SET {leagueIdCol} = @configId WHERE {idCol} = @serverId;";
-
-                command.Parameters.AddWithValue("@configId", NpgsqlDbType.Integer, leagueId);
-                command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
-                command.CommandType = CommandType.Text;
-
-                command.ExecuteNonQuery();
-                return;
-            }
-            throw (new DbConnectionException());
-        }
-
         public static void DeleteServer(string serverId)
         {
             var dbCon = DBConnection.Instance();

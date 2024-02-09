@@ -47,10 +47,9 @@ CREATE TABLE League (
 CREATE TABLE Team (
     Id SERIAL PRIMARY KEY,
     teamName VARCHAR(20) NOT NULL,
-    serverId VARCHAR(20) NOT NULL,
+    fancyName VARCHAR(20) NOT NULL,
     leagueId INT NOT NULL,
-    FOREIGN KEY (leagueId) REFERENCES League (Id),
-    FOREIGN KEY (serverId) REFERENCES Server (Id)
+    FOREIGN KEY (leagueId) REFERENCES League (Id)
 );
 CREATE TABLE TeamUser (
     Id SERIAL PRIMARY KEY,

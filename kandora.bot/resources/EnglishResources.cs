@@ -12,8 +12,24 @@ namespace kandora.bot.resources
         public const string admin_startLeaderboard_leaderboardStarted = "A mahjong leaderboard has been created on {0}!";
         public const string admin_startLeaderboard_leaderboardAlreadyExists = "A leaderboard already exists on {0}!";
         public const string admin_startLeague_description = "Starts a mahjong team league";
+        public const string admin_startLeague_tournamentId = "tournamentId";
+        public const string admin_startLeague_tournamentId_description = "A Riichi City tournament ID";
+        public const string admin_startLeague_displayName = "displayName";
+        public const string admin_startLeague_displayName_description = "The league's display name";
         public const string admin_startLeague_leagueStarted = "A mahjong team league has been created on {0}!";
         public const string admin_startLeague_leagueAlreadyExists = "A league already exists on {0}!";
+        public const string admin_createTeam_description = "Create a team for the current league";
+        public const string admin_createTeam_teamName = "teamName";
+        public const string admin_createTeam_teamName_description = "The team's name (no spaces nor special characters)";
+        public const string admin_createTeam_fancyName = "fancyName";
+        public const string admin_createTeam_fancyName_description = "The team's display name (go wild on these emotes)";
+        public const string admin_createTeam_teamCreated = "The team {0} has been created in {1}!";
+        public const string admin_addTeamPlayer_description = "Add a player to a team";
+        public const string admin_addTeamPlayer_user = "userName";
+        public const string admin_addTeamPlayer_user_description = "The player's name or mention (@)";
+        public const string admin_addTeamPlayer_team = "teamName";
+        public const string admin_addTeamPlayer_team_description = "The team's name";
+        public const string admin_addTeamPlayer_userHasBeenAdded = "The user {0} has been added to team {1}!";
         public const string admin_flushServer_description = "Delete everything on a server";
         public const string admin_flushServer_unauthorized = "This commands deletes every game and every player data, so let's not do that for now.";
         public const string admin_flushServer_leaderboardEnded = "The mahjong leaderboard got deleted!";
@@ -79,8 +95,9 @@ namespace kandora.bot.resources
         public const string admin_addPlayer_description = "Register a user to the server's leaderboard";
         public const string admin_addPlayer_nickname = "name";
         public const string admin_addPlayer_nickname_description = "The user's mention (with @) or his name if he's not on discord";
-
         public const string admin_addPlayer_Success = "The player {0} has been added to the leaderboard";
+        public const string admin_setUser_description = "Change a user's info (use with caution)";
+        public const string admin_setUser_Success = "The user {0} was edited";
 
         public const string admin_migratePlayer_description = "Change a user's name, and migrate all his game history";
         public const string admin_migratePlayer_sourceName = "currentName";
@@ -90,7 +107,20 @@ namespace kandora.bot.resources
 
         //League commands
         public const string league_groupDescription = "League commands";
-
+        public const string admin_startGame_description = "Start a league game";
+        public const string admin_startGame_user1 = "user1";
+        public const string admin_startGame_user1_description = "The player's name or mention (@)";
+        public const string admin_startGame_user2 = "user2";
+        public const string admin_startGame_user2_description = "The player's name or mention (@)";
+        public const string admin_startGame_user3 = "user3";
+        public const string admin_startGame_user3_description = "The player's name or mention (@)";
+        public const string admin_startGame_user4 = "user4";
+        public const string admin_startGame_user4_description = "The player's name or mention (@)";
+        public const string admin_seeLeagueRanking_description = "Displays the ranking of the ongoing league";
+        public const string admin_seeLeagueRanking_displayInChat = "displayInChat";
+        public const string admin_seeLeagueRanking_displayInChat_description = "Displays the ranking publicly";
+        
+        
         //Leaderboard commands
         public const string leaderboard_groupDescription = "Leaderboard commands";
         public const string leaderboard_register_description = "Register to the leaderboard or change your info";
@@ -101,9 +131,9 @@ namespace kandora.bot.resources
         public const string leaderboard_register_tenhouName = "tenhouname";
         public const string leaderboard_register_tenhouName_description = "Your Tenhou nickname";
         public const string leaderboard_register_riichiCityId = "riichicityid";
-        public const string leaderboard_register_riichiCityId_description = "Your Riichi City ID";
+        public const string leaderboard_register_riichiCityId_description = "The Riichi City user ID";
         public const string leaderboard_register_riichiCityName = "riichicityname";
-        public const string leaderboard_register_riichiCityName_description = "Your Riichi City nickname";
+        public const string leaderboard_register_riichiCityName_description = "The Riichi City nickname";
         public const string leaderboard_register_response_newUser = "You are now registered to this server's leaderboard";
         public const string leaderboard_register_response_newRanking = "You are now registered to this server's leaderboard. Your tenhou and mahjsoul names are shared between other servers leaderboards";
         public const string leaderboard_register_response_userAlreadyRegistered = "Your new info has been recorded";
@@ -249,6 +279,11 @@ namespace kandora.bot.resources
         public const string commandError_leaderboardNotInitialized = "The leaderboard hasn't been created yet";
         public const string commandError_leagueAlreadyInitialized = "An league is still ongoing on this server";
         public const string commandError_leaderboardAlreadyInitialized = "The leaderboard has already been created";
+        public const string commandError_teamNameAlreadyExists = "A team with this name already exists in this league";
+        public const string commandError_playerAlreadyPresentInATeam = "This user is already in a team for this league (maybe this one?)";
+        public const string commandError_teamDoesNotExist = "The team {0} doesn't exist in this league";
+        public const string commandError_PlayerNotOnRiichiCity = "The user {0} doesn't have a Riichi City ID";
+        public const string commandError_RiichiCityConnectionFailed = "The connection to Riichi City failed";
 
 
         //Leaderboard

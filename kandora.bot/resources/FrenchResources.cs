@@ -12,8 +12,24 @@ namespace kandora.bot.resources
         public const string admin_startLeaderboard_leaderboardStarted = "Un leaderboard vient de commencer sur {0}!";
         public const string admin_startLeaderboard_leaderboardAlreadyExists = "Un leaderboard existe déjà sur {0}!";
         public const string admin_startLeague_description = "Commence une ligue en equipe de mahjong";
+        public const string admin_startLeague_tournamentId = "tournamentId";
+        public const string admin_startLeague_tournamentId_description = "L'ID d'un tournoi riichi city";
+        public const string admin_startLeague_displayName = "displayName";
+        public const string admin_startLeague_displayName_description = "le nom de la ligue";
         public const string admin_startLeague_leagueStarted = "Une ligue vient de commencer sur {0}!";
         public const string admin_startLeague_leagueAlreadyExists = "Une ligue  existe déjà sur {0}!";
+        public const string admin_createTeam_description = "Crée une équipe pour la ligue actuelle";
+        public const string admin_createTeam_teamName = "teamName";
+        public const string admin_createTeam_teamName_description = "Le nom de l'équipe (sans espace ni caractères spéciaux)";
+        public const string admin_createTeam_fancyName = "fancyName";
+        public const string admin_createTeam_fancyName_description = "Le nom d'affichage de l'équipe (faites vous plaisir sur les emojis)";
+        public const string admin_createTeam_teamCreated = "L'équipe \"{0}\" a été créée dans {1}!";
+        public const string admin_addTeamPlayer_description = "Ajoute un joueur à une équipe";
+        public const string admin_addTeamPlayer_user = "userName";
+        public const string admin_addTeamPlayer_user_description = "Le nom ou la mention (@) du joueur";
+        public const string admin_addTeamPlayer_team = "teamName";
+        public const string admin_addTeamPlayer_team_description = "Le nom de l'équipe";
+        public const string admin_addTeamPlayer_userHasBeenAdded = "Le joueur {0} a bien été ajouté à l'équipe {1}!";
         public const string admin_flushServer_description = "Supprime une ligue de mahjong ainsi que l'historique des parties";
         public const string admin_flushServer_unauthorized = "Cette commande supprime tout l'historique, on va éviter pour le moment.";
         public const string admin_flushServer_leaderboardEnded = "La ligue de mahjong a été supprimée!";
@@ -76,11 +92,13 @@ namespace kandora.bot.resources
         public const string admin_setLeaderboardConfig_backfillInProgress = "La configuration de la ligue a changé.\n{0}\n\n :bangbang: Kandora recalcule le classement à partir du début... ";
         public const string admin_setLeaderboardConfig_backfillFinished = "La configuration de la ligue a changé.\n{0}\n\n :white_check_mark: Kandora a fini de recalculer le classement! ";
 
-        public const string admin_addPlayer_description = "Inscrit un utilisateur à la ligue du serveur";
+        public const string admin_addPlayer_description = "Inscrit un utilisateur au leaderboard du serveur";
         public const string admin_addPlayer_nickname = "nom";
         public const string admin_addPlayer_nickname_description = "La mention du joueur (avec @) ou son nom d'invité s'il n'est pas sur le serveur";
+        public const string admin_addPlayer_Success = "Le joueur {0} a bien été ajouté au leaderboard";
+        public const string admin_setUser_description = "Modifie les infos d'un utilisateur (à utiliser avec modération)";
+        public const string admin_setUser_Success = "Le joueur {0} a bien été modifié";
 
-        public const string admin_addPlayer_Success = "Le joueur {0} a bien été ajouté à la ligue";
 
         public const string admin_migratePlayer_description = "Change le pseudo d'un utilisateur (et migre son historique de parties)";
         public const string admin_migratePlayer_sourceName = "pseudoActuel";
@@ -89,8 +107,20 @@ namespace kandora.bot.resources
         public const string admin_migratePlayer_targetName_description = "Mention du joueur voulu ou pseudo (pour crée un joueur invité)";
         public const string admin_migratePlayer_success = "Le joueur {0} a bien été renommé en {1}.";
 
-        //Leaderboard commands
+        //League commands
         public const string league_groupDescription = "Commandes de ligue";
+        public const string admin_startGame_description = "Commence une partie de ligue";
+        public const string admin_startGame_user1 = "user1";
+        public const string admin_startGame_user1_description = "La mention (@) ou nom du joueur 1";
+        public const string admin_startGame_user2 = "user2";
+        public const string admin_startGame_user2_description = "La mention (@) ou nom du joueur 2";
+        public const string admin_startGame_user3 = "user3";
+        public const string admin_startGame_user3_description = "La mention (@) ou nom du joueur 3";
+        public const string admin_startGame_user4 = "user4";
+        public const string admin_startGame_user4_description = "La mention (@) ou nom du joueur 4";
+        public const string admin_seeLeagueRanking_description = "Affiche le classement de la ligue en cours";
+        public const string admin_seeLeagueRanking_displayInChat = "displayInChat";
+        public const string admin_seeLeagueRanking_displayInChat_description = "Affiche le score publiquement";
 
 
         //Leaderboard commands
@@ -103,9 +133,9 @@ namespace kandora.bot.resources
         public const string leaderboard_register_tenhouName = "tenhouname";
         public const string leaderboard_register_tenhouName_description = "Ton pseudo Tenhou";
         public const string leaderboard_register_riichiCityId = "riichicityid";
-        public const string leaderboard_register_riichiCityId_description = "Ton ID Riichi City";
+        public const string leaderboard_register_riichiCityId_description = "L'ID utilisateur Riichi City";
         public const string leaderboard_register_riichiCityName = "riichicityname";
-        public const string leaderboard_register_riichiCityName_description = "Ton pseudo Riichi City";
+        public const string leaderboard_register_riichiCityName_description = "Le pseudo Riichi City";
         public const string leaderboard_register_response_newUser = "Tu fais maintenant partie de la ligue de ce serveur";
         public const string leaderboard_register_response_newRanking = "Tu fais maintenant partie de la ligue de ce serveur. Attention, tes pseudos Tenhou et Mahjong Soul sont communs avec les ligues d'autres serveurs";
         public const string leaderboard_register_response_userAlreadyRegistered = "Les nouvelles infos ont été prise en compte";
@@ -254,6 +284,14 @@ namespace kandora.bot.resources
         public const string commandError_leagueNotInitialized = "La ligue de n'a pas été encore crée";
         public const string commandError_leaderboardAlreadyInitialized = "Le leaderboard a déjà été créé";
         public const string commandError_leagueAlreadyInitialized = "Une ligue est déjà en cours sur ce serveur";
+        public const string commandError_teamNameAlreadyExists = "Une équipe avec ce nom existe déjà dans cette ligue";
+        public const string commandError_playerAlreadyPresentInATeam = "Ce joueur est déjà présent dans une équipe pour cette ligue";
+        public const string commandError_teamDoesNotExist = "L'équipe {0} n'existe pas dans cette ligue";
+        public const string commandError_PlayerNotOnRiichiCity = "Le joueur {0} n'a pas d'ID Riichi City";
+        public const string commandError_RiichiCityConnectionFailed = "La connection avec Riichi City a échoué";
+
+
+
 
 
 

@@ -37,6 +37,7 @@ namespace kandora.bot.services
         private const string TimestampCol = "timestamp";
         private const string IdCol = "Id";
         private const string ServerIdCol = "serverId";
+        private const string LeagueIdCol = "leagueId";
         private const string FullLogIdCol = "fullLog";
         private const string NameCol = "name";
         private const string IsSanmaCol = "isSanma"; 
@@ -287,7 +288,7 @@ namespace kandora.bot.services
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.CommandText = $"SELECT {IdCol}, {User1IdCol}, {User2IdCol}, {User3IdCol}, {User4IdCol}, {User1ScoreCol}, {User2ScoreCol}, {User3ScoreCol}, {User4ScoreCol}, {FullLogIdCol}, {PlatformCol}, {TimestampCol}, {IsSanmaCol}, {NameCol}, {LocationCol}" +
                     $" FROM {GameTableName}" +
-                    $" WHERE {ServerIdCol} = @serverId" +
+                    $" WHERE {ServerIdCol} = @serverId AND {LeagueIdCol} IS NULL" +
                     (config == null ? "" : $" AND {TimestampCol} > @startTime AND {TimestampCol} < @endTime") +
                     $" ORDER BY {TimestampCol} DESC, {IdCol} DESC;";
                 command.CommandType = CommandType.Text;

@@ -31,7 +31,7 @@ namespace kandora.bot.services
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {idCol}, {mahjsoulNameCol}, {mahjsoulFriendIdCol}, {mahjsoulUserIdCol}, {tenhouNameCol} FROM {tableName}";
+                command.CommandText = $"SELECT {idCol}, {mahjsoulNameCol}, {mahjsoulFriendIdCol}, {mahjsoulUserIdCol}, {tenhouNameCol}, {riichiCityNameCol}, {riichiCityIdCol} FROM {tableName}";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();
@@ -44,13 +44,15 @@ namespace kandora.bot.services
                     user.MahjsoulFriendId = reader.IsDBNull(2) ? null : reader.GetString(2);
                     user.MahjsoulUserId = reader.IsDBNull(3) ? null : reader.GetString(3);
                     user.TenhouName = reader.IsDBNull(4) ? null : reader.GetString(4);
+                    user.RiichiCityName = reader.IsDBNull(5) ? null : reader.GetString(5);
+                    user.RiichiCityId = reader.IsDBNull(6) ? null : reader.GetString(6);
 
                     users.Add(id, user);
                 }
                 reader.Close();
                 return users;
             }
-            throw (new DbConnectionException());
+            throw new DbConnectionException();
         }
 
         public static bool IsUserInDb(string userId)
