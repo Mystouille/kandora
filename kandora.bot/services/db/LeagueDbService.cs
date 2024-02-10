@@ -5,6 +5,7 @@ using Npgsql;
 using NpgsqlTypes;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace kandora.bot.services
 {
@@ -34,15 +35,16 @@ namespace kandora.bot.services
 
 
 
-        public static League GetOngoingLeagueOnServer(string serverId)
+        public static List<League> GetLeaguesOnServer(string serverId, bool onlyOngoing = false)
         {
+            var leagues = new List<League>();
             Dictionary<string,Server> serverMap = new Dictionary<string, Server>();
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {idCol}, {displayNameCol} FROM {LeagueTableName} WHERE {serverIdCol} = @serverId AND {isOngoingCol} = true;";
+                command.CommandText = $"SELECT {idCol}, {displayNameCol} FROM {LeagueTableName} WHERE {serverIdCol} = @serverId {(onlyOngoing ? $"AND {isOngoingCol} = true" : "")};";
                 command.CommandType = CommandType.Text;
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
                 var reader = command.ExecuteReader();
@@ -53,9 +55,10 @@ namespace kandora.bot.services
                     int id = reader.GetInt32(0);
                     string displayName = reader.GetString(1);
                     league = new League(id, displayName, serverId, true);
+                    leagues.Add(league);
                 }
                 reader.Close();
-                return league;
+                return leagues;
             }
             throw new DbConnectionException();
         }
@@ -80,7 +83,73 @@ namespace kandora.bot.services
             }
             throw new DbConnectionException();
         }
-        
+
+        public static void DeleteLeagues(List<League> leagues)
+        {
+            if (leagues.Count == 0)
+            {
+                return;
+            }
+            var leagueIds = string.Join(",", leagues.Select(x => x.Id));
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.Connection = dbCon.Connection;
+                command.CommandType = CommandType.Text;
+                command.CommandText = $"DELETE FROM {LeagueTableName} WHERE {idCol} IN ({leagueIds});";
+                command.CommandType = CommandType.Text;
+
+                command.ExecuteNonQuery();
+                return;
+            }
+            throw new DbConnectionException();
+        }
+
+        public static void DeleteTeams(List<Team> teams)
+        {
+            if (teams.Count == 0)
+            {
+                return;
+            }
+            var dbCon = DBConnection.Instance();
+            var teamIds = string.Join(",", teams.Select(x => x.teamId));
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.Connection = dbCon.Connection;
+                command.CommandType = CommandType.Text;
+                command.CommandText = $"DELETE FROM {teamTableName} WHERE {idCol} IN ({teamIds});";
+                command.CommandType = CommandType.Text;
+
+                command.ExecuteNonQuery();
+                return;
+            }
+            throw new DbConnectionException();
+        }
+
+        public static void DeleteTeamPlayers(List<TeamUser> players)
+        {
+            if(players.Count == 0)
+            {
+                return;
+            }
+            var dbCon = DBConnection.Instance();
+            var playerIds = string.Join(",", players.Select(x => x.id));
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.Connection = dbCon.Connection;
+                command.CommandType = CommandType.Text;
+                command.CommandText = $"DELETE FROM {teamUserTableName} WHERE {idCol} IN ({playerIds});";
+                command.CommandType = CommandType.Text;
+
+                command.ExecuteNonQuery();
+                return;
+            }
+            throw new DbConnectionException();
+        }
+
         public static void CreateLeagueTeam(int leagueId, string teamName, string fancyName)
         {
             var dbCon = DBConnection.Instance();
@@ -108,18 +177,21 @@ namespace kandora.bot.services
         }
 
         
-        public static List<Team> GetLeagueTeams(int leagueId)
+        public static List<Team> GetLeagueTeams(List<League> leagues)
         {
             List<Team> teamList = new List<Team>();
+            if (leagues.Count == 0)
+            {
+                return teamList;
+            }
             var dbCon = DBConnection.Instance();
+            var leagueIds = string.Join(",", leagues.Select(x => x.Id));
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.CommandText = $"SELECT {idCol}, {teamNameCol}, {fancyNameCol} FROM {teamTableName} " +
-                    $"WHERE {leagueIdCol} = @leagueId;";
+                    $"WHERE {leagueIdCol} IN ({leagueIds});";
                 command.CommandType = CommandType.Text;
-
-                command.Parameters.AddWithValue("@leagueId", NpgsqlDbType.Integer, leagueId);
 
                 var reader = command.ExecuteReader();
                 while (reader.Read())
@@ -135,16 +207,20 @@ namespace kandora.bot.services
             throw new DbConnectionException();
         }
         
-        public static List<TeamUser> GetLeaguePlayers(int[] teamIds)
+        public static List<TeamUser> GetLeaguePlayers(List<Team> teams)
         {
             List<TeamUser> playerList = new List<TeamUser>();
+            if(teams.Count == 0)
+            {
+                return playerList;
+            }
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                var allTeams = string.Join(",", teamIds);
+                var allTeams = string.Join(",", teams.Select(x=>x.teamId));
                 command.CommandText = $"SELECT {idCol}, {teamIdCol}, {isCaptainCol}, {userIdCol} FROM {teamUserTableName} " +
-                    $"WHERE {teamIdCol} IN ({allTeams})";
+                    $"WHERE {teamIdCol} IN ({allTeams});";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();
@@ -154,7 +230,7 @@ namespace kandora.bot.services
                     int teamId = reader.GetInt32(1);
                     bool isCaptain = reader.GetBoolean(2);
                     string userId = reader.GetString(3);
-                    playerList.Add(new TeamUser(userId, teamId, isCaptain));
+                    playerList.Add(new TeamUser(id,userId, teamId, isCaptain));
                 }
                 reader.Close();
                 return playerList;

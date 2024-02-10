@@ -116,6 +116,7 @@ namespace kandora.bot.resources
         public const string admin_startGame_user3_description = "The player's name or mention (@)";
         public const string admin_startGame_user4 = "user4";
         public const string admin_startGame_user4_description = "The player's name or mention (@)";
+        public const string admin_startGame_gameStarted = "The game has started!";
         public const string admin_seeLeagueRanking_description = "Displays the ranking of the ongoing league";
         public const string admin_seeLeagueRanking_displayInChat = "displayInChat";
         public const string admin_seeLeagueRanking_displayInChat_description = "Displays the ranking publicly";
@@ -283,6 +284,7 @@ namespace kandora.bot.resources
         public const string commandError_playerAlreadyPresentInATeam = "This user is already in a team for this league (maybe this one?)";
         public const string commandError_teamDoesNotExist = "The team {0} doesn't exist in this league";
         public const string commandError_PlayerNotOnRiichiCity = "The user {0} doesn't have a Riichi City ID";
+        public const string commandError_PlayerNotInAteam = "The player {0} isn't in any team of the current league";
         public const string commandError_RiichiCityConnectionFailed = "The connection to Riichi City failed";
 
 

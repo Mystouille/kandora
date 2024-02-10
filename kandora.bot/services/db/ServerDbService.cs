@@ -101,8 +101,8 @@ namespace kandora.bot.services
                 {
                     string id = reader.GetString(0).Trim();
                     string displayName = reader.GetString(1);
-                    string leaderboardRoleId = reader.GetString(2);
-                    string leaderboardName = reader.GetString(3);
+                    string leaderboardRoleId = reader.IsDBNull(2) ? null : reader.GetString(2);
+                    string leaderboardName = reader.IsDBNull(3) ? null : reader.GetString(3);
                     int leaderBoardConfigId = reader.IsDBNull(4) ? -1 : reader.GetInt32(4);
                     int leaderboardConfigId = reader.IsDBNull(5) ? -1 : reader.GetInt32(5);
                     serverMap.Add(id, new Server(id, displayName, leaderboardRoleId, leaderboardName, leaderboardConfigId == -1 ? null : leaderboardConfigId, leaderBoardConfigId == -1 ? null : leaderBoardConfigId));

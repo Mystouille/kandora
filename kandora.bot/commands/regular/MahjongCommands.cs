@@ -34,7 +34,7 @@ namespace kandora.bot.commands.regular
                 }
                 var stream = ImageToolbox.GetImageFromTiles(hand);
                 var mb = new DiscordMessageBuilder();
-                mb.WithFile(stream);
+                mb.AddFile(stream);
                 await mb.SendAsync(ctx.Channel).ContinueWith(precedent => stream.Close());
             }
             catch (Exception e)

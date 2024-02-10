@@ -124,7 +124,7 @@ namespace kandora.bot.services.discord
 
             var message = $"{messageHeader}\n{quizz.GetCurrentWinners()}";
 
-            var msgb = new DiscordMessageBuilder().WithContent(message).WithFile(quizz.QuestionDataData.Image);
+            var msgb = new DiscordMessageBuilder().WithContent(message).AddFile(quizz.QuestionDataData.Image);
             msg = await msg.ModifyAsync(msgb).ConfigureAwait(true);
             quizz.QuestionDataData.Image.Dispose();
             quizz.ResetTimer();

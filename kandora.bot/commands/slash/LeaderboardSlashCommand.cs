@@ -29,7 +29,7 @@ namespace kandora.bot.commands.slash
              [Option(Resources.leaderboard_register_mahjsoulName, Resources.leaderboard_register_mahjsoulName_description)] string mahjsoulName = "",
              [Option(Resources.leaderboard_register_mahjsoulFriendId, Resources.leaderboard_register_mahjsoulFriendId_description)] string mahjsoulFriendId = "",
              [Option(Resources.leaderboard_register_tenhouName, Resources.leaderboard_register_tenhouName_description)] string tenhouName = "",
-             [Option(Resources.leaderboard_register_riichiCityId, Resources.leaderboard_register_riichiCityId_description)] string riichiCityId = "",
+             [Option(Resources.leaderboard_register_riichiCityId, Resources.leaderboard_register_riichiCityId_description)] long riichiCityId = -1,
              [Option(Resources.leaderboard_register_riichiCityName, Resources.leaderboard_register_riichiCityName_description)] string riichiCityName = "")
         {
             try
@@ -73,16 +73,16 @@ namespace kandora.bot.commands.slash
                         throw new Exception(String.Format(Resources.commandError_ValueAlreadyExists, Resources.leaderboard_register_tenhouName, tenhouName));
                     }
                 }
-                if (riichiCityId.Length > 0)
+                if (riichiCityId >= 0)
                 {
-                    if (UserDbService.RiichiCityIdExistAlready(userId, serverId, riichiCityId))
+                    if (UserDbService.RiichiCityIdExistAlready(userId, serverId, (int)riichiCityId))
                     {
                         throw new Exception(String.Format(Resources.commandError_ValueAlreadyExists, Resources.leaderboard_register_riichiCityId, riichiCityId));
                     }
                 }
                 if (riichiCityName.Length > 0)
                 {
-                    if (UserDbService.RiichiCityIdExistAlready(userId, serverId, riichiCityName))
+                    if (UserDbService.RiichiCityNameExistAlready(userId, serverId, riichiCityName))
                     {
                         throw new Exception(String.Format(Resources.commandError_ValueAlreadyExists, Resources.leaderboard_register_riichiCityName, riichiCityName));
                     }
@@ -126,9 +126,9 @@ namespace kandora.bot.commands.slash
                 {
                     UserDbService.SetTenhouName(userId, tenhouName);
                 }
-                if (riichiCityId.Length > 0)
+                if (riichiCityId >= 0)
                 {
-                    UserDbService.SetRiichiCityId(userId, riichiCityId);
+                    UserDbService.SetRiichiCityId(userId, (int)riichiCityId);
                 }
                 if (riichiCityName.Length > 0)
                 {

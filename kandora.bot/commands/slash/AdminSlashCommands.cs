@@ -1,22 +1,209 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
 using kandora.bot.models;
 using kandora.bot.resources;
 using kandora.bot.services;
 using kandora.bot.services.db;
+using kandora.bot.services.http;
 using kandora.bot.utils;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace kandora.bot.commands.slash
 {
     [SlashCommandGroup("admin", Resources.admin_groupDescription, defaultPermission: false)]
     class AdminSlashCommands : KandoraSlashCommandModule
     {
+        [SlashCommand("startGame", Resources.admin_startGame_description)]
+        public async Task Test(InteractionContext ctx, 
+            [Option(Resources.admin_startGame_user1, Resources.admin_startGame_user1_description)] string user1,
+            [Option(Resources.admin_startGame_user2, Resources.admin_startGame_user2_description)] string user2,
+            [Option(Resources.admin_startGame_user3, Resources.admin_startGame_user3_description)] string user3,
+            [Option(Resources.admin_startGame_user4, Resources.admin_startGame_user4_description)] string user4)
+        {
+            try
+            {
+                await ctx.DeferAsync(ephemeral: true).ConfigureAwait(true);
+
+                var userIds = new List<(string, string)>
+                {
+                    (getIdFromPlayerParam(user1), user1),
+                    (getIdFromPlayerParam(user2), user2),
+                    (getIdFromPlayerParam(user3), user3),
+                    (getIdFromPlayerParam(user4), user4)
+                };
+
+                var serverDiscordId = ctx.Guild.Id.ToString();
+
+                var status = await computeStatus(userIds, serverDiscordId, ctx.Client).ConfigureAwait(true);
+
+                var refreshId = Guid.NewGuid().ToString("N");
+                var startId = Guid.NewGuid().ToString("N");
+                DiscordButtonComponent refreshButton = new DiscordButtonComponent(ButtonStyle.Secondary, refreshId, "Refresh");
+                DiscordButtonComponent startButton = new DiscordButtonComponent(ButtonStyle.Primary, startId, "Start Game!", disabled: !status.Item2);
+
+                ctx.Client.ComponentInteractionCreated += async (client, eventArgs) =>
+                {
+
+                    if (eventArgs.Interaction.Data.CustomId == refreshId)
+                    {
+                        try
+                        {
+                            var status = await computeStatus(userIds, serverDiscordId, client).ConfigureAwait(true);
+
+                            if (status.Item2)
+                            {
+                                startButton.Enable();
+                            }
+                            else
+                            {
+                                startButton.Disable();
+                            }
+                            var webhookBuilder = new DiscordWebhookBuilder()
+                                .WithContent(status.Item1).AddComponents(refreshButton, startButton);
+
+                            await ctx.EditResponseAsync(webhookBuilder);
+
+                        }
+                        catch (Exception e)
+                        {
+                            var wb = new DiscordWebhookBuilder().WithContent(e.Message);
+                            await ctx.EditResponseAsync(wb).ConfigureAwait(true);
+                        };
+                    }
+                    else if (eventArgs.Interaction.Data.CustomId == startId)
+                    {
+                        try
+                        {
+                            
+                            var users = UserDbService.GetUsers();
+                            var servers = ServerDbService.GetServers(users);
+                            var leagues = LeagueDbService.GetLeaguesOnServer(serverDiscordId, onlyOngoing: true);
+                            var teams = LeagueDbService.GetLeagueTeams(leagues);
+                            var teamPlayers = LeagueDbService.GetLeaguePlayers(teams);
+                            var league = leagues.First();
+                            var rcIds = new List<int>();
+                            userIds.ForEach(x =>
+                            {
+                                if (!users.ContainsKey(x.Item1))
+                                {
+                                    throw new Exception(string.Format(Resources.commandError_PlayerUnknown, x.Item2));
+                                }
+                                if (users[x.Item1].RiichiCityId < 0)
+                                {
+                                    throw new Exception(string.Format(Resources.commandError_PlayerNotOnRiichiCity, x.Item2));
+                                }
+                                if (!teamPlayers.Select(player => player.userId).Contains(x.Item1))
+                                {
+                                    throw new Exception(string.Format(Resources.commandError_PlayerNotInAteam, x.Item2));
+                                }
+                                rcIds.Add(users[x.Item1].RiichiCityId);
+                            });
+
+                            var isOK = await RiichiCityService.Instance.StartGame(league.Id, rcIds.GetRange(0,1));
+
+                            if (isOK)
+                            {
+                                var wb = new DiscordWebhookBuilder().WithContent(Resources.admin_startGame_gameStarted);
+                                await ctx.EditResponseAsync(wb).ConfigureAwait(true);
+                            }
+                            else
+                            {
+                                var status = await computeStatus(userIds, serverDiscordId, client).ConfigureAwait(true);
+                                var wb = new DiscordWebhookBuilder().WithContent(status.Item1).AddComponents(refreshButton, startButton);
+                                await ctx.EditResponseAsync(wb).ConfigureAwait(true);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            
+                            var wb = new DiscordWebhookBuilder().WithContent(e.Message);
+                            await ctx.EditResponseAsync(wb).ConfigureAwait(true);
+                        };
+                    }
+                };
+ 
+                var webhookBuilder = new DiscordWebhookBuilder()
+                    .WithContent(status.Item1).AddComponents(refreshButton, startButton);
+
+                await ctx.EditResponseAsync(webhookBuilder);
+            }
+            catch (Exception e)
+            {
+                var wb = new DiscordWebhookBuilder().WithContent(e.Message);
+                await ctx.EditResponseAsync(wb).ConfigureAwait(true);
+            }
+        }
+
+        private async Task<(string,bool)> computeStatus(List<(string, string)> userIds, string serverId, DiscordClient client )
+        {
+            var users = UserDbService.GetUsers();
+            var servers = ServerDbService.GetServers(users);
+            var leagues = LeagueDbService.GetLeaguesOnServer(serverId, onlyOngoing: true);
+            var teams = LeagueDbService.GetLeagueTeams(leagues);
+            var teamPlayers = LeagueDbService.GetLeaguePlayers(teams);
+            if (leagues.Count() == 0)
+            {
+                throw new Exception(Resources.commandError_leagueNotInitialized);
+            }
+
+            var fullIds = new List<(int, string)>(); // (rcId, fullname)
+            userIds.ForEach(x =>
+            {
+                if (!users.ContainsKey(x.Item1))
+                {
+                    throw new Exception(string.Format(Resources.commandError_PlayerUnknown, x.Item2));
+                }
+                if (users[x.Item1].RiichiCityId < 0)
+                {
+                    throw new Exception(string.Format(Resources.commandError_PlayerNotOnRiichiCity, x.Item2));
+                }
+                if (!teamPlayers.Select(player => player.userId).Contains(x.Item1))
+                {
+                    throw new Exception(string.Format(Resources.commandError_PlayerNotInAteam, x.Item2));
+                }
+                fullIds.Add((users[x.Item1].RiichiCityId, x.Item2));
+            });
+
+            if (leagues.Count() > 1)
+            {
+                throw new Exception("whoops, more than one league active");
+            }
+
+            var league = leagues.First();
+
+            var statusList = (await RiichiCityService.Instance.GetPlayersStatus(league.Id)).Data;
+            var fullData = new List<(string, PlayerStatusData)>();
+            fullIds.ForEach(tuple =>
+            {
+                var status = statusList.Where(status => status.UserId == tuple.Item1);
+                if (status.Count() == 0)
+                {
+                    //throw new Exception("Player status not found from RC data");
+                }
+                fullData.Add((tuple.Item2, status.FirstOrDefault()));
+            });
+
+            var sb = new StringBuilder();
+            var okStatus = DiscordEmoji.FromName(client, ":white_check_mark:");
+            var koStatus = DiscordEmoji.FromName(client, ":octagonal_sign:");
+            sb.AppendLine("Players status:");
+            fullData.ToList().ForEach(x => {
+                var rcName = x.Item2 != null ? x.Item2.Name : "???";
+                var statusStr = x.Item2 != null ? (x.Item2.Status == 2 ? okStatus : koStatus): koStatus;
+                sb.AppendLine($"{statusStr}\t{x.Item1}({rcName})");
+            });
+
+            var allOk = fullData.Where(x => x.Item2!= null && x.Item2.Status == 2).Count() == fullData.Count();
+
+            return (sb.ToString(), allOk);
+        }
+
         [SlashCommand("startLeaderboard", Resources.admin_startLeaderboard_description)]
         public async Task StartLeaderboard(InteractionContext ctx)
         {
@@ -57,14 +244,16 @@ namespace kandora.bot.commands.slash
                 var serverDiscordId = ctx.Guild.Id.ToString();
                 var users = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(users);
-                var league = LeagueDbService.GetOngoingLeagueOnServer(serverDiscordId);
+                var leagues = LeagueDbService.GetLeaguesOnServer(serverDiscordId, onlyOngoing: true);
+                var teams = LeagueDbService.GetLeagueTeams(leagues);
+                var teamPlayers = LeagueDbService.GetLeaguePlayers(teams);
+                if (leagues.Count() != 0)
+                {
+                    throw new Exception(Resources.commandError_leagueAlreadyInitialized);
+                }
                 if (!servers.ContainsKey(serverDiscordId))
                 {
                     ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name);
-                }
-                if (league != null)
-                {
-                    throw new Exception(Resources.commandError_leagueAlreadyInitialized);
                 }
 
                 LeagueDbService.StartLeague(serverDiscordId, (int)tournamentId, displayName);
@@ -89,14 +278,16 @@ namespace kandora.bot.commands.slash
                 var serverDiscordId = ctx.Guild.Id.ToString();
                 var users = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(users);
-                var league = LeagueDbService.GetOngoingLeagueOnServer(serverDiscordId);
-                var teams = LeagueDbService.GetLeagueTeams(league.Id);
-                if (league == null)
+                var leagues = LeagueDbService.GetLeaguesOnServer(serverDiscordId, onlyOngoing: true);
+                var teams = LeagueDbService.GetLeagueTeams(leagues);
+                var teamPlayers = LeagueDbService.GetLeaguePlayers(teams);
+                if (leagues.Count() == 0)
                 {
                     throw new Exception(Resources.commandError_leagueNotInitialized);
                 }
+                var league = leagues.First();
 
-                if(teams.Where(x=>x.name == teamName).Count() > 0)
+                if (teams.Where(x=>x.name == teamName).Count() > 0)
                 {
                     throw new Exception(Resources.commandError_teamNameAlreadyExists);
                 }
@@ -123,9 +314,15 @@ namespace kandora.bot.commands.slash
                 var serverDiscordId = ctx.Guild.Id.ToString();
                 var users = UserDbService.GetUsers();
                 var servers = ServerDbService.GetServers(users);
-                var league = LeagueDbService.GetOngoingLeagueOnServer(serverDiscordId);
-                var teams = LeagueDbService.GetLeagueTeams(league.Id);
-                
+                var leagues = LeagueDbService.GetLeaguesOnServer(serverDiscordId, onlyOngoing: true);
+                var teams = LeagueDbService.GetLeagueTeams(leagues);
+                var teamPlayers = LeagueDbService.GetLeaguePlayers(teams);
+                if (leagues.Count() == 0)
+                {
+                    throw new Exception(Resources.commandError_leagueNotInitialized);
+                }
+                var league = leagues.First();
+
                 var userId = getIdFromPlayerParam(userName);
 
                 var server = servers[serverDiscordId]; 
@@ -141,7 +338,7 @@ namespace kandora.bot.commands.slash
 
                 var user = server.Users.Where(x => x.Id == userId).First();
 
-                if(user.RiichiCityId == null || user.RiichiCityId.Length == 0)
+                if(user.RiichiCityId == null || user.RiichiCityId <= 0)
                 {
                     throw new Exception(string.Format(Resources.commandError_PlayerNotOnRiichiCity, userName));
                 }
@@ -157,13 +354,12 @@ namespace kandora.bot.commands.slash
                 }
                 var team = teams.Where(x=>x.name == teamName).First();
 
-                var leaguePlayers = LeagueDbService.GetLeaguePlayers(teams.Select(x=>x.teamId).ToArray());
-                if(leaguePlayers.Where(x=>x.userId == userId).Count() > 0)
+                if(teamPlayers.Where(x=>x.userId == userId).Count() > 0)
                 {
                     throw new Exception(Resources.commandError_playerAlreadyPresentInATeam);
                 }
 
-                var isCaptain = leaguePlayers.Where(x=>x.teamId == team.teamId).Count() == 0;
+                var isCaptain = teamPlayers.Where(x=>x.teamId == team.teamId).Count() == 0;
 
                 LeagueDbService.AddPlayerToTeam(userId, team.teamId, isCaptain);
 
@@ -213,14 +409,23 @@ namespace kandora.bot.commands.slash
             {
                 var serverDiscordId = ctx.Guild.Id.ToString();
                 var server = ServerDbService.GetServer(serverDiscordId);
+                var users = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(users);
+                var leagues = LeagueDbService.GetLeaguesOnServer(serverDiscordId);
+                var teams = LeagueDbService.GetLeagueTeams(leagues);
+                var players = LeagueDbService.GetLeaguePlayers(teams);
 
                 if (!Bypass.isSuperUser(ctx.User.Id.ToString()))
                 {
                     throw new Exception(Resources.admin_flushServer_unauthorized);
                 }
 
+
                 RankingDbService.DeleteRankings(serverDiscordId);
                 ScoreDbService.DeleteGamesFromServer(serverDiscordId);
+                LeagueDbService.DeleteTeamPlayers(players);
+                LeagueDbService.DeleteTeams(teams);
+                LeagueDbService.DeleteLeagues(leagues);
                 ServerDbService.DeleteUsersFromServer(serverDiscordId);
                 ServerDbService.DeleteServer(serverDiscordId);
                 if (server.LeaderboardConfigId != null)
@@ -480,7 +685,7 @@ namespace kandora.bot.commands.slash
             [Option(Resources.admin_addPlayer_nickname, Resources.admin_addPlayer_nickname_description)] string name,
             [Option(Resources.leaderboard_register_mahjsoulName, Resources.leaderboard_register_mahjsoulName_description)] string mahjsoulName = "",
             [Option(Resources.leaderboard_register_tenhouName, Resources.leaderboard_register_tenhouName_description)] string tenhouName = "",
-            [Option(Resources.leaderboard_register_riichiCityId, Resources.leaderboard_register_riichiCityId_description)] string riichiCityId = "",
+            [Option(Resources.leaderboard_register_riichiCityId, Resources.leaderboard_register_riichiCityId_description)] long riichiCityId = -1,
             [Option(Resources.leaderboard_register_riichiCityName, Resources.leaderboard_register_riichiCityName_description)] string riichiCityName = ""
             )
         {
@@ -508,6 +713,11 @@ namespace kandora.bot.commands.slash
                 {
                     UserDbService.CreateUser(userId, name, serverDiscordId, config);
                 }
+                if (!server.Users.Select(x => x.Id).Contains(userId))
+                {
+                    ServerDbService.AddUserToServer(userId, server.Id, userId);
+                }
+
                 RankingDbService.InitUserRanking(userId, serverDiscordId, config);
                 
 
@@ -519,9 +729,9 @@ namespace kandora.bot.commands.slash
                 {
                     UserDbService.SetTenhouName(userId, tenhouName);
                 }
-                if (riichiCityId.Length > 0)
+                if (riichiCityId >= 0)
                 {
-                    UserDbService.SetRiichiCityId(userId, riichiCityId);
+                    UserDbService.SetRiichiCityId(userId, (int)riichiCityId);
                 }
                 if (riichiCityName.Length > 0)
                 {
@@ -542,7 +752,7 @@ namespace kandora.bot.commands.slash
             [Option(Resources.admin_addPlayer_nickname, Resources.admin_addPlayer_nickname_description)] string name,
             [Option(Resources.leaderboard_register_mahjsoulName, Resources.leaderboard_register_mahjsoulName_description)] string mahjsoulName = "",
             [Option(Resources.leaderboard_register_tenhouName, Resources.leaderboard_register_tenhouName_description)] string tenhouName = "",
-            [Option(Resources.leaderboard_register_riichiCityId, Resources.leaderboard_register_riichiCityId_description)] string riichiCityId = "",
+            [Option(Resources.leaderboard_register_riichiCityId, Resources.leaderboard_register_riichiCityId_description)] long riichiCityId = -1,
             [Option(Resources.leaderboard_register_riichiCityName, Resources.leaderboard_register_riichiCityName_description)] string riichiCityName = ""
             )
         {
@@ -571,9 +781,9 @@ namespace kandora.bot.commands.slash
                 {
                     UserDbService.SetTenhouName(userId, tenhouName);
                 }
-                if (riichiCityId.Length > 0)
+                if (riichiCityId >= 0)
                 {
-                    UserDbService.SetRiichiCityId(userId, riichiCityId);
+                    UserDbService.SetRiichiCityId(userId, (int)riichiCityId);
                 }
                 if (riichiCityName.Length > 0)
                 {

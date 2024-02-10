@@ -93,6 +93,9 @@ namespace kandora.bot.services.http
             client.DefaultRequestHeaders.Add("User-Agent", "UnityPlayer/2019.4.23f1 (UnityWebRequest/1.0, libcurl/7.52.0-DEV)");
             client.DefaultRequestHeaders.Add("Cookies", $"{{\"channel\":\"default\",\"deviceid\":\"{deviceId}\",\"lang\":\"en\",\"version\":\"{apiVersion}\",\"platform\":\"pc\",\"region\":\"cn\",\"sid\":\"{sessionId}\",\"uid\":{userId}}}");
             client.DefaultRequestHeaders.Add("X-Unity-Version", "2019.4.23f1");
+            //client.DefaultRequestHeaders.Add("X-Unity-Version: ", "2020.3.42f1c1");
+            client.DefaultRequestHeaders.Add("Accept-Encoding", "deflate,gzip");
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
 
             return (parsed.Code, parsed.Message);
         }
@@ -109,19 +112,84 @@ namespace kandora.bot.services.http
             return await response.Content.ReadAsStringAsync();
         }
 
-        public async Task<RankResponse> GetPlayerScores(int tournamentId)
+        public async Task<TournamentInfoResponse> GetTournamentInfo(int tournamentId, bool fallBack = true)
         {
-            await Login();
+            HttpResponseMessage response = await client.PostAsync(
+                $"https://{domainId}/lobbys/enterSelfBuild",
+                new StringContent(content: $"{{\"id\":{tournamentId},\"classifyID\":\"cm1agdeai08c2ltub0t0\"}}", encoding: null, mediaType: "application/json")
+            );
+
+            var payload = await response.Content.ReadAsStringAsync();
+            var parsed = JsonSerializer.Deserialize<TournamentInfoResponse>(payload);
+
+            if (parsed.Code == 10 && fallBack)
+            {
+                await Login();
+                return await GetTournamentInfo(tournamentId, fallBack: false);
+            }
+            return parsed;
+        }
+
+        public async Task<RankResponse> GetPlayerScores(int tournamentId, bool fallBack = true)
+        {
+            var tournamentInfo = await GetTournamentInfo(tournamentId);
 
             HttpResponseMessage response = await client.PostAsync(
                 $"https://{domainId}/stats/getSelfRank",
-                new StringContent(content: $"{{\"matchID\":{tournamentId}}}", encoding: null, mediaType: "application/json")
+                new StringContent(content: $"{{\"matchID\":{tournamentId},\"classifyID\":\"{tournamentInfo.Data.ClassifyId}\"}}", encoding: null, mediaType: "application/json")
             );
 
             var payload = await response.Content.ReadAsStringAsync();
             var parsed = JsonSerializer.Deserialize<RankResponse>(payload);
+
+            if (parsed.Code == 10 && fallBack)
+            {
+                await Login();
+                return await GetPlayerScores(tournamentId, fallBack: false);
+            }
             return parsed;
-            
+        }
+
+        public async Task<PlayerStatusResponse> GetPlayersStatus(int tournamentId, bool fallBack = true)
+        {
+            HttpResponseMessage response = await client.PostAsync(
+                $"https://{domainId}/lobbys/getSelfManageInfo",
+                new StringContent(content: $"{{\"matchID\":{tournamentId}}}", encoding: Encoding.UTF8, mediaType: "application/json")
+            );
+
+            var payload = await response.Content.ReadAsStringAsync();
+            var parsed = JsonSerializer.Deserialize<PlayerStatusResponse>(payload);
+
+            if (parsed.Code == 10 && fallBack)
+            {
+                await Login();
+                return await GetPlayersStatus(tournamentId, fallBack: false);
+            }
+            return parsed;
+        }
+
+        public async Task<bool> StartGame(int tournamentId, List<int> playerIds, bool fallBack = true)
+        {
+            var botIds = new List<int> { 113808489, 217163646, 511575033 };
+            var ids = new List<int> (playerIds);
+            if(ids.Count < 4)
+            {
+                ids.AddRange(botIds.GetRange(0, 4 - ids.Count));
+            }
+            HttpResponseMessage response = await client.PostAsync(
+                $"https://{domainId}/lobbys/allocateSelfUser",
+                new StringContent(content: $"{{\"matchID\":{tournamentId},\"usersID\":[{string.Join(",",ids)}],\"table_idx\":1}}", encoding: Encoding.UTF8, mediaType: "application/json")
+            );
+
+            var payload = await response.Content.ReadAsStringAsync();
+            var parsed = JsonSerializer.Deserialize<StartGameResponse>(payload);
+
+            if (parsed.Code == 10 && fallBack)
+            {
+                await Login();
+                return await StartGame(tournamentId, playerIds, fallBack: false);
+            }
+            return parsed.IsSuccess;
         }
 
     }

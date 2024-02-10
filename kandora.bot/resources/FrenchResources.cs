@@ -118,6 +118,7 @@ namespace kandora.bot.resources
         public const string admin_startGame_user3_description = "La mention (@) ou nom du joueur 3";
         public const string admin_startGame_user4 = "user4";
         public const string admin_startGame_user4_description = "La mention (@) ou nom du joueur 4";
+        public const string admin_startGame_gameStarted = "La partie à commencé!";
         public const string admin_seeLeagueRanking_description = "Affiche le classement de la ligue en cours";
         public const string admin_seeLeagueRanking_displayInChat = "displayInChat";
         public const string admin_seeLeagueRanking_displayInChat_description = "Affiche le score publiquement";
@@ -281,13 +282,14 @@ namespace kandora.bot.resources
         public const string commandError_CouldntExtractDateFromLog = "La date de ce log n'a pas pu être extraite. la partie ne sera pas enregistrée";
         public const string commandError_PlayerUnknown = "Le joueur {0} n'est pas encore inscrit";
         public const string commandError_leaderboardNotInitialized = "Le leaderboard n'a pas été encore crée";
-        public const string commandError_leagueNotInitialized = "La ligue de n'a pas été encore crée";
+        public const string commandError_leagueNotInitialized = "La ligue n'a pas été encore crée";
         public const string commandError_leaderboardAlreadyInitialized = "Le leaderboard a déjà été créé";
         public const string commandError_leagueAlreadyInitialized = "Une ligue est déjà en cours sur ce serveur";
         public const string commandError_teamNameAlreadyExists = "Une équipe avec ce nom existe déjà dans cette ligue";
         public const string commandError_playerAlreadyPresentInATeam = "Ce joueur est déjà présent dans une équipe pour cette ligue";
         public const string commandError_teamDoesNotExist = "L'équipe {0} n'existe pas dans cette ligue";
         public const string commandError_PlayerNotOnRiichiCity = "Le joueur {0} n'a pas d'ID Riichi City";
+        public const string commandError_PlayerNotInAteam = "Le joueur {0} n'est dans aucun equipe de la ligue actuelle";
         public const string commandError_RiichiCityConnectionFailed = "La connection avec Riichi City a échoué";
 
 

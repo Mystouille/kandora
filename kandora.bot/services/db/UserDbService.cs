@@ -45,7 +45,7 @@ namespace kandora.bot.services
                     user.MahjsoulUserId = reader.IsDBNull(3) ? null : reader.GetString(3);
                     user.TenhouName = reader.IsDBNull(4) ? null : reader.GetString(4);
                     user.RiichiCityName = reader.IsDBNull(5) ? null : reader.GetString(5);
-                    user.RiichiCityId = reader.IsDBNull(6) ? null : reader.GetString(6);
+                    user.RiichiCityId = reader.IsDBNull(6) ? -1 : reader.GetInt32(6);
 
                     users.Add(id, user);
                 }
@@ -114,7 +114,7 @@ namespace kandora.bot.services
         {
             UpdateFieldInTable(tableName, tenhouNameCol, userId, value);
         }
-        public static void SetRiichiCityId(string userId, string value)
+        public static void SetRiichiCityId(string userId, int value)
         {
             UpdateFieldInTable(tableName, riichiCityIdCol, userId, value);
         }
@@ -144,9 +144,9 @@ namespace kandora.bot.services
         }
 
 
-        public static bool RiichiCityIdExistAlready(string userId, string serverId, string value)
+        public static bool RiichiCityIdExistAlready(string userId, string serverId, int value)
         {
-            return ValueExistAlready(userId, serverId, riichiCityIdCol, value);
+            return IntValueExistAlready(userId, serverId, riichiCityIdCol, value);
         }
 
         private static bool ValueExistAlready(string userId, string serverId, string columnName, string value)
@@ -157,6 +157,29 @@ namespace kandora.bot.services
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
                 command.CommandText = $"SELECT {idCol} FROM {tableName} WHERE {columnName} = \'{value}\' AND {idCol} != \'{userId}\'";
+                command.CommandType = CommandType.Text;
+
+                var reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    reader.Close();
+                    return true;
+                }
+                reader.Close();
+                return false;
+            }
+            throw (new DbConnectionException());
+        }
+
+        private static bool IntValueExistAlready(string userId, string serverId, string columnName, int value)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.Connection = dbCon.Connection;
+                command.CommandText = $"SELECT {idCol} FROM {tableName} WHERE {columnName} = {value} AND {idCol} != \'{userId}\'";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();

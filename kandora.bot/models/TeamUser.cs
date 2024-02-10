@@ -8,12 +8,14 @@ namespace kandora.bot.models
 {
     struct TeamUser
     {
-        public TeamUser(string userId, int teamId, bool isCaptain)
+        public TeamUser(int id, string userId, int teamId, bool isCaptain)
         {
+            this.id = id;
             this.userId = userId;
             this.teamId = teamId;
             this.isCaptain = isCaptain;
         }
+        public int id;
         public string userId;
         public int teamId;
         public bool isCaptain;
