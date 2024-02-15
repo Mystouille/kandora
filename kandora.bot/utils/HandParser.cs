@@ -19,7 +19,7 @@ namespace kandora.bot.utils
         public static IEnumerable<DiscordEmoji> GetHandEmojiCodes(string hand, DiscordClient client, bool sorted = false)
         {
             StringBuilder sb = new StringBuilder();
-            var tileList = SplitTiles(hand, true); // We want unique emotes
+            var tileList = SplitTiles(hand); // We want unique emotes
             if (sorted)
             {
                 tileList.Sort(new TileComparer());
@@ -56,8 +56,7 @@ namespace kandora.bot.utils
                         }
                         string tileToAdd = $"{tileNumber}{called}{fixedChar}";
 
-                        if (!(isUnique && tiles.Contains(tileToAdd)))
-                            tiles.Add(tileToAdd);
+                        tiles.Add(tileToAdd);
                     }
                     k = i + 1; // char after the letter for the next iteration
                 }

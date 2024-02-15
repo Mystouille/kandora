@@ -2,6 +2,7 @@
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity.Extensions;
 using DSharpPlus.SlashCommands;
+using kandora.bot.mahjong;
 using kandora.bot.models;
 using kandora.bot.resources;
 using kandora.bot.services;
@@ -19,8 +20,47 @@ namespace kandora.bot.commands.slash
     [SlashCommandGroup("admin", Resources.admin_groupDescription, defaultPermission: false)]
     class AdminSlashCommands : KandoraSlashCommandModule
     {
-        [SlashCommand("startGame", Resources.admin_startGame_description)]
-        public async Task Test(InteractionContext ctx, 
+        private string GetHandMessage(IEnumerable<DiscordEmoji> emojis)
+        {
+            string toReturn = "";
+            var lastEmoji = "";
+            foreach (var emoji in emojis)
+            {
+                toReturn += lastEmoji;
+                lastEmoji = emoji;
+            }
+            toReturn += (emojis.Count() > 12 ? " " : "") + lastEmoji;
+            return toReturn;
+        }
+
+        [SlashCommand("test", "test fetch log")]
+        public async Task Test(InteractionContext ctx)
+        {
+            try
+            {
+                await ctx.DeferAsync(ephemeral: true).ConfigureAwait(true);
+
+                var data = await RiichiCityService.Instance.GetLog("cn5872m9nc70otuhfm5g");
+                var gameData = data.Data;
+                var firstHand = gameData.Rounds[0].Hands[0].Data.StartingHand.ToList();
+                var emojiList= HandParser.GetHandEmojiCodes(string.Join("",firstHand), ctx.Client, sorted:true);
+                var sb = new StringBuilder();
+                sb.AppendLine(GetHandMessage(emojiList));
+                sb.AppendLine(gameData.Rounds[0].Hands[5].Data.Action.ToString());
+                sb.AppendLine(gameData.NowTime.ToString());
+                sb.AppendLine(gameData.Rounds[0].Hands[0].Time.ToString());
+                var wb = new DiscordWebhookBuilder().WithContent(sb.ToString());
+                await ctx.EditResponseAsync(wb).ConfigureAwait(true);
+            }
+            catch (Exception e)
+            {
+                var wb = new DiscordWebhookBuilder().WithContent(e.Message + "\n" + e.StackTrace);
+                await ctx.EditResponseAsync(wb).ConfigureAwait(true);
+            }
+
+        }
+            [SlashCommand("startGame", Resources.admin_startGame_description)]
+        public async Task StartGame(InteractionContext ctx, 
             [Option(Resources.admin_startGame_user1, Resources.admin_startGame_user1_description)] string user1,
             [Option(Resources.admin_startGame_user2, Resources.admin_startGame_user2_description)] string user2,
             [Option(Resources.admin_startGame_user3, Resources.admin_startGame_user3_description)] string user3,
@@ -105,7 +145,7 @@ namespace kandora.bot.commands.slash
                                 rcIds.Add(users[x.Item1].RiichiCityId);
                             });
 
-                            var isOK = await RiichiCityService.Instance.StartGame(league.Id, rcIds.GetRange(0,1));
+                            var isOK = await RiichiCityService.Instance.StartGame(league.Id, rcIds);
 
                             if (isOK)
                             {

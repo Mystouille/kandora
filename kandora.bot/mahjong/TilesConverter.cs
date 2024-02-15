@@ -37,7 +37,7 @@ namespace kandora.bot.mahjong
         //         Example of output with print_aka_dora=False: 1244579m3p57z
         //         Example of output with print_aka_dora=True:  1244079m3p57z
         //         
-        public static string ToString(List<int> tiles, bool print_aka_dora = false, string suitOrder= null)
+        public static string ToString(List<int> tiles, bool print_aka_dora = true, string suitOrder= null)
         {
             tiles = tiles.OrderBy(_p_1 => _p_1).ToList();
             var man = (from t in tiles
@@ -377,6 +377,25 @@ namespace kandora.bot.mahjong
                 return sum/x.Count();
             }).ToList();
             return arrays136;
+        }
+
+        public static string FromRiichiCityFormatToString(List<int> hand)
+        {
+            List<int> arrays136 = new List<int>();
+            var pin = (from t in hand
+                       where 1 <= t && t <= 9 || t == 261
+                       select t == 261 ? "0" : t.ToString()).ToList();
+            var sou = (from t in hand
+                       where 17 <= t && t <= 25 || t == 277
+                       select t == 277 ? "0" : (t-16).ToString()).ToList();
+            var man = (from t in hand
+                       where 33 <= t && t <= 41 || t == 293
+                       select t == 293 ? "0" : (t-32).ToString()).ToList();
+            var hon = (from t in hand
+                       where t == 49 || t == 65 || t == 81 || t == 97 || t == 113 || t == 129 || t == 145 
+                       select (t-32)/16).ToList();
+
+            return string.Join("",sou)+'s'+ string.Join("", pin) + 'p'+ string.Join("", man) + 'm' + string.Join("", hon) + 'z';
         }
 
 

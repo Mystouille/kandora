@@ -78,5 +78,6 @@
   <ItemGroup>
     <Folder Include="http\" />
     <Folder Include="resources\generated\" />
+    <Folder Include="resources\gameLogs\" />
   </ItemGroup>
 </Project>
