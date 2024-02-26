@@ -18,6 +18,10 @@ namespace kandora.bot.resources
         public const string admin_startLeague_displayName_description = "The league's display name";
         public const string admin_startLeague_leagueStarted = "A mahjong team league has been created on {0}!";
         public const string admin_startLeague_leagueAlreadyExists = "A league already exists on {0}!";
+        public const string admin_editLeague_description = "Changes league parameters";
+        public const string admin_editLeague_leagueChanged = "The current league has been modified";
+        public const string admin_startLeague_cutoff = "finalsCutoff";
+        public const string admin_startLeague_cutoff_description = "Start date of the finals phase (yyyy/MM/dd)";
         public const string admin_createTeam_description = "Create a team for the current league";
         public const string admin_createTeam_teamName = "teamName";
         public const string admin_createTeam_teamName_description = "The team's name (no spaces nor special characters)";

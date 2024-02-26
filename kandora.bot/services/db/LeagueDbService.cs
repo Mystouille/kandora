@@ -3,6 +3,7 @@ using kandora.bot.models;
 using kandora.bot.services.db;
 using Npgsql;
 using NpgsqlTypes;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -22,6 +23,7 @@ namespace kandora.bot.services
         public static string displayNameCol = "displayName";
         public static string serverIdCol = "serverId";
         public static string isOngoingCol = "isOngoing";
+        public static string finalscutoffdateCol = "finalscutoffdate";
 
         //Team
         public static string teamNameCol = "teamName";
@@ -44,7 +46,7 @@ namespace kandora.bot.services
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {idCol}, {displayNameCol} FROM {LeagueTableName} WHERE {serverIdCol} = @serverId {(onlyOngoing ? $"AND {isOngoingCol} = true" : "")};";
+                command.CommandText = $"SELECT {idCol}, {displayNameCol}, {finalscutoffdateCol} FROM {LeagueTableName} WHERE {serverIdCol} = @serverId {(onlyOngoing ? $"AND {isOngoingCol} = true" : "")};";
                 command.CommandType = CommandType.Text;
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
                 var reader = command.ExecuteReader();
@@ -54,7 +56,8 @@ namespace kandora.bot.services
                 {
                     int id = reader.GetInt32(0);
                     string displayName = reader.GetString(1);
-                    league = new League(id, displayName, serverId, true);
+                    DateTime? finalsCutoffDate = reader.IsDBNull(2) ? null : reader.GetTimeStamp(2).ToDateTime();
+                    league = new League(id, displayName, serverId, true, finalsCutoffDate);
                     leagues.Add(league);
                 }
                 reader.Close();
@@ -63,7 +66,7 @@ namespace kandora.bot.services
             throw new DbConnectionException();
         }
 
-        public static void StartLeague(string serverId, int leagueId, string leagueName)
+        public static void StartLeague(string serverId, int leagueId, string leagueName, DateTime? cutoffDate)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -71,11 +74,32 @@ namespace kandora.bot.services
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
                 command.CommandType = CommandType.Text;
-                command.CommandText = $"INSERT INTO {LeagueTableName} ({idCol}, {serverIdCol}, {isOngoingCol}, {displayNameCol}) VALUES (@configId, @serverId, true, @displayName);";
+                command.CommandText = $"INSERT INTO {LeagueTableName} ({idCol}, {serverIdCol}, {isOngoingCol}, {displayNameCol}, {finalscutoffdateCol}) VALUES (@configId, @serverId, true, @displayName, @cutoff);";
 
                 command.Parameters.AddWithValue("@configId", NpgsqlDbType.Integer, leagueId);
                 command.Parameters.AddWithValue("@serverId", NpgsqlDbType.Varchar, serverId);
                 command.Parameters.AddWithValue("@displayName", NpgsqlDbType.Varchar, leagueName);
+                command.Parameters.AddWithValue("@cutoff", NpgsqlDbType.Timestamp, cutoffDate);
+                command.CommandType = CommandType.Text;
+
+                command.ExecuteNonQuery();
+                return;
+            }
+            throw new DbConnectionException();
+        }
+
+        public static void SetFinalsCutoff(int leagueId, DateTime? cutoff)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.Connection = dbCon.Connection;
+                command.CommandType = CommandType.Text;
+                command.CommandText = $"UPDATE {LeagueTableName} SET {finalscutoffdateCol}=@cutoff WHERE {idCol}=@leagueId;";
+
+                command.Parameters.AddWithValue("@cutoff", NpgsqlDbType.Timestamp, cutoff);
+                command.Parameters.AddWithValue("@leagueId", NpgsqlDbType.Integer, leagueId);
                 command.CommandType = CommandType.Text;
 
                 command.ExecuteNonQuery();

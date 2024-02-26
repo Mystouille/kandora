@@ -42,6 +42,7 @@ CREATE TABLE League (
     displayName VARCHAR(200) NOT NULL,
     serverId VARCHAR(20) NOT NULL,
     isOngoing BOOL NOT NULL,
+    finalsCutoffDate timestamp NULL,
     FOREIGN KEY (serverId) REFERENCES Server (Id)
 );
 CREATE TABLE Team (

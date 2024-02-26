@@ -38,12 +38,38 @@ namespace kandora.bot.commands.slash
         {
             try
             {
+                await ctx.DeferAsync(ephemeral: true);
+
+                var serverDiscordId = ctx.Guild.Id.ToString();
+                var users = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(users);
+                var leagues = LeagueDbService.GetLeaguesOnServer(serverDiscordId, onlyOngoing: true);
+                var teams = LeagueDbService.GetLeagueTeams(leagues);
+                var teamPlayers = LeagueDbService.GetLeaguePlayers(teams);
+                var league = leagues.First();
+
+                var data = await RiichiCityService.Instance.GetAllTournamentLogs(league.Id);
+
+                var wb = new DiscordWebhookBuilder().WithContent("aa");
+                await ctx.EditResponseAsync(wb).ConfigureAwait(true);
+            }
+            catch (Exception e)
+            {
+                var wb = new DiscordWebhookBuilder().WithContent(e.Message + "\n" + e.StackTrace);
+                await ctx.EditResponseAsync(wb).ConfigureAwait(true);
+            }
+
+        }
+
+        public async Task Test2(InteractionContext ctx)
+        {
+            try
+            {
                 await ctx.DeferAsync(ephemeral: true).ConfigureAwait(true);
 
-                var data = await RiichiCityService.Instance.GetLog("cn5872m9nc70otuhfm5g");
-                var gameData = data.Data;
+                var gameData = await RiichiCityService.Instance.GetLog("cn5872m9nc70otuhfm5g");
                 var firstHand = gameData.Rounds[0].Hands[0].Data.StartingHand.ToList();
-                var emojiList= HandParser.GetHandEmojiCodes(string.Join("",firstHand), ctx.Client, sorted:true);
+                var emojiList = HandParser.GetHandEmojiCodes(string.Join("", firstHand), ctx.Client, sorted: true);
                 var sb = new StringBuilder();
                 sb.AppendLine(GetHandMessage(emojiList));
                 sb.AppendLine(gameData.Rounds[0].Hands[5].Data.Action.ToString());
@@ -59,7 +85,8 @@ namespace kandora.bot.commands.slash
             }
 
         }
-            [SlashCommand("startGame", Resources.admin_startGame_description)]
+
+        [SlashCommand("startGame", Resources.admin_startGame_description)]
         public async Task StartGame(InteractionContext ctx, 
             [Option(Resources.admin_startGame_user1, Resources.admin_startGame_user1_description)] string user1,
             [Option(Resources.admin_startGame_user2, Resources.admin_startGame_user2_description)] string user2,
@@ -277,7 +304,9 @@ namespace kandora.bot.commands.slash
         [SlashCommand("startLeague", Resources.admin_startLeague_description)]
         public async Task StartLeague(InteractionContext ctx,
             [Option(Resources.admin_startLeague_tournamentId, Resources.admin_startLeague_tournamentId_description)] long tournamentId,
-            [Option(Resources.admin_startLeague_displayName, Resources.admin_startLeague_displayName_description)] string displayName)
+            [Option(Resources.admin_startLeague_displayName, Resources.admin_startLeague_displayName_description)] string displayName,
+            [Option(Resources.admin_startLeague_cutoff, Resources.admin_startLeague_cutoff_description)] string cutoffStr = ""
+            )
         {
             try
             {
@@ -287,6 +316,8 @@ namespace kandora.bot.commands.slash
                 var leagues = LeagueDbService.GetLeaguesOnServer(serverDiscordId, onlyOngoing: true);
                 var teams = LeagueDbService.GetLeagueTeams(leagues);
                 var teamPlayers = LeagueDbService.GetLeaguePlayers(teams);
+
+                DateTime? cutoff = cutoffStr.Length == 0 ? null : DateTime.ParseExact(cutoffStr, "yyyy/MM/dd", System.Globalization.CultureInfo.InvariantCulture);
                 if (leagues.Count() != 0)
                 {
                     throw new Exception(Resources.commandError_leagueAlreadyInitialized);
@@ -296,7 +327,7 @@ namespace kandora.bot.commands.slash
                     ServerDbService.AddServer(serverDiscordId, ctx.Guild.Name);
                 }
 
-                LeagueDbService.StartLeague(serverDiscordId, (int)tournamentId, displayName);
+                LeagueDbService.StartLeague(serverDiscordId, (int)tournamentId, displayName, cutoff);
 
                 var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_startLeague_leagueStarted, ctx.Guild.Name)).AsEphemeral();
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
@@ -306,6 +337,37 @@ namespace kandora.bot.commands.slash
                 replyWithException(ctx, e);
             }
         }
+
+        [SlashCommand("editLeague", Resources.admin_editLeague_description)]
+        public async Task EditLeague(InteractionContext ctx,
+            [Option(Resources.admin_startLeague_cutoff, Resources.admin_startLeague_cutoff_description)] string cutoffStr)
+        {
+            try
+            {
+                var serverDiscordId = ctx.Guild.Id.ToString();
+                var users = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(users);
+                var leagues = LeagueDbService.GetLeaguesOnServer(serverDiscordId, onlyOngoing: true);
+                var teams = LeagueDbService.GetLeagueTeams(leagues);
+                var teamPlayers = LeagueDbService.GetLeaguePlayers(teams);
+
+                DateTime? cutoff = cutoffStr.Length == 0 ? null : DateTime.ParseExact(cutoffStr, "yyyy/MM/dd", System.Globalization.CultureInfo.InvariantCulture);
+                if (leagues.Count() == 0)
+                {
+                    throw new Exception(Resources.commandError_leagueNotInitialized);
+                }
+
+                LeagueDbService.SetFinalsCutoff(leagues.First().Id, cutoff);
+
+                var rb = new DiscordInteractionResponseBuilder().WithContent(Resources.admin_editLeague_leagueChanged).AsEphemeral();
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
+            }
+            catch (Exception e)
+            {
+                replyWithException(ctx, e);
+            }
+        }
+
 
         [SlashCommand("createTeam", Resources.admin_createTeam_description)]
         public async Task CreateTeam(InteractionContext ctx,

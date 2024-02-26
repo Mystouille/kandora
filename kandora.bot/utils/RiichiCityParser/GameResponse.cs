@@ -201,7 +201,7 @@ public class HandData
     public string RawData { get; set; }
 
     [JsonPropertyName("userId")]
-    public int userId { get; set; }
+    public int UserId { get; set; }
 
     [JsonPropertyName("startTime")]
     public long RawTime { get; set; }
@@ -224,7 +224,7 @@ public enum EventType
     NewDoraIndicator = 7,
     UnknownEventType8 = 8,
     UnknownEventType9 = 9,
-    UnknownEventType10 = 9,
+    UnknownEventType10 = 10,
     TenpaiReached = 11
 }
 
@@ -346,7 +346,7 @@ public class SubHandData
 
     //==== Win
     [JsonPropertyName("end_type")]
-    public int? EndType { get; set; }
+    public RoundEndType? EndType { get; set; }
 
     [JsonPropertyName("win_info")]
     public WinInfoData[] WinInfos { get; set; }

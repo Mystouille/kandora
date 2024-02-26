@@ -16,8 +16,12 @@ namespace kandora.bot.resources
         public const string admin_startLeague_tournamentId_description = "L'ID d'un tournoi riichi city";
         public const string admin_startLeague_displayName = "displayName";
         public const string admin_startLeague_displayName_description = "le nom de la ligue";
+        public const string admin_startLeague_cutoff = "finalsCutoff";
+        public const string admin_startLeague_cutoff_description = "La date début de la phase finale (yyyy/MM/dd)";
         public const string admin_startLeague_leagueStarted = "Une ligue vient de commencer sur {0}!";
         public const string admin_startLeague_leagueAlreadyExists = "Une ligue  existe déjà sur {0}!";
+        public const string admin_editLeague_description = "Change les paramètre de la ligue";
+        public const string admin_editLeague_leagueChanged = "La ligue actuelle a été modifiée";
         public const string admin_createTeam_description = "Crée une équipe pour la ligue actuelle";
         public const string admin_createTeam_teamName = "teamName";
         public const string admin_createTeam_teamName_description = "Le nom de l'équipe (sans espace ni caractères spéciaux)";

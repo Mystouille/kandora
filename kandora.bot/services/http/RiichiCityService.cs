@@ -5,16 +5,18 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using kandora.bot.resources;
 using kandora.bot.utils;
+using kandora.bot.utils.RiichiCityParser;
 
 namespace kandora.bot.services.http
 {
     public sealed class RiichiCityService
-    { 
+    {
 
         private string deviceId = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
         private string domainId = "alicdn.mahjong-jp.net";
@@ -34,10 +36,10 @@ namespace kandora.bot.services.http
         private RiichiCityService()
         {
             client = new HttpClient();
-            client.Timeout = new TimeSpan(0,0,6);
+            client.Timeout = new TimeSpan(0, 0, 6);
         }
 
-        
+
         public static RiichiCityService Instance
         {
             get
@@ -62,25 +64,26 @@ namespace kandora.bot.services.http
             }
         }
 
-        private async Task<string> InitSession(){
+        private async Task<string> InitSession()
+        {
             var httpRequestMessage = new HttpRequestMessage
-                {
-                    Method = HttpMethod.Post,
-                    RequestUri = new Uri($"https://{domainId}/users/initSession"),
-                    Headers = { 
+            {
+                Method = HttpMethod.Post,
+                RequestUri = new Uri($"https://{domainId}/users/initSession"),
+                Headers = {
                         { "Cookies", $"{{\"channel\":\"default\",\"deviceid\":\"{deviceId}\",\"lang\":\"en\",\"version\":\"{apiVersion}\",\"platform\":\"pc\"}}" }
                     },
-                };
+            };
 
             var response = await client.SendAsync(httpRequestMessage).ConfigureAwait(true); ;
-            
+
             var payload = await response.Content.ReadAsStringAsync().ConfigureAwait(true); ;
             var SID = JsonSerializer.Deserialize<InitSessionResponse>(payload).SID;
             sessionId = SID;
             return SID;
         }
 
-        private async Task<(int,string)> Login()
+        private async Task<(int, string)> Login()
         {
             client.DefaultRequestHeaders.Clear();
             await InitSession().ConfigureAwait(true); ;
@@ -102,7 +105,7 @@ namespace kandora.bot.services.http
             var payload = await response.Content.ReadAsStringAsync().ConfigureAwait(true); ;
             var parsed = JsonSerializer.Deserialize<LoginResponse>(payload);
 
-            if(parsed.Code != 0)
+            if (parsed.Code != 0)
             {
                 throw new Exception(Resources.commandError_RiichiCityConnectionFailed);
             }
@@ -135,7 +138,7 @@ namespace kandora.bot.services.http
         {
             HttpResponseMessage response = await client.PostAsync(
                 $"https://{domainId}/lobbys/enterSelfBuild",
-                new StringContent(content: $"{{\"id\":{tournamentId},\"classifyID\":\"cm1agdeai08c2ltub0t0\"}}", encoding: null, mediaType: "application/json")
+                new StringContent(content: $"{{\"id\":{tournamentId}}}", encoding: null, mediaType: "application/json")
             );
 
             var payload = await response.Content.ReadAsStringAsync().ConfigureAwait(true); ;
@@ -151,7 +154,7 @@ namespace kandora.bot.services.http
 
         public async Task<RankResponse> GetPlayerScores(int tournamentId, bool fallBack = true)
         {
-            var tournamentInfo = await GetTournamentInfo(tournamentId).ConfigureAwait(true); ;
+            var tournamentInfo = await GetTournamentInfo(tournamentId).ConfigureAwait(true);
 
             HttpResponseMessage response = await client.PostAsync(
                 $"https://{domainId}/stats/getSelfRank",
@@ -176,7 +179,7 @@ namespace kandora.bot.services.http
                 new StringContent(content: $"{{\"matchID\":{tournamentId}}}", encoding: Encoding.UTF8, mediaType: "application/json")
             );
 
-            var payload = await response.Content.ReadAsStringAsync();
+            var payload = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
             var parsed = JsonSerializer.Deserialize<PlayerStatusResponse>(payload);
 
             if (parsed.Code == 10 && fallBack)
@@ -190,8 +193,8 @@ namespace kandora.bot.services.http
         public async Task<bool> StartGame(int tournamentId, List<int> playerIds, bool fallBack = true)
         {
             var botIds = new List<int> { 113808489, 217163646, 511575033 };
-            var ids = new List<int> (playerIds);
-            if(ids.Count < 4)
+            var ids = new List<int>(playerIds);
+            if (ids.Count < 4)
             {
                 ids.AddRange(botIds.GetRange(0, 4 - ids.Count));
             }
@@ -200,10 +203,10 @@ namespace kandora.bot.services.http
 
             HttpResponseMessage response = await client.PostAsync(
                 $"https://{domainId}/lobbys/allocateSelfUser",
-                new StringContent(content: $"{{\"matchID\":{tournamentId},\"usersID\":[{string.Join(",",ids)}],\"table_idx\":1}}", encoding: Encoding.UTF8, mediaType: "application/json")
+                new StringContent(content: $"{{\"matchID\":{tournamentId},\"usersID\":[{string.Join(",", ids)}],\"table_idx\":1}}", encoding: Encoding.UTF8, mediaType: "application/json")
             );
 
-            var payload = await response.Content.ReadAsStringAsync();
+            var payload = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
             var parsed = JsonSerializer.Deserialize<StartGameResponse>(payload);
 
             if (parsed.Code == 10 && fallBack)
@@ -216,20 +219,23 @@ namespace kandora.bot.services.http
 
 
 
-        public async Task<GameResponse> GetLog(string gameId, bool fallBack = true)
+        public async Task<GameData> GetLog(string gameId, bool fallBack = true)
         {
             if (fallBack && FileUtils.IsLogCached(gameId))
             {
-                return JsonSerializer.Deserialize<GameResponse>(FileUtils.ReadLog(gameId));
+                Console.WriteLine($"from file");
+                return JsonSerializer.Deserialize<GameResponse>(FileUtils.ReadLog(gameId)).Data;
             }
             else
             {
+
+                Console.WriteLine($"from web");
                 HttpResponseMessage response = await client.PostAsync(
                     $"https://{domainId}/record/getRoomData",
                     new StringContent(content: $"{{\"keyValue\":\"{gameId}\",\"isObserve\":false}}", encoding: Encoding.UTF8, mediaType: "application/json")
                 );
 
-                var payload = await response.Content.ReadAsStringAsync();
+                var payload = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
                 var parsed = JsonSerializer.Deserialize<GameResponse>(payload);
 
                 if (parsed.Code == 10 && fallBack)
@@ -238,9 +244,39 @@ namespace kandora.bot.services.http
                     return await GetLog(gameId, fallBack: false).ConfigureAwait(true);
                 }
                 FileUtils.SaveLog(gameId, payload);
-                return parsed;
+                return parsed.Data;
             }
         }
 
+        public async Task<List<GameData>> GetAllTournamentLogs(int tournamentId, int skip = 0, bool fallBack = true)
+        {
+            // Getting the logIds
+            var tournamentInfo = await GetTournamentInfo(tournamentId).ConfigureAwait(true);
+            var skipValue = skip > 0 ? $", \"skip\":{skip}" : "";
+            HttpResponseMessage response = await client.PostAsync(
+                $"https://{domainId}/record/readPaiPuList",
+                new StringContent(content: $"{{\"startTime\":0, \"endTime\":0{skipValue}, \"classifyID\":\"{tournamentInfo.Data.ClassifyId}\", \"isSelf\":true, \"gamePlay\":1002}}", encoding: Encoding.UTF8, mediaType: "application/json")
+            );
+
+            var payload = await response.Content.ReadAsStringAsync().ConfigureAwait(true);
+            var parsed = JsonSerializer.Deserialize<LogListResponse>(payload);
+
+            if (parsed.Code == 10 && fallBack)
+            {
+                await Login().ConfigureAwait(true); ;
+                return await GetAllTournamentLogs(tournamentId, skip, fallBack: false).ConfigureAwait(true);
+            }
+            var relevantLogs = parsed.Data.Where(x=>x.IsIgnored==false).Select(x=>x.LogId);
+
+            // Fetching the logs
+            var logList = new List<GameData>();
+            foreach (var logId in relevantLogs)
+            {
+                Console.WriteLine($"fetching log {logId}");
+                var log = await GetLog(logId).ConfigureAwait(true);
+                logList.Add(log);
+            }
+            return logList;
+        }
     }
 }

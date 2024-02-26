@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
-using kandora.bot.models;
 using kandora.bot.resources;
 using kandora.bot.services;
 using kandora.bot.services.http;
-using Microsoft.VisualBasic;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace kandora.bot.commands.slash
 {
@@ -57,18 +53,22 @@ namespace kandora.bot.commands.slash
                     throw new Exception(Resources.commandError_leagueNotInitialized);
                 }
                 var league = leagues.First();
+                var cutoffDate = league.FinalsCutoffDate;
                 var rcResp = await RiichiCityService.Instance.GetPlayerScores(league.Id);
 
                 var rankingData = new Dictionary<int,(string,float)>();
                 int nbPlayer = 0;
                 teams.ForEach(team => rankingData.Add(team.teamId,(team.fancyName,0)));
+                var cutOffMultiplier = cutoffDate != null ? 2 : 1;
+
                 rcResp.Users.ToList().ForEach((player)=> {
-                    var user = users.Where(x=>x.Value.RiichiCityId == player.UserId);
-                    if (user.Count() == 0)
+                    var matchingUsers = users.Where(x=>x.Value.RiichiCityId == player.UserId);
+                    if (matchingUsers.Count() == 0)
                     {
                         return;
                     }
-                    var userId = user.First().Value.Id;
+                    var user = matchingUsers.First().Value;
+                    var userId = user.Id;
                     var team = teamPlayers.Where(tp => tp.userId == userId);
                     if (team.Count() == 0)
                     {
@@ -77,7 +77,7 @@ namespace kandora.bot.commands.slash
                     var teamId = team.First().teamId;
                     rankingData[teamId] = (rankingData[teamId].Item1, rankingData[teamId].Item2 + player.Score);
                     nbPlayer++;
-                    Console.WriteLine($"team: {teamId}, user: {user.First().Value.RiichiCityName}, score: {player.Score}");
+                    Console.WriteLine($"team: {teamId}, user: {user.RiichiCityName}, score: {player.Score}");
                 });
                 Console.WriteLine($"total: {nbPlayer}");
 
