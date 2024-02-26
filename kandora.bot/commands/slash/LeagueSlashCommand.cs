@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -54,39 +55,53 @@ namespace kandora.bot.commands.slash
                 }
                 var league = leagues.First();
                 var cutoffDate = league.FinalsCutoffDate;
-                var rcResp = await RiichiCityService.Instance.GetPlayerScores(league.Id);
+                var logs = await RiichiCityService.Instance.GetAllTournamentLogs(league.Id);
 
-                var rankingData = new Dictionary<int,(string,float)>();
-                int nbPlayer = 0;
-                teams.ForEach(team => rankingData.Add(team.teamId,(team.fancyName,0)));
-                var cutOffMultiplier = cutoffDate != null ? 2 : 1;
-
-                rcResp.Users.ToList().ForEach((player)=> {
-                    var matchingUsers = users.Where(x=>x.Value.RiichiCityId == player.UserId);
-                    if (matchingUsers.Count() == 0)
+                var teamsScoreDoubled = new Dictionary<int,int>();
+                var userToTeam = new Dictionary<int, int>();
+                foreach ( var team in teams)
+                {
+                    teamsScoreDoubled.Add(team.teamId, 0);
+                }
+                logs.ForEach(log => {
+                    var isBeforeCutoff = cutoffDate == null ? false : log.Rounds[0].Hands[0].Time < cutoffDate;
+                    var cutoffMultiplier = isBeforeCutoff ? 1 : 2;
+                    var gameEndData = log.Rounds.Last().Hands.Where(hand => hand.EventType == EventType.GameEnd).First().Data.GameEndDataList;
+                    gameEndData.ToImmutableList().ForEach(playerData =>
                     {
-                        return;
-                    }
-                    var user = matchingUsers.First().Value;
-                    var userId = user.Id;
-                    var team = teamPlayers.Where(tp => tp.userId == userId);
-                    if (team.Count() == 0)
-                    {
-                        return;
-                    }
-                    var teamId = team.First().teamId;
-                    rankingData[teamId] = (rankingData[teamId].Item1, rankingData[teamId].Item2 + player.Score);
-                    nbPlayer++;
-                    Console.WriteLine($"team: {teamId}, user: {user.RiichiCityName}, score: {player.Score}");
+                        var teamId = 0;
+                        if (!userToTeam.ContainsKey(playerData.UserId))
+                        {
+                            var userId = users.Values.Where(u => u.RiichiCityId == playerData.UserId).First().Id;
+                            teamId = teamPlayers.Where(p => p.userId == userId).First().teamId;
+                            userToTeam.Add(playerData.UserId, teamId);
+                        } else
+                        {
+                            teamId = userToTeam[playerData.UserId];
+                        }
+                        teamsScoreDoubled[teamId] = teamsScoreDoubled[teamId] + playerData.FinalScore * cutoffMultiplier;
+                    });
                 });
-                Console.WriteLine($"total: {nbPlayer}");
-
-                var sortedData = rankingData.Values.OrderByDescending(x => x.Item2);
+                var rankingData = new List<(string, int)>();
+                var sortedData = teamsScoreDoubled.Select(kv => (teams.Where(t=> t.teamId ==kv.Key).First().fancyName, ((float)(kv.Value))/2)).OrderByDescending(x => x.Item2);
                 var sb = new StringBuilder();
                 sb.AppendLine("Live ranking!");
-                sortedData.ToList().ForEach(x => {
-                    sb.AppendLine($"`{formatScore(x.Item2)}`  \t| {x.Item1}");
-                });
+
+                var cutoffHappened = cutoffDate == null ? false : cutoffDate < DateTime.UtcNow;
+                if (!cutoffHappened)
+                {
+                    sortedData.ToList().ForEach(x => {
+                        sb.AppendLine($"`{formatScore(x.Item2)}`  \t| {x.Item1}");
+                    });
+                } else {
+                    sortedData.ToList().GetRange(0,4).ForEach(x => {
+                        sb.AppendLine($"`{formatScore(x.Item2)}`  \t| {x.Item1}");
+                    });
+                    sb.AppendLine("\nEliminated:");
+                    sortedData.ToList().GetRange(4, sortedData.Count() - 4).ForEach(x => {
+                        sb.AppendLine($"`{formatScore(x.Item2*2)}`  \t| {x.Item1}");
+                    });
+                }
                 var wb = new DiscordWebhookBuilder().WithContent(sb.ToString());
                 await ctx.EditResponseAsync(wb).ConfigureAwait(true);
             }
@@ -100,8 +115,9 @@ namespace kandora.bot.commands.slash
         private string formatScore(float score)
         {
             var floatScore = (float)(score) / 10;
-            var stringScore = floatScore.ToString("0.0");
-            return $"`{(floatScore > 0 ? "+" : "")}{stringScore.PadLeft(5,' ')}`";
+            var absScore = floatScore > 0 ? floatScore : floatScore * -1;
+            var stringScore = absScore.ToString("0.00");
+            return $"`{(floatScore > 0 ? "+" : "-")}{stringScore.PadLeft(6,' ')}`";
         }
 
         
