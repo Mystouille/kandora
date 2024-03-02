@@ -20,6 +20,13 @@ namespace kandora.bot.resources
         public const string admin_startLeague_leagueAlreadyExists = "A league already exists on {0}!";
         public const string admin_editLeague_description = "Changes league parameters";
         public const string admin_editLeague_leagueChanged = "The current league has been modified";
+        public const string admin_addSub_userOut = "subbedOutUser";
+        public const string admin_addSub_userOut_description = "The user that is subbed out (@ mention or guest name)";
+        public const string admin_addSub_userIn = "subbedInUser";
+        public const string admin_addSub_userIn_description = "The user that is subbed in (@ mention or guest name)";
+        public const string admin_addSub_gameId = "gameId";
+        public const string admin_addSub_gameId_description = "The Riichi City game id (log id)";
+        public const string admin_addSub_playerHasBeenSubbed = "Player {0} has been subbed by {1} for game id {2}";
         public const string admin_startLeague_cutoff = "finalsCutoff";
         public const string admin_startLeague_cutoff_description = "Start date of the finals phase (yyyy/MM/dd)";
         public const string admin_createTeam_description = "Create a team for the current league";
@@ -290,6 +297,7 @@ namespace kandora.bot.resources
         public const string commandError_PlayerNotOnRiichiCity = "The user {0} doesn't have a Riichi City ID";
         public const string commandError_PlayerNotInAteam = "The player {0} isn't in any team of the current league";
         public const string commandError_RiichiCityConnectionFailed = "The connection to Riichi City failed";
+        public const string commandError_playerAlreadySubbed = "Player is already subbed out for this game (ask admin if you want to change that)";
 
 
         //Leaderboard

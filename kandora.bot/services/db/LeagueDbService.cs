@@ -15,6 +15,7 @@ namespace kandora.bot.services
         public static string LeagueTableName = "League";
         public static string teamTableName = "Team";
         public static string teamUserTableName = "TeamUser";
+        public static string leagueSubTableName = "LeagueSub";
 
         //id col
         public static string idCol = "Id";
@@ -34,6 +35,11 @@ namespace kandora.bot.services
         public static string teamIdCol = "teamId";
         public static string userIdCol = "userId";
         public static string isCaptainCol = "isCaptain";
+
+        //League Sub
+        public static string rcGameIdCol = "rcGameId";
+        public static string outIdCol = "outId";
+        public static string inIdCol = "inId";
 
 
 
@@ -279,6 +285,55 @@ namespace kandora.bot.services
 
                 command.ExecuteNonQuery();
                 return;
+            }
+            throw new DbConnectionException();
+        }
+
+        public static void AddSubToGame(string rcGameId, int leagueId, string outId, string inId)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.Connection = dbCon.Connection;
+                command.CommandType = CommandType.Text;
+                command.CommandText = $"INSERT INTO {leagueSubTableName} ({leagueIdCol}, {rcGameIdCol}, {outIdCol}, {inIdCol}) VALUES (@leagueId, @rcGameId, @outId, @inId);";
+
+                command.Parameters.AddWithValue("@leagueId", NpgsqlDbType.Integer, leagueId);
+                command.Parameters.AddWithValue("@rcGameId", NpgsqlDbType.Varchar, rcGameId);
+                command.Parameters.AddWithValue("@outId", NpgsqlDbType.Varchar, outId);
+                command.Parameters.AddWithValue("@inId", NpgsqlDbType.Varchar, inId);
+                command.CommandType = CommandType.Text;
+
+                command.ExecuteNonQuery();
+                return;
+            }
+            throw new DbConnectionException();
+        }
+
+        public static List<(string gameId, string outId, string inId)> GetSubs(int leagueId)
+        {
+             var subList = new List<(string gameId, string outId, string inId)>();
+
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.CommandText = $"SELECT {rcGameIdCol}, {outIdCol}, {inIdCol} FROM {leagueSubTableName} " +
+                    $"WHERE {leagueIdCol} = @leagueId;";
+                command.CommandType = CommandType.Text;
+                command.Parameters.AddWithValue("@leagueId", NpgsqlDbType.Integer, leagueId);
+
+                var reader = command.ExecuteReader();
+                while (reader.Read())
+                {
+                    string gameId = reader.GetString(0);
+                    string outId = reader.GetString(1);
+                    string inId = reader.GetString(2);
+                    subList.Add((gameId, outId, inId));
+                }
+                reader.Close();
+                return subList;
             }
             throw new DbConnectionException();
         }

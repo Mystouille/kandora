@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
+using kandora.bot.models;
 using kandora.bot.resources;
 using kandora.bot.services;
 using kandora.bot.services.http;
@@ -54,52 +55,69 @@ namespace kandora.bot.commands.slash
                     throw new Exception(Resources.commandError_leagueNotInitialized);
                 }
                 var league = leagues.First();
+
+                var subList = LeagueDbService.GetSubs(league.Id);
+
                 var cutoffDate = league.FinalsCutoffDate;
                 var logs = await RiichiCityService.Instance.GetAllTournamentLogs(league.Id);
 
                 var teamsScoreDoubled = new Dictionary<int,int>();
-                var userToTeam = new Dictionary<int, int>();
+                var userToTeam = new Dictionary<string, int>();
                 foreach ( var team in teams)
                 {
                     teamsScoreDoubled.Add(team.teamId, 0);
                 }
+                var teamsAfterCutoff = new List<int>();
                 logs.ForEach(log => {
                     var isBeforeCutoff = cutoffDate == null ? false : log.Rounds[0].Hands[0].Time < cutoffDate;
                     var cutoffMultiplier = isBeforeCutoff ? 1 : 2;
                     var gameEndData = log.Rounds.Last().Hands.Where(hand => hand.EventType == EventType.GameEnd).First().Data.GameEndDataList;
+
                     gameEndData.ToImmutableList().ForEach(playerData =>
                     {
                         var teamId = 0;
-                        if (!userToTeam.ContainsKey(playerData.UserId))
+                        var userId = users.Values.Where(u => u.RiichiCityId == playerData.UserId).First().Id;
+                        var sub = subList.Where(s => s.gameId == log.GameId && s.inId == userId);
+                        var actualPlayerId = sub.Count() == 0 ? userId : sub.First().outId;
+                        var actualScore = sub.Count() == 0 ? playerData.FinalScore : -300;
+
+                        if (!userToTeam.ContainsKey(actualPlayerId))
                         {
-                            var userId = users.Values.Where(u => u.RiichiCityId == playerData.UserId).First().Id;
-                            teamId = teamPlayers.Where(p => p.userId == userId).First().teamId;
-                            userToTeam.Add(playerData.UserId, teamId);
+                            teamId = teamPlayers.Where(p => p.userId == actualPlayerId).First().teamId;
+                            userToTeam.Add(actualPlayerId, teamId);
                         } else
                         {
-                            teamId = userToTeam[playerData.UserId];
+                            teamId = userToTeam[actualPlayerId];
                         }
-                        teamsScoreDoubled[teamId] = teamsScoreDoubled[teamId] + playerData.FinalScore * cutoffMultiplier;
+
+                        if (!isBeforeCutoff && !teamsAfterCutoff.Contains(teamId))
+                        {
+                            teamsAfterCutoff.Add(teamId);
+                        }
+
+                        teamsScoreDoubled[teamId] = teamsScoreDoubled[teamId] + actualScore * cutoffMultiplier;
                     });
                 });
                 var rankingData = new List<(string, int)>();
-                var sortedData = teamsScoreDoubled.Select(kv => (teams.Where(t=> t.teamId ==kv.Key).First().fancyName, ((float)(kv.Value))/2)).OrderByDescending(x => x.Item2);
+                var sortedData = teamsScoreDoubled.Select(kv => (teams.Where(t => t.teamId == kv.Key).First().fancyName, ((float)(kv.Value)) / 2)).OrderByDescending(x => x.Item2);
+                var finalistData = teamsScoreDoubled.Where(ts=>teamsAfterCutoff.Contains(ts.Key)).Select(kv => (teams.Where(t => t.teamId == kv.Key).First().fancyName, ((float)(kv.Value)) / 2)).OrderByDescending(x => x.Item2);
                 var sb = new StringBuilder();
                 sb.AppendLine("Live ranking!");
 
                 var cutoffHappened = cutoffDate == null ? false : cutoffDate < DateTime.UtcNow;
                 if (!cutoffHappened)
                 {
-                    sortedData.ToList().ForEach(x => {
+                    sortedData.ToList().GetRange(0, 4).ForEach(x => {
                         sb.AppendLine($"`{formatScore(x.Item2)}`  \t| {x.Item1}");
+                    });
+
+                    sb.AppendLine("\n");
+                    sortedData.ToList().GetRange(4, sortedData.Count() - 4).ForEach(x => {
+                        sb.AppendLine($"`{formatScore(x.Item2 * 2)}`  \t| {x.Item1}");
                     });
                 } else {
-                    sortedData.ToList().GetRange(0,4).ForEach(x => {
+                    finalistData.ToList().GetRange(0, 4).ForEach(x => {
                         sb.AppendLine($"`{formatScore(x.Item2)}`  \t| {x.Item1}");
-                    });
-                    sb.AppendLine("\nEliminated:");
-                    sortedData.ToList().GetRange(4, sortedData.Count() - 4).ForEach(x => {
-                        sb.AppendLine($"`{formatScore(x.Item2*2)}`  \t| {x.Item1}");
                     });
                 }
                 var wb = new DiscordWebhookBuilder().WithContent(sb.ToString());

@@ -22,6 +22,13 @@ namespace kandora.bot.resources
         public const string admin_startLeague_leagueAlreadyExists = "Une ligue  existe déjà sur {0}!";
         public const string admin_editLeague_description = "Change les paramètre de la ligue";
         public const string admin_editLeague_leagueChanged = "La ligue actuelle a été modifiée";
+        public const string admin_addSub_userOut = "absent";
+        public const string admin_addSub_userOut_description = "Le joueur qui était absent (@ mention ou nom d'invité)";
+        public const string admin_addSub_userIn = "remplacant";
+        public const string admin_addSub_userIn_description = "Le joueur qui l'a remplacé (@ mention ou nom d'invité)";
+        public const string admin_addSub_gameId = "gameId";
+        public const string admin_addSub_gameId_description = "L'id de partie Riici City (log id)";
+        public const string admin_addSub_playerHasBeenSubbed = "Le joueur {0} a été remplacé par {1} pour la partie {2}";
         public const string admin_createTeam_description = "Crée une équipe pour la ligue actuelle";
         public const string admin_createTeam_teamName = "teamName";
         public const string admin_createTeam_teamName_description = "Le nom de l'équipe (sans espace ni caractères spéciaux)";
@@ -295,6 +302,7 @@ namespace kandora.bot.resources
         public const string commandError_PlayerNotOnRiichiCity = "Le joueur {0} n'a pas d'ID Riichi City";
         public const string commandError_PlayerNotInAteam = "Le joueur {0} n'est dans aucun equipe de la ligue actuelle";
         public const string commandError_RiichiCityConnectionFailed = "La connection avec Riichi City a échoué";
+        public const string commandError_playerAlreadySubbed = "Le joueur a déjà été remplacé dans cette partie";
 
 
 

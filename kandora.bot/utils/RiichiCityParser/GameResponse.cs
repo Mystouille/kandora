@@ -20,6 +20,10 @@ public class GameData
 
     [JsonPropertyName("nowTime")]
     public long RawNowTime { get; set; }
+
+    [JsonPropertyName("keyValue")]
+    public string GameId { get; set; }
+
     public DateTime NowTime { get{
         return TimeUtils.GetDateTimeFromUnixMs(RawNowTime*1000);
     }}

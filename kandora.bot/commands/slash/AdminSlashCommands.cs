@@ -207,6 +207,52 @@ namespace kandora.bot.commands.slash
             }
         }
 
+        [SlashCommand("addSub", Resources.admin_startGame_description)]
+        public async Task AddSub(InteractionContext ctx,
+            [Option(Resources.admin_addSub_userOut, Resources.admin_addSub_userOut_description)] string userOut,
+            [Option(Resources.admin_addSub_userIn, Resources.admin_addSub_userIn_description)] string userIn,
+            [Option(Resources.admin_addSub_gameId, Resources.admin_addSub_gameId_description)] string gameId)
+        {
+            try
+            {
+                await ctx.DeferAsync(ephemeral: true).ConfigureAwait(true);
+                var useIdId = getIdFromPlayerParam(userIn);
+                var userOutId = getIdFromPlayerParam(userOut);
+
+                var serverDiscordId = ctx.Guild.Id.ToString();
+                var users = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(users);
+                var leagues = LeagueDbService.GetLeaguesOnServer(serverDiscordId, onlyOngoing: true);
+                var teams = LeagueDbService.GetLeagueTeams(leagues);
+                var teamPlayers = LeagueDbService.GetLeaguePlayers(teams);
+
+                if (leagues.Count() == 0)
+                {
+                    throw new Exception(Resources.commandError_leagueNotInitialized);
+                }
+
+                var league = leagues.First();
+                var subs = LeagueDbService.GetSubs(league.Id);
+                if(subs.Where(s=> s.outId == userOutId && s.gameId == gameId).Count()>0)
+                {
+                    throw new Exception(Resources.commandError_playerAlreadySubbed);
+                }
+
+                LeagueDbService.AddSubToGame(gameId, league.Id, userOutId, useIdId);
+
+                var webhookBuilder = new DiscordWebhookBuilder()
+                    .WithContent(String.Format(Resources.admin_addSub_playerHasBeenSubbed, userOut, userIn, gameId));
+
+                await ctx.EditResponseAsync(webhookBuilder);
+            }
+            catch (Exception e)
+            {
+                var wb = new DiscordWebhookBuilder().WithContent(e.Message);
+                await ctx.EditResponseAsync(wb).ConfigureAwait(true);
+            }
+        }
+
+
         private async Task<(string,bool)> computeStatus(List<(string, string)> userIds, string serverId, DiscordClient client )
         {
             var users = UserDbService.GetUsers();

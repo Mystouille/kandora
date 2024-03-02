@@ -137,3 +137,13 @@ CREATE TABLE TeamRanking (
     FOREIGN KEY (gameId) REFERENCES Game (Id),
     FOREIGN KEY (serverId) REFERENCES Server (Id)
 );
+CREATE TABLE LeagueSub (
+    Id SERIAL PRIMARY KEY,
+    leagueId INT NOT NULL,
+    rcGameId  VARCHAR (40) NOT NULL,
+    outId  VARCHAR(20) NOT NULL,
+    inId   VARCHAR(20) NOT NULL,
+    FOREIGN KEY (leagueId) REFERENCES League (Id),
+    FOREIGN KEY (outId) REFERENCES DiscordUser (Id),
+    FOREIGN KEY (inId) REFERENCES DiscordUser (Id)
+);
