@@ -20,7 +20,8 @@ namespace kandora.bot.services
         public static string tenhouNameCol = "tenhouName";
         public static string riichiCityNameCol = "riichiCityName";
         public static string riichiCityIdCol = "riichiCityId";
-        
+        public static string riichiCitySecondaryIdCol = "riichiCitySecondaryId";
+
         public static string isAdminCol = "isAdmin";
 
         public static Dictionary<string,User> GetUsers()
@@ -31,7 +32,7 @@ namespace kandora.bot.services
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
-                command.CommandText = $"SELECT {idCol}, {mahjsoulNameCol}, {mahjsoulFriendIdCol}, {mahjsoulUserIdCol}, {tenhouNameCol}, {riichiCityNameCol}, {riichiCityIdCol} FROM {tableName}";
+                command.CommandText = $"SELECT {idCol}, {mahjsoulNameCol}, {mahjsoulFriendIdCol}, {mahjsoulUserIdCol}, {tenhouNameCol}, {riichiCityNameCol}, {riichiCityIdCol}, {riichiCitySecondaryIdCol} FROM {tableName}";
                 command.CommandType = CommandType.Text;
 
                 var reader = command.ExecuteReader();
@@ -46,6 +47,7 @@ namespace kandora.bot.services
                     user.TenhouName = reader.IsDBNull(4) ? null : reader.GetString(4);
                     user.RiichiCityName = reader.IsDBNull(5) ? null : reader.GetString(5);
                     user.RiichiCityId = reader.IsDBNull(6) ? -1 : reader.GetInt32(6);
+                    user.RiichiCitySecondaryId = reader.IsDBNull(7) ? -1 : reader.GetInt32(7);
 
                     users.Add(id, user);
                 }
@@ -118,6 +120,10 @@ namespace kandora.bot.services
         {
             UpdateFieldInTable(tableName, riichiCityIdCol, userId, value);
         }
+        public static void SetRiichiCitySecondaryId(string userId, int value)
+        {
+            UpdateFieldInTable(tableName, riichiCitySecondaryIdCol, userId, value);
+        }
         public static void SetRiichiCityName(string userId, string value)
         {
             UpdateFieldInTable(tableName, riichiCityNameCol, userId, value);
@@ -146,7 +152,7 @@ namespace kandora.bot.services
 
         public static bool RiichiCityIdExistAlready(string userId, string serverId, int value)
         {
-            return IntValueExistAlready(userId, serverId, riichiCityIdCol, value);
+            return IntValueExistAlready(userId, serverId, riichiCityIdCol, value) || IntValueExistAlready(userId, serverId, riichiCitySecondaryIdCol, value);
         }
 
         private static bool ValueExistAlready(string userId, string serverId, string columnName, string value)

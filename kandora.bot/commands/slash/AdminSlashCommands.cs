@@ -33,8 +33,43 @@ namespace kandora.bot.commands.slash
             return toReturn;
         }
 
-        [SlashCommand("test", "test fetch log")]
-        public async Task Test(InteractionContext ctx)
+        [SlashCommand("test", "test users")]
+        public async Task RefreshUserNicknames(InteractionContext ctx)
+        {
+            try
+            {
+                await ctx.DeferAsync(ephemeral: true);
+
+                var serverDiscordId = ctx.Guild.Id.ToString();
+                var users = UserDbService.GetUsers();
+
+                foreach (var uId in users.Keys){
+                    var isNumeric = ulong.TryParse(uId, out ulong n);
+                    if (isNumeric)
+                    {
+                        try
+                        {
+                            var member = await ctx.Guild.GetMemberAsync(Convert.ToUInt64(uId));
+                            ServerDbService.SetUserDisplayName(serverDiscordId, uId, member.DisplayName);
+                        }
+                        catch (Exception e)
+                        {
+                            //do nothing
+                        }
+                    }
+                };
+
+                var wb = new DiscordWebhookBuilder().WithContent("aa");
+                await ctx.EditResponseAsync(wb).ConfigureAwait(true);
+            }
+            catch (Exception e)
+            {
+                var wb = new DiscordWebhookBuilder().WithContent(e.Message + "\n" + e.StackTrace);
+                await ctx.EditResponseAsync(wb).ConfigureAwait(true);
+            }
+        }
+
+        public async Task TestGetAllLogs(InteractionContext ctx)
         {
             try
             {
@@ -58,10 +93,9 @@ namespace kandora.bot.commands.slash
                 var wb = new DiscordWebhookBuilder().WithContent(e.Message + "\n" + e.StackTrace);
                 await ctx.EditResponseAsync(wb).ConfigureAwait(true);
             }
-
         }
 
-        public async Task Test2(InteractionContext ctx)
+        public async Task TestgetGame(InteractionContext ctx)
         {
             try
             {

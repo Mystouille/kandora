@@ -68,6 +68,7 @@ CREATE TABLE DiscordUser
     mahjsoulName VARCHAR(30) NULL,
     tenhouName VARCHAR(30) NULL,
     riichiCityId INT NULL,
+    riichiCitySecondaryId INT NULL,
     riichiCityName VARCHAR(30) NULL,
     leaderboardPassword VARCHAR NULL
 );

@@ -76,7 +76,7 @@ namespace kandora.bot.commands.slash
                     gameEndData.ToImmutableList().ForEach(playerData =>
                     {
                         var teamId = 0;
-                        var userId = users.Values.Where(u => u.RiichiCityId == playerData.UserId).First().Id;
+                        var userId = users.Values.Where(u => u.RiichiCityId == playerData.UserId || u.RiichiCitySecondaryId == playerData.UserId).First().Id;
                         var sub = subList.Where(s => s.gameId == log.GameId && s.inId == userId);
                         var actualPlayerId = sub.Count() == 0 ? userId : sub.First().outId;
                         var actualScore = sub.Count() == 0 ? playerData.FinalScore : -300;

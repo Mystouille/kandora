@@ -17,6 +17,8 @@ namespace kandora.bot.models
         public string MahjsoulName { get; set; }
         public string TenhouName { get; set; }
         public int RiichiCityId { get; set; }
+        public int RiichiCitySecondaryId { get; set; }
+        
         public string RiichiCityName { get; set; }
     }
 }
