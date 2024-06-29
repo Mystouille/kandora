@@ -398,7 +398,7 @@ namespace kandora.bot.commands.slash
                 var teamPlayers = LeagueDbService.GetLeaguePlayers(teams);
 
                 DateTime? cutoff = cutoffStr.Length == 0 ? null : DateTime.ParseExact(cutoffStr, "yyyy/MM/dd", System.Globalization.CultureInfo.InvariantCulture);
-                if (leagues.Count() != 0)
+                if (leagues.Select(league => league.IsOngoing).Count()>0)
                 {
                     throw new Exception(Resources.commandError_leagueAlreadyInitialized);
                 }
@@ -410,6 +410,36 @@ namespace kandora.bot.commands.slash
                 LeagueDbService.StartLeague(serverDiscordId, (int)tournamentId, displayName, cutoff);
 
                 var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_startLeague_leagueStarted, ctx.Guild.Name)).AsEphemeral();
+                await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
+            }
+            catch (Exception e)
+            {
+                replyWithException(ctx, e);
+            }
+        }
+
+        [SlashCommand("endLeague", Resources.admin_endLeague_description)]
+        public async Task EndLeague(InteractionContext ctx)
+        {
+            try
+            {
+                var serverDiscordId = ctx.Guild.Id.ToString();
+                var users = UserDbService.GetUsers();
+                var servers = ServerDbService.GetServers(users);
+                var leagues = LeagueDbService.GetLeaguesOnServer(serverDiscordId, onlyOngoing: true);
+                var teams = LeagueDbService.GetLeagueTeams(leagues);
+                var teamPlayers = LeagueDbService.GetLeaguePlayers(teams);
+
+                if (leagues.Where(league => league.IsOngoing).Count() == 0)
+                {
+                    throw new Exception(Resources.commandError_noOngoingLeague);
+                }
+
+                var currentLeague = leagues.Where(league => league.IsOngoing).First();
+
+                LeagueDbService.EndLeague(serverDiscordId, currentLeague.Id);
+
+                var rb = new DiscordInteractionResponseBuilder().WithContent(string.Format(Resources.admin_endLeague_leagueEnded, ctx.Guild.Name)).AsEphemeral();
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
             }
             catch (Exception e)

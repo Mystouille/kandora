@@ -96,14 +96,15 @@ namespace kandora.bot.services.discord
                 var culture = new CultureInfo(Resources.cultureInfoStr, true);
                 var dateStr = DateTime.Now.ToString("ddd dd MMM HH'h'mm", culture);
                 var threadNameStr = string.Format(threadNameRes, dateStr, nbProblems);
-                var thread = await ctx.Channel.CreateThreadAsync(startingMessage, string.Format(threadNameStr, dateStr, nbProblems), AutoArchiveDuration.Hour).ConfigureAwait(true);
                 var problem = new OngoingQuizz(
                     generator: generator,
                     nbQuestions: nbProblems,
                     timeout: timeout,
                     onQuestionEnd: this.OnQuestionEnd
                 );
-                await AddOngoingQuizz(problem, residentChannel: thread);
+                var thread = await ctx.Channel.CreateThreadAsync(startingMessage, string.Format(threadNameStr, dateStr, nbProblems), AutoArchiveDuration.Hour).ConfigureAwait(true);
+
+                await AddOngoingQuizz(problem, residentChannel: thread).ConfigureAwait(true);
             }
         }
 
@@ -117,16 +118,16 @@ namespace kandora.bot.services.discord
 
             GuildsWithOngoingQuizz.Add(msg.Channel.Guild.Id);
             OngoingQuizz.Add(msg.Id, quizz);
-            foreach (var emoji in quizz.QuestionDataData.OptionEmojis)
+            foreach (var emoji in quizz.QuestionData.OptionEmojis)
             {
                 await msg.CreateReactionAsync(emoji).ConfigureAwait(true);
             }
 
             var message = $"{messageHeader}\n{quizz.GetCurrentWinners()}";
 
-            var msgb = new DiscordMessageBuilder().WithContent(message).AddFile(quizz.QuestionDataData.Image);
+            var msgb = new DiscordMessageBuilder().WithContent(message).AddFile(quizz.QuestionData.Image);
             msg = await msg.ModifyAsync(msgb).ConfigureAwait(true);
-            quizz.QuestionDataData.Image.Dispose();
+            quizz.QuestionData.Image.Dispose();
             quizz.ResetTimer();
 
             if (quizz.Timeout > 0)

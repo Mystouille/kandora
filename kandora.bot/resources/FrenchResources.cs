@@ -20,6 +20,8 @@ namespace kandora.bot.resources
         public const string admin_startLeague_cutoff_description = "La date début de la phase finale (yyyy/MM/dd)";
         public const string admin_startLeague_leagueStarted = "Une ligue vient de commencer sur {0}!";
         public const string admin_startLeague_leagueAlreadyExists = "Une ligue  existe déjà sur {0}!";
+        public const string admin_endLeague_description = "Termine la ligue en cours";
+        public const string admin_endLeague_leagueEnded = "{0} est terminée";
         public const string admin_editLeague_description = "Change les paramètre de la ligue";
         public const string admin_editLeague_leagueChanged = "La ligue actuelle a été modifiée";
         public const string admin_addSub_userOut = "absent";
@@ -296,6 +298,7 @@ namespace kandora.bot.resources
         public const string commandError_leagueNotInitialized = "La ligue n'a pas été encore crée";
         public const string commandError_leaderboardAlreadyInitialized = "Le leaderboard a déjà été créé";
         public const string commandError_leagueAlreadyInitialized = "Une ligue est déjà en cours sur ce serveur";
+        public const string commandError_noOngoingLeague = "Aucune ligue n'est en cours sur ce serveur";
         public const string commandError_teamNameAlreadyExists = "Une équipe avec ce nom existe déjà dans cette ligue";
         public const string commandError_playerAlreadyPresentInATeam = "Ce joueur est déjà présent dans une équipe pour cette ligue";
         public const string commandError_teamDoesNotExist = "L'équipe {0} n'existe pas dans cette ligue";

@@ -93,6 +93,25 @@ namespace kandora.bot.services
             }
             throw new DbConnectionException();
         }
+        public static void EndLeague(string serverId, int leagueId)
+        {
+            var dbCon = DBConnection.Instance();
+            if (dbCon.IsConnect())
+            {
+                using var command = new NpgsqlCommand("", dbCon.Connection);
+                command.Connection = dbCon.Connection;
+                command.CommandType = CommandType.Text;
+                command.CommandText = $"UPDATE {LeagueTableName} SET {isOngoingCol}=@ongoing WHERE {idCol}=@leagueId;";
+
+                command.Parameters.AddWithValue("@ongoing", NpgsqlDbType.Boolean, false);
+                command.Parameters.AddWithValue("@leagueId", NpgsqlDbType.Integer, leagueId);
+                command.CommandType = CommandType.Text;
+
+                command.ExecuteNonQuery();
+                return;
+            }
+            throw new DbConnectionException();
+        }
 
         public static void SetFinalsCutoff(int leagueId, DateTime? cutoff)
         {

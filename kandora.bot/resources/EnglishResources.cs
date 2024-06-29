@@ -18,6 +18,8 @@ namespace kandora.bot.resources
         public const string admin_startLeague_displayName_description = "The league's display name";
         public const string admin_startLeague_leagueStarted = "A mahjong team league has been created on {0}!";
         public const string admin_startLeague_leagueAlreadyExists = "A league already exists on {0}!";
+        public const string admin_endLeague_description = "Ends the ongoing league";
+        public const string admin_endLeague_leagueEnded = "{0} just ended";
         public const string admin_editLeague_description = "Changes league parameters";
         public const string admin_editLeague_leagueChanged = "The current league has been modified";
         public const string admin_addSub_userOut = "subbedOutUser";
@@ -290,6 +292,7 @@ namespace kandora.bot.resources
         public const string commandError_leagueNotInitialized = "The league hasn't been created yet";
         public const string commandError_leaderboardNotInitialized = "The leaderboard hasn't been created yet";
         public const string commandError_leagueAlreadyInitialized = "An league is still ongoing on this server";
+        public const string commandError_noOngoingLeague = "There is no ongoing league on this server";
         public const string commandError_leaderboardAlreadyInitialized = "The leaderboard has already been created";
         public const string commandError_teamNameAlreadyExists = "A team with this name already exists in this league";
         public const string commandError_playerAlreadyPresentInATeam = "This user is already in a team for this league (maybe this one?)";

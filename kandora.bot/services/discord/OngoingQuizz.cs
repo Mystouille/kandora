@@ -23,7 +23,7 @@ namespace kandora.bot.services.discord
             this.QuizzProgress = 1;
             this.NbTotalQuestions = nbQuestions;
             this.Generator = generator;
-            this.QuestionDataData = generator.GetNewQuestion();
+            this.QuestionData = generator.GetNewQuestion();
             this.OnQuestionEnd = onQuestionEnd;
         }
 
@@ -37,17 +37,17 @@ namespace kandora.bot.services.discord
             this.QuizzProgress = quizzProgress;
             this.NbTotalQuestions = nbQuestions;
             this.Generator = generator;
-            this.QuestionDataData = generator.GetNewQuestion();
+            this.QuestionData = generator.GetNewQuestion();
             this.OnQuestionEnd = onQuestionEnd;
         }
 
         private IQuizzGenerator Generator { get; }
-        public MultipleChoicesQuestion QuestionDataData { get; }
+        public MultipleChoicesQuestion QuestionData { get; }
         public int Timeout { get; }
         public DateTime StartTime { get; set; }
         private readonly Dictionary<ulong, ISet<ulong>> usersAnswers;
-        public ISet<ulong> Answer { get => QuestionDataData.AnswerEmojis.Select(emoji => emoji.Id).ToHashSet(); }
-        public ISet<ulong> Options { get => QuestionDataData.OptionEmojis.Select(emoji => emoji.Id).ToHashSet(); }
+        public ISet<ulong> Answer { get => QuestionData.AnswerEmojis.Select(emoji => emoji.Id).ToHashSet(); }
+        public ISet<ulong> Options { get => QuestionData.OptionEmojis.Select(emoji => emoji.Id).ToHashSet(); }
         public readonly int[] scoreTable = new int[] { 6, 4, 2, 1, 1 };
         public Dictionary<ulong, int> WinnersAndTiming { get; }
         public Dictionary<ulong,int> PlayersAndPoints { get; }
@@ -129,7 +129,7 @@ namespace kandora.bot.services.discord
                 var sb = new StringBuilder();
                 sb.AppendLine(GetProgress());
                 sb.AppendLine(String.Format(Resources.quizz_suddenDeathWinnerMessage,user.Mention));
-                sb.AppendLine(String.Format(Resources.quizz_answer,string.Join("", QuestionDataData.AnswerEmojis)));
+                sb.AppendLine(String.Format(Resources.quizz_answer,string.Join("", QuestionData.AnswerEmojis)));
                 if (NbTotalQuestions > 1)
                 {
                     sb.AppendLine(GetFinalScore());
@@ -145,7 +145,7 @@ namespace kandora.bot.services.discord
             UpdateScores();
             var sb = new StringBuilder();
             sb.AppendLine(GetProgress());
-            sb.AppendLine(String.Format(Resources.quizz_answer, string.Join("", QuestionDataData.AnswerEmojis)));
+            sb.AppendLine(String.Format(Resources.quizz_answer, string.Join("", QuestionData.AnswerEmojis)));
 
             if (WinnersAndTiming.Count == 0)
             {
@@ -248,8 +248,8 @@ namespace kandora.bot.services.discord
         public string HeaderMessage
         {
             get => Timeout > 0
-                ? String.Format(QuestionDataData.MessageWithTimeout, QuizzProgress, NbTotalQuestions, Timeout)
-                : String.Format(QuestionDataData.Message, QuizzProgress, NbTotalQuestions);
+                ? String.Format(QuestionData.MessageWithTimeout, QuizzProgress, NbTotalQuestions, Timeout)
+                : String.Format(QuestionData.Message, QuizzProgress, NbTotalQuestions);
         }
 
         public OngoingQuizz GetNextProblem()

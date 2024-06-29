@@ -85,7 +85,7 @@ namespace kandora.bot.services.discord.problems
                 shanten = shantenCalc.GetNbShanten(hand);
                 nbIter++;
                 var hand136 = TilesConverter.From34countTo136(hand.ToList());
-                handStr = TilesConverter.ToString(hand136);
+                handStr = TilesConverter.ToString(hand136, print_aka_dora:false);
 
                 handAlreadyExist = ImageToolbox.ImageExists(handStr);
             }
@@ -102,7 +102,7 @@ namespace kandora.bot.services.discord.problems
         {
             var sc = new ShantenCalculator();
 
-            var hand34 = TilesConverter.FromStringTo34Count(handStr);
+            var hand34 = TilesConverter.FromStringTo34Count(handStr, true);
             if(sc.GetNbShanten(hand34) != 0)
             {
                 return null;
