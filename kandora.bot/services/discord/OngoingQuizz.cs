@@ -120,16 +120,21 @@ namespace kandora.bot.services.discord
 
             if (Timeout>0)
             {
+                var sb = new StringBuilder();
+                var message = $"{HeaderMessage}\n{Resources.quizz_results}\n{GetCurrentWinners()}";
+                sb.AppendLine(message);
+                var mb = new DiscordMessageBuilder().WithContent(sb.ToString());
+                await msg.ModifyAsync(mb, attachments: msg.Attachments).ConfigureAwait(true);
                 return;
             }
-
-            if (isWinner)
+            else if (isWinner)
             {
                 UpdateScores();
                 var sb = new StringBuilder();
                 sb.AppendLine(GetProgress());
                 sb.AppendLine(String.Format(Resources.quizz_suddenDeathWinnerMessage,user.Mention));
-                sb.AppendLine(String.Format(Resources.quizz_answer,string.Join("", QuestionData.AnswerEmojis)));
+                sb.AppendLine(QuizzProgress == NbTotalQuestions ? Resources.quizz_FinalRanking : Resources.quizz_tempRanking);
+                sb.AppendLine(String.Format(Resources.quizz_answer, string.Join("", QuestionData.AnswerEmojis)));
                 if (NbTotalQuestions > 1)
                 {
                     sb.AppendLine(GetFinalScore());
@@ -140,6 +145,7 @@ namespace kandora.bot.services.discord
                 OnQuestionEnd.Invoke(msg);
             }
         }
+
         public async void OnQuestionTimeout(DiscordMessage msg)
         {
             UpdateScores();
@@ -151,10 +157,10 @@ namespace kandora.bot.services.discord
             {
                 sb.AppendLine(Resources.quizz_timeoutNoWinnerMessage);
             }
-            else
-            {
-                sb.AppendLine(GetFinalScore());
-            }
+
+            sb.AppendLine(QuizzProgress == NbTotalQuestions ? Resources.quizz_FinalRanking : Resources.quizz_tempRanking);
+            sb.AppendLine(GetFinalScore());
+            
             var mb = new DiscordMessageBuilder().WithContent(sb.ToString());
             await msg.ModifyAsync(mb, attachments: msg.Attachments).ConfigureAwait(true);
             await msg.DeleteAllReactionsAsync().ConfigureAwait(true);
@@ -214,7 +220,7 @@ namespace kandora.bot.services.discord
                 {
                     var userId = timingList[i].Key;
                     var totalScore = PlayersAndPoints.ContainsKey(userId) ? PlayersAndPoints[userId] : 0;
-                    sb.AppendLine($"{i+1}: <@{timingList[i].Key}>`+{scoreTable[i]}pts` => {totalScore+scoreTable[i]}pts");
+                    sb.AppendLine($"{i+1}: <@{timingList[i].Key}>`+{scoreTable[i]}pts` ({Math.Round((float)(timingList[i].Value)/1000,1)}s)");
                 }
                 else
                 {

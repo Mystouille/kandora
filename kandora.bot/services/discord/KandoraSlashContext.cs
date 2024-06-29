@@ -123,7 +123,7 @@ namespace kandora.bot.services.discord
                 await msg.CreateReactionAsync(emoji).ConfigureAwait(true);
             }
 
-            var message = $"{messageHeader}\n{quizz.GetCurrentWinners()}";
+            var message = $"{messageHeader}\n{Resources.quizz_results}\n{quizz.GetCurrentWinners()}";
 
             var msgb = new DiscordMessageBuilder().WithContent(message).AddFile(quizz.QuestionData.Image);
             msg = await msg.ModifyAsync(msgb).ConfigureAwait(true);

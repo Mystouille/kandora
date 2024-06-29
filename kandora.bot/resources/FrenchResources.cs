@@ -265,9 +265,12 @@ namespace kandora.bot.resources
         // general
         public const string quizz_timer_disclaimer = ", {0} secondes par question.";
         public const string quizz_generatingProblem = "Affichage dans 3... 2... 1...";
-        public const string quizz_timeoutNoWinnerMessage = "C'était peut-être un peu trop dur?";
+        public const string quizz_timeoutNoWinnerMessage = "Aucun gagnant, c'était peut-être un peu trop dur?";
         public const string quizz_suddenDeathWinnerMessage = "{0} a trouvé en premier!";
         public const string quizz_answer = "La réponse est {0}";
+        public const string quizz_results = "Résultats:";
+        public const string quizz_tempRanking = "Classement temporaire:";
+        public const string quizz_FinalRanking = "**Classement final:**";
         public const string quizz_isOver = "**Le quizz est terminé!**";
         public const string quizz_error_problemAlreadyExists = "Un quizz est déjà en cours sur ce serveur";
 

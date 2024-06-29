@@ -17,5 +17,7 @@ namespace kandora.bot.utils
         public const string RAGE = ":kaavirage:";
         public const string THINK = ":kaavithink:";
         public const string WOW = ":kaaviwow:";
+        public const string EYES = ":eyes:";
+        public const string PLUS = ":heavy_plus_sign:";
     }
 }

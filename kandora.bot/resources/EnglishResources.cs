@@ -263,6 +263,9 @@ namespace kandora.bot.resources
         public const string quizz_timeoutNoWinnerMessage = "Looks like this was a bit too hard for you!";
         public const string quizz_suddenDeathWinnerMessage = "{0} got this one first!";
         public const string quizz_answer = "The answer is {0}";
+        public const string quizz_results = "Results:";
+        public const string quizz_tempRanking = "Temporary ranking:";
+        public const string quizz_FinalRanking = "*Final ranking:**";
         public const string quizz_isOver = "**Quizz is over!**";
         public const string quizz_error_problemAlreadyExists = "A quizz is already ongoing on this server";
 

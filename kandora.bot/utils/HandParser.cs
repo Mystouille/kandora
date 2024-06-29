@@ -9,7 +9,7 @@ namespace kandora.bot.utils
 {
     public static class HandParser
     {
-        private static readonly HashSet<char> SUIT_NAMES = new HashSet<char>() { 'p', 'm', 's', 'z' };
+        public static readonly HashSet<char> SUIT_NAMES = new HashSet<char>() { 'p', 'm', 's', 'z' };
 
         public static DiscordEmoji GetEmojiCode(string tileName, DiscordClient client)
         {

@@ -12,6 +12,8 @@ namespace kandora.bot.services.nanikiru
         private Random Random = new Random();
         private StoredNanikiru() {
             Problems = NanikiruParser.ParseNanikiruProblems();
+            UzakuProblems = Problems.Where(problem => problem.Source.StartsWith("300-") || problem.Source.StartsWith("301-")).ToList();
+            RemainingUzakuProblems = Enumerable.Range(0, (UzakuProblems.Count/3) -1).ToList();
         }
         private static StoredNanikiru instance = null;
         public static StoredNanikiru Instance
@@ -27,10 +29,22 @@ namespace kandora.bot.services.nanikiru
         }
 
         public List<NanikiruProblem> Problems { get; set; }
+        public List<NanikiruProblem> UzakuProblems { get; set; }
+        public List<int> RemainingUzakuProblems { get; set; }
         public NanikiruProblem NextProblem()
         {
             int index = Random.Next(Problems.Count);
             return Problems[index];
+        }
+        public List<NanikiruProblem> NextUzakuPage()
+        {
+            if (RemainingUzakuProblems.Count == 0)
+            {
+                RemainingUzakuProblems = Enumerable.Range(0, (UzakuProblems.Count/3) -1).ToList();
+            }
+            int startIndex = RemainingUzakuProblems.ElementAt(Random.Next(RemainingUzakuProblems.Count + 1));
+            RemainingUzakuProblems.Remove(startIndex);
+            return UzakuProblems.GetRange(startIndex, 3);
         }
     }
 }

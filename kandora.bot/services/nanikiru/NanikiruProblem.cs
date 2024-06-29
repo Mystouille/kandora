@@ -17,6 +17,7 @@ namespace kandora.bot.services.nanikiru
         public string Answer { get; set; }
         public string ExplanationEng { get; set; }
         public string ExplanationFr { get; set; }
+        public string Ukeire { get; set; }
         public string Source { get; set; }
     }
 }
