@@ -23,7 +23,7 @@ namespace kandora.bot.services.discord
         private KandoraSlashContext()
         {
             PendingGames = new Dictionary<ulong, PendingGame>();
-            OngoingQuizz = new Dictionary<ulong, OngoingQuizz>();
+            OngoingProblems = new Dictionary<ulong, OngoingProblem>();
             GuildsWithOngoingQuizz = new HashSet<ulong>();
         }
         public static KandoraSlashContext Instance
@@ -35,7 +35,7 @@ namespace kandora.bot.services.discord
         }
 
         public Dictionary<ulong, PendingGame> PendingGames { get; }
-        public Dictionary<ulong, OngoingQuizz> OngoingQuizz { get; }
+        public Dictionary<ulong, OngoingProblem> OngoingProblems { get; }
         public ISet<ulong> GuildsWithOngoingQuizz { get; }
 
         public async Task NotifyReaction(DiscordClient sender, DiscordMessage msg, DiscordEmoji emoji, DiscordUser user, bool added)
@@ -44,16 +44,19 @@ namespace kandora.bot.services.discord
             {
                 await PendingGame.OnPendingGameReaction(sender, msg, emoji, user, added);
             }
-            else if (OngoingQuizz.ContainsKey(msg.Id))
+            else if (OngoingProblems.ContainsKey(msg.Id))
             {
-                await OngoingQuizz[msg.Id].OnProblemReaction(sender, msg, emoji, user, added).ConfigureAwait(true);
+                await OngoingProblems[msg.Id].OnProblemReaction(sender, msg, emoji, user, added).ConfigureAwait(true);
             }
         }
 
         private async void OnQuestionEnd(DiscordMessage msg)
         {
-            var nextProblem = OngoingQuizz[msg.Id].GetNextProblem();
-            OngoingQuizz.Remove(msg.Id);
+            if (!OngoingProblems.ContainsKey(msg.Id)) { 
+                return;
+            }
+            var nextProblem = OngoingProblems[msg.Id].GetNextProblem();
+            OngoingProblems.Remove(msg.Id);
             if (nextProblem == null)
             {
                 GuildsWithOngoingQuizz.Remove(msg.Channel.Guild.Id);
@@ -74,7 +77,7 @@ namespace kandora.bot.services.discord
             PendingGames.Add(response.Id, game);
         }
 
-        public async Task StartProblemSeries(InteractionContext ctx, IQuizzGenerator generator, int nbProblems, int timeout, string startMsgContent, string threadNameRes)
+        public async Task StartProblemSeries(InteractionContext ctx, OngoingProblem problem, string startMsgContent, string threadNameRes)
         {
             if (GuildsWithOngoingQuizz.Contains(ctx.Guild.Id))
             {
@@ -88,52 +91,48 @@ namespace kandora.bot.services.discord
             }
             else
             {
-
-                var startingMessageContent = string.Format(startMsgContent, nbProblems) + (timeout>0 ? string.Format(Resources.quizz_timer_disclaimer, timeout) : "");
+                var nbProblems = problem.NbTotalQuestions;
+                var timeout = problem.Timeout;
+                var startingMessageContent = string.Format(startMsgContent, nbProblems) + (timeout > 0 ? string.Format(Resources.quizz_timer_disclaimer, timeout) : "");
                 var rb = new DiscordInteractionResponseBuilder().WithContent(startingMessageContent);
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb).ConfigureAwait(true);
                 var startingMessage = await ctx.Interaction.GetOriginalResponseAsync().ConfigureAwait(true);
                 var culture = new CultureInfo(Resources.cultureInfoStr, true);
                 var dateStr = DateTime.Now.ToString("ddd dd MMM HH'h'mm", culture);
                 var threadNameStr = string.Format(threadNameRes, dateStr, nbProblems);
-                var problem = new OngoingQuizz(
-                    generator: generator,
-                    nbQuestions: nbProblems,
-                    timeout: timeout,
-                    onQuestionEnd: this.OnQuestionEnd
-                );
                 var thread = await ctx.Channel.CreateThreadAsync(startingMessage, string.Format(threadNameStr, dateStr, nbProblems), AutoArchiveDuration.Hour).ConfigureAwait(true);
 
                 await AddOngoingQuizz(problem, residentChannel: thread).ConfigureAwait(true);
             }
         }
 
-        private async Task AddOngoingQuizz(OngoingQuizz quizz, DiscordChannel residentChannel)
+        private async Task AddOngoingQuizz(OngoingProblem problem, DiscordChannel residentChannel)
         {
-            DiscordMessage msg = null;
-            var messageHeader = quizz.HeaderMessage;
+            var messageHeader = problem.HeaderMessage;
             var messageWait = Resources.quizz_generatingProblem;
             var startRoundMessageContent = $"{messageHeader}\n{messageWait}";
-            msg = await residentChannel.SendMessageAsync(startRoundMessageContent).ConfigureAwait(true);
+            var msg = await residentChannel.SendMessageAsync(startRoundMessageContent).ConfigureAwait(true);
 
             GuildsWithOngoingQuizz.Add(msg.Channel.Guild.Id);
-            OngoingQuizz.Add(msg.Id, quizz);
-            foreach (var emoji in quizz.QuestionData.OptionEmojis)
+            OngoingProblems.Add(msg.Id, problem);
+            problem.OnQuestionEnd = this.OnQuestionEnd;
+
+            foreach (var emoji in problem.QuestionData.OptionEmojis)
             {
                 await msg.CreateReactionAsync(emoji).ConfigureAwait(true);
             }
 
-            var message = $"{messageHeader}\n{Resources.quizz_results}\n{quizz.GetCurrentWinners()}";
+            var message = $"{messageHeader}\n{Resources.quizz_results}\n{problem.GetCurrentWinners()}";
 
-            var msgb = new DiscordMessageBuilder().WithContent(message).AddFile(quizz.QuestionData.Image);
+            var msgb = new DiscordMessageBuilder().WithContent(message).AddFile(problem.QuestionData.Image);
             msg = await msg.ModifyAsync(msgb).ConfigureAwait(true);
-            quizz.QuestionData.Image.Dispose();
-            quizz.ResetTimer();
+            problem.QuestionData.Image.Dispose();
+            problem.ResetTimer();
 
-            if (quizz.Timeout > 0)
+            if (problem.Timeout > 0)
             {
-                await Task.Delay(quizz.Timeout*1000).ContinueWith(parent => {
-                    quizz.OnQuestionTimeout(msg);
+                await Task.Delay(problem.Timeout*1000).ContinueWith(parent => {
+                    problem.OnQuestionTimeout(msg);
                 }).ConfigureAwait(false);
             }
         }

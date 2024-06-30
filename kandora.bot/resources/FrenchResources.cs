@@ -222,7 +222,10 @@ namespace kandora.bot.resources
         public const string quizz_options_questions_description = "Le nombre de questions voulu [Optionel]";
         public const string quizz_option_value_random = "aléatoire";
         public const string quizz_option_timeout = "timeout";
+        public const string quizz_options_uzaku = "uzaku";
+        public const string quizz_options_uzaku_description = "Limite les questions à des problème de G. Uzaku [Optionel]";
         public const string quizz_option_timeout_description = "Nombre de secondes au bout desquelles la question expire (0 = mort subite) [Optionel]";
+        public const string quizz_nanikiru_description = "Commence une serie de naikiru";
 
         //Mahjong commands
         public const string mahjong_groupDescription = "Commandes liées au mahjong";
@@ -261,6 +264,17 @@ namespace kandora.bot.resources
         public const string quizz_fullflush_startMessage = "Un quizz de main pure commence.\n{0} manches";
         public const string quizz_fullflush_questionMessageWithTime = "Question **[{0} / {1}]**. Trouvez les tuiles qui completent la main.\nVous avez {2} secondes.";
         public const string quizz_fullflush_questionMessage = "Question **[{0} / {1}]**. Trouvez les tuiles qui completent la main. Seul le premier gagne!";
+
+        //nanikiru
+        public const string quizz_nanikiru_questionMessageWithTime = "Problème **[{0} / {1}]**. Trouvez la meilleure défause \nVous avez {2} secondes.";
+        public const string quizz_nanikiru_questionMessage = "Question **[{0} / {1}]**. Trouvez la meilleure défause. Réagissez avec :eyes: pour afficher la réponse.";
+        public const string quizz_nanikiru_threadName = "Nanikiru du {0} ({1} problèmes)";
+        public const string quizz_nanikiru_startMessage = "Une série de {0} nanikiru commence!";
+        public const string quizz_nanikiru_answer = "Réponse:";
+        public const string quizz_nanikiru_ukeire = "Ukeire:";
+        public const string quizz_nanikiru_explanation = "Explication:";
+        public const string quizz_nanikiru_winners = "{0} ont trouvé!";
+        
 
         // general
         public const string quizz_timer_disclaimer = ", {0} secondes par question.";

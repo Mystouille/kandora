@@ -1,7 +1,6 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
-using kandora.bot.mahjong;
-using kandora.bot.utils;
+using kandora.bot.services.discord.problems;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,136 +9,58 @@ using System.Threading.Tasks;
 
 namespace kandora.bot.services.discord
 {
-    public class OngoingProblem
+    public abstract class OngoingProblem
     {
-        public OngoingProblem(ISet<int> answer, ISet<ulong> options = null, bool hasTimer = false)
+        public DateTime StartTime { get; set; }
+        public int Timeout { get; set; }
+        public int NbTotalQuestions { get; set; }
+        public void ResetTimer()
         {
-            Answer = answer;
-            this.answers = new Dictionary<ulong, ISet<int>>();
-            if (options == null)
-            {
-                Options = new HashSet<ulong>();
-            }
-            else
-            {
-                this.Options = options;
-            }
-            this.winnersAndTiming = new List<(ulong, int)>();
-            this.hasTimer = hasTimer;
-            if (hasTimer)
-            {
-                this.startTime = DateTime.Now;
-            }
-
+            StartTime = DateTime.Now;
         }
-
-        public bool hasTimer;
-        public DateTime startTime;
-        private Dictionary<ulong, ISet<int>> answers;
-        public ISet<int> Answer { get; }
-        public ISet<ulong> Options { get; }
-        public List<(ulong, int)> winnersAndTiming { get; }
-        public bool ChangeUserAnswer(ulong userId, int answer, bool isAdd)
+        public abstract string HeaderMessage
         {
-            if (isAdd)
-            {
-                if (!answers.ContainsKey(userId))
-                {
-                    answers.Add(userId, new HashSet<int>());
-                }
-                answers[userId].Add(answer);
-            }
-            else
-            {
-                if (answers.ContainsKey(userId))
-                {
-                    answers[userId].Remove(answer);
-                }
-            }
-
-            if (!answers.ContainsKey(userId))
-            {
-                return false;
-            }
-
-            var isWinner = answers[userId].Intersect(Answer).Count() == Answer.Count && answers[userId].Count == Answer.Count;
-
-            if (isWinner)
-            {
-                var endTime = DateTime.Now;
-                var duration = endTime - startTime;
-                winnersAndTiming.Add((userId, (int)duration.TotalMilliseconds));
-            }
-            else
-            {
-                winnersAndTiming.RemoveAll(x => x.Item1 == userId);
-            }
-            return isWinner;
+            get;
         }
+        public Action<DiscordMessage> OnQuestionEnd { get; set; }
+        public Dictionary<ulong, int> WinnersAndTiming { get; set; }
+        public Dictionary<ulong, int> PlayersAndPoints { get; set; }
 
-        static int fromEmojiToTile34(DiscordEmoji emoji)
+        public abstract void OnQuestionTimeout(DiscordMessage msg);
+        public int[] ScoreTable { get; set; }
+        protected DiscordClient Client { get; set; }
+
+        public MultipleChoicesQuestion QuestionData { get; set; }
+
+        public abstract Task OnProblemReaction(DiscordClient client, DiscordMessage msg, DiscordEmoji emoji, DiscordUser user, bool added);
+        public abstract OngoingProblem GetNextProblem();
+        public string GetCurrentWinners()
         {
-            var emojiSplit = emoji.ToString().Split(':');
-            var array = TilesConverter.FromStringTo34Count(emojiSplit[1]);
-            for(int i = 0; i< array.Length; i++)
+            if (Timeout == 0)
             {
-                if (array[i] > 0)
-                {
-                    return i;
-                }
+                return "";
             }
-            return -1;
-        }
-        public async Task<bool> OnProblemReaction(DiscordClient sender, DiscordMessage msg, DiscordEmoji emoji, DiscordUser user, bool added)
-        {
-            if (!Options.Contains(emoji.Id))
-            {
-                return false;
-            }
-            var tile34 = fromEmojiToTile34(emoji);
-            bool isWinner = ChangeUserAnswer(user.Id, tile34, added);
-
-            if (hasTimer)
-            {
-                return false;
-            }
-
-            if (isWinner)
-            {
-                var answer136 = TilesConverter.From34IxdHandTo136(new List<List<int>> { Answer.ToList() });
-                var answerStr = TilesConverter.ToString(answer136);
-                var answerEmoji = HandParser.GetHandEmojiCodes(answerStr, sender);
-                var sb = new StringBuilder();
-                sb.AppendLine($"{user.Mention} got this one first!");
-                sb.AppendLine($"The answer was: {string.Join("", answerEmoji)}");
-                await msg.RespondAsync(sb.ToString());
-                return true;
-            }
-            return false;
-        }
-
-        public async Task OnProblemTimeout(DiscordClient sender, DiscordMessage msg)
-        {
-            var answer136 = TilesConverter.From34IxdHandTo136(new List<List<int>> { Answer.ToList() });
-            var answerStr = TilesConverter.ToString(answer136);
-            var answerEmoji = HandParser.GetHandEmojiCodes(answerStr, sender);
             var sb = new StringBuilder();
-            sb.AppendLine($"The answer was: {string.Join("", answerEmoji)}");
-
-            if(winnersAndTiming.Count == 0)
+            var timingList = WinnersAndTiming.ToList();
+            timingList.Sort((x, y) => {
+                return y.Value.CompareTo(x.Value);
+            });
+            for (int i = 0; i < ScoreTable.Length; i++)
             {
-                sb.AppendLine($"Looks like this was a bit too hard for you!");
-            }
-            else
-            {
-                sb.AppendLine($"Top 3:");
-                for (int i = 0; i < 3 && i < winnersAndTiming.Count; i++)
+                if (i < timingList.Count())
                 {
-                    sb.AppendLine($"<@{winnersAndTiming[i].Item1}>: {(float)(winnersAndTiming[i].Item2) / 1000}s");
+                    var userId = timingList[i].Key;
+                    var totalScore = PlayersAndPoints.ContainsKey(userId) ? PlayersAndPoints[userId] : 0;
+                    sb.AppendLine($"{i + 1}: <@{timingList[i].Key}>`+{ScoreTable[i]}pts` ({Math.Round((float)(timingList[i].Value) / 1000, 1)}s)");
+                }
+                else
+                {
+                    sb.AppendLine($"{i + 1}: ....");
                 }
             }
-            await msg.RespondAsync(sb.ToString());
+            return sb.ToString();
         }
+
 
     }
 }

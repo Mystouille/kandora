@@ -1,5 +1,6 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,6 +26,16 @@ namespace kandora.bot.utils
                 tileList.Sort(new TileComparer());
             }
             return tileList.Select(x => GetEmojiCode(x, client));
+        }
+        public static string GetHandEmojiString(string hand, DiscordClient client, bool sorted = false)
+        {
+            StringBuilder sb = new StringBuilder();
+            var tileList = SplitTiles(hand); // We want unique emotes
+            if (sorted)
+            {
+                tileList.Sort(new TileComparer());
+            }
+            return String.Join("",tileList.Select(x => ""+GetEmojiCode(x, client)));
         }
 
         // Builds the hand

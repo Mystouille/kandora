@@ -42,9 +42,9 @@ namespace kandora.bot.services.nanikiru
             {
                 RemainingUzakuProblems = Enumerable.Range(0, (UzakuProblems.Count/3) -1).ToList();
             }
-            int startIndex = RemainingUzakuProblems.ElementAt(Random.Next(RemainingUzakuProblems.Count + 1));
+            int startIndex = RemainingUzakuProblems.ElementAt(Random.Next(RemainingUzakuProblems.Count));
             RemainingUzakuProblems.Remove(startIndex);
-            return UzakuProblems.GetRange(startIndex, 3);
+            return UzakuProblems.GetRange(startIndex*3, 3);
         }
     }
 }

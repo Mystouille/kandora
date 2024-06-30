@@ -218,7 +218,11 @@ namespace kandora.bot.resources
         public const string quizz_options_questions_description = "The number of questions";
         public const string quizz_option_value_random = "random";
         public const string quizz_option_timeout = "timeout";
-        public const string quizz_option_timeout_description = "number of seconds after which a question expires (0 = sudden death)";
+        public const string quizz_options_uzaku = "uzaku";
+        public const string quizz_options_uzaku_description = "Limits to G.Uzaku problems [Optional]";
+        public const string quizz_option_timeout_description = "Number of seconds after which a question expires (0 = sudden death)";
+
+        public const string quizz_nanikiru_description = "Starts a nanikiru quizz";
 
         //Mahjong commands
         public const string mahjong_groupDescription = "Mahjong related commands";
@@ -256,6 +260,16 @@ namespace kandora.bot.resources
         public const string quizz_fullflush_startMessage = "A \"full flush\" quizz is starting.\n{0} rounds";
         public const string quizz_fullflush_questionMessageWithTime = "Question **[{0} / {1}]**. Find the tiles that complete this hand.\nYou have {2} seconds.";
         public const string quizz_fullflush_questionMessage = "Question **[{0} / {1}]**. Find the tiles that complete this hand. The first one wins!";
+
+        //nanikiru
+        public const string quizz_nanikiru_questionMessageWithTime = "Problem **[{0} / {1}]**. Find the best discard \nYou have {2} seconds.";
+        public const string quizz_nanikiru_questionMessage = "Question **[{0} / {1}]**. Find the best discard. React with :eyes: to display the answer.";
+        public const string quizz_nanikiru_threadName = "Nanikiru series of {0} ({1} problems)";
+        public const string quizz_nanikiru_startMessage = "A series of {0} nanikiru is starting!";
+        public const string quizz_nanikiru_answer = "Answer:";
+        public const string quizz_nanikiru_ukeire = "Ukeire:";
+        public const string quizz_nanikiru_explanation = "Explanation:";
+        public const string quizz_nanikiru_winners = "{0} got it right!";
 
         // general
         public const string quizz_timer_disclaimer = ", {0} seconds per question.";

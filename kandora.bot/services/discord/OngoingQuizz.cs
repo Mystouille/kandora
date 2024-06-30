@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace kandora.bot.services.discord
 {
-    public class OngoingQuizz
+    public class OngoingQuizz : OngoingProblem
     {
-        public OngoingQuizz(IQuizzGenerator generator, int timeout, Action<DiscordMessage> onQuestionEnd, int nbQuestions = 1)
+        public OngoingQuizz(IQuizzGenerator generator, int timeout, int nbQuestions = 1)
         {
             this.WinnersAndTiming = new Dictionary<ulong, int>();
             this.PlayersAndPoints = new Dictionary<ulong, int>();
@@ -24,7 +24,7 @@ namespace kandora.bot.services.discord
             this.NbTotalQuestions = nbQuestions;
             this.Generator = generator;
             this.QuestionData = generator.GetNewQuestion();
-            this.OnQuestionEnd = onQuestionEnd;
+            this.ScoreTable = new int[] { 6, 4, 2, 1, 1 };
         }
 
         private OngoingQuizz(IQuizzGenerator generator, int timeout, Action<DiscordMessage> onQuestionEnd, int quizzProgress, int nbQuestions, Dictionary<ulong, int> playersAndPoints)
@@ -39,22 +39,15 @@ namespace kandora.bot.services.discord
             this.Generator = generator;
             this.QuestionData = generator.GetNewQuestion();
             this.OnQuestionEnd = onQuestionEnd;
+            this.ScoreTable = new int[] { 6, 4, 2, 1, 1 };
         }
 
-        private IQuizzGenerator Generator { get; }
-        public MultipleChoicesQuestion QuestionData { get; }
-        public int Timeout { get; }
-        public DateTime StartTime { get; set; }
+        public IQuizzGenerator Generator { get; set; }
         private readonly Dictionary<ulong, ISet<ulong>> usersAnswers;
         public ISet<ulong> Answer { get => QuestionData.AnswerEmojis.Select(emoji => emoji.Id).ToHashSet(); }
         public ISet<ulong> Options { get => QuestionData.OptionEmojis.Select(emoji => emoji.Id).ToHashSet(); }
-        public readonly int[] scoreTable = new int[] { 6, 4, 2, 1, 1 };
-        public Dictionary<ulong, int> WinnersAndTiming { get; }
-        public Dictionary<ulong,int> PlayersAndPoints { get; }
-        public int NbTotalQuestions { get; }
         public int QuizzProgress { get; }
         public FileStream Image { get; }
-        private Action<DiscordMessage> OnQuestionEnd { get; }
 
         public void ResetTimer()
         {
@@ -106,7 +99,7 @@ namespace kandora.bot.services.discord
             return isWinner;
         }
 
-        public async Task OnProblemReaction(DiscordClient client, DiscordMessage msg, DiscordEmoji emoji, DiscordUser user, bool added)
+        public override async Task OnProblemReaction(DiscordClient client, DiscordMessage msg, DiscordEmoji emoji, DiscordUser user, bool added)
         {
             if(client.CurrentUser.Id == user.Id)
             {
@@ -133,8 +126,8 @@ namespace kandora.bot.services.discord
                 var sb = new StringBuilder();
                 sb.AppendLine(GetProgress());
                 sb.AppendLine(String.Format(Resources.quizz_suddenDeathWinnerMessage,user.Mention));
-                sb.AppendLine(QuizzProgress == NbTotalQuestions ? Resources.quizz_FinalRanking : Resources.quizz_tempRanking);
                 sb.AppendLine(String.Format(Resources.quizz_answer, string.Join("", QuestionData.AnswerEmojis)));
+                sb.AppendLine(QuizzProgress == NbTotalQuestions ? Resources.quizz_FinalRanking : Resources.quizz_tempRanking);
                 if (NbTotalQuestions > 1)
                 {
                     sb.AppendLine(GetFinalScore());
@@ -146,7 +139,7 @@ namespace kandora.bot.services.discord
             }
         }
 
-        public async void OnQuestionTimeout(DiscordMessage msg)
+        public override async void OnQuestionTimeout(DiscordMessage msg)
         {
             UpdateScores();
             var sb = new StringBuilder();
@@ -184,9 +177,9 @@ namespace kandora.bot.services.discord
             }
             else
             {
-                for (int i = 0; i < scoreTable.Length && i < timingList.Count(); i++)
+                for (int i = 0; i < ScoreTable.Length && i < timingList.Count(); i++)
                 {
-                    AddPointsToUser(timingList[i].Key, scoreTable[i]);
+                    AddPointsToUser(timingList[i].Key, ScoreTable[i]);
                 }
             }
         }
@@ -203,33 +196,6 @@ namespace kandora.bot.services.discord
             }
         }
 
-        public string GetCurrentWinners()
-        {
-            if(Timeout == 0)
-            {
-                return "";
-            }
-            var sb = new StringBuilder();
-            var timingList = WinnersAndTiming.ToList();
-            timingList.Sort((x, y) => {
-                return y.Value.CompareTo(x.Value);
-            });
-            for (int i = 0; i < scoreTable.Length; i++)
-            {
-                if (i < timingList.Count())
-                {
-                    var userId = timingList[i].Key;
-                    var totalScore = PlayersAndPoints.ContainsKey(userId) ? PlayersAndPoints[userId] : 0;
-                    sb.AppendLine($"{i+1}: <@{timingList[i].Key}>`+{scoreTable[i]}pts` ({Math.Round((float)(timingList[i].Value)/1000,1)}s)");
-                }
-                else
-                {
-                    sb.AppendLine($"{i+1}: ....");
-                }
-            }
-            return sb.ToString();
-        }
-
         private string GetFinalScore()
         {
             var sb = new StringBuilder();
@@ -238,7 +204,7 @@ namespace kandora.bot.services.discord
                 return y.Value.CompareTo(x.Value);
             });
             pointList.Reverse();
-            for (int i = 0; i < pointList.Count() && i < scoreTable.Length; i++)
+            for (int i = 0; i < pointList.Count() && i < ScoreTable.Length; i++)
             {
                sb.AppendLine($"{i + 1}: <@{pointList[i].Key}> `{pointList[i].Value}pts`");
             }
@@ -251,14 +217,14 @@ namespace kandora.bot.services.discord
             return $"**[{QuizzProgress}/{NbTotalQuestions}]** {(isOver ? Resources.quizz_isOver : "")}";
         }
 
-        public string HeaderMessage
+        public override string HeaderMessage
         {
             get => Timeout > 0
                 ? String.Format(QuestionData.MessageWithTimeout, QuizzProgress, NbTotalQuestions, Timeout)
                 : String.Format(QuestionData.Message, QuizzProgress, NbTotalQuestions);
         }
 
-        public OngoingQuizz GetNextProblem()
+        public override OngoingQuizz GetNextProblem()
         {
             if(QuizzProgress >= NbTotalQuestions)
             {

@@ -2,7 +2,6 @@
 using DSharpPlus.Entities;
 using kandora.bot.resources;
 using kandora.bot.services.discord.problems;
-using kandora.bot.services.nanikiru;
 using kandora.bot.utils;
 using System;
 using System.Collections.Generic;
@@ -13,25 +12,28 @@ using System.Threading.Tasks;
 
 namespace kandora.bot.services.discord
 {
-    public class OngoingNanikiru
+    public class OngoingNanikiru : OngoingProblem
     {
-        public OngoingNanikiru(NanikiruGenerator generator, int timeout, Action<DiscordMessage> onQuestionEnd, int nbQuestions = 1)
+        public OngoingNanikiru(NanikiruGenerator generator, DiscordClient client, int timeout, int nbQuestions = 1)
         {
             this.Generator = generator;
-            this.QuestionData = generator.GetNewQuestion();
+            this.SpecificQuestionData = generator.GetNewQuestion(); ;
+            this.QuestionData = SpecificQuestionData;
             this.WinnersAndTiming = new Dictionary<ulong, int>();
             this.usersAnswers = new Dictionary<ulong, ISet<ulong>>();
             this.Timeout = timeout;
             ResetTimer();
             this.QuizzProgress = 1;
             this.NbTotalQuestions = nbQuestions;
-            this.OnQuestionEnd = onQuestionEnd;
+            this.ScoreTable = new int[] {};
+            this.Client = client;
         }
 
-        private OngoingNanikiru(NanikiruGenerator generator, int timeout, Action<DiscordMessage> onQuestionEnd, int quizzProgress, int nbQuestions)
+        private OngoingNanikiru(NanikiruGenerator generator, DiscordClient client, int timeout, Action<DiscordMessage> onQuestionEnd, int quizzProgress, int nbQuestions)
         {
             this.Generator = generator;
-            this.QuestionData = generator.GetNewQuestion();
+            this.SpecificQuestionData = generator.GetNewQuestion(); ;
+            this.QuestionData = SpecificQuestionData;
             this.WinnersAndTiming = new Dictionary<ulong, int>();
             this.usersAnswers = new Dictionary<ulong, ISet<ulong>>();
             this.Timeout = timeout;
@@ -39,25 +41,19 @@ namespace kandora.bot.services.discord
             this.QuizzProgress = quizzProgress;
             this.NbTotalQuestions = nbQuestions;
             this.OnQuestionEnd = onQuestionEnd;
+            this.ScoreTable = new int[] {};
+            this.Client = client;
         }
 
         private NanikiruGenerator Generator { get; }
-        public SingleChoiceQuestion QuestionData { get; }
-        public int Timeout { get; }
-        public DateTime StartTime { get; set; }
         private readonly Dictionary<ulong, ISet<ulong>> usersAnswers;
-        public ulong Answer { get => QuestionData.AnswerEmoji.Id; }
+        private NanikiruQuestion SpecificQuestionData { get; set; }
+        public ulong Answer { get => QuestionData.AnswerEmojis.First().Id; }
         public ISet<ulong> Options { get => QuestionData.OptionEmojis.Select(emoji => emoji.Id).ToHashSet(); }
-        public Dictionary<ulong, int> WinnersAndTiming { get; }
-        public int NbTotalQuestions { get; }
         public int QuizzProgress { get; }
         public FileStream Image { get; }
-        private Action<DiscordMessage> OnQuestionEnd { get; }
 
-        public void ResetTimer()
-        {
-            StartTime = DateTime.Now;
-        }
+
         public bool ChangeUserAnswer(ulong userId, ulong answer, bool isAdd)
         {
             if (isAdd)
@@ -104,58 +100,84 @@ namespace kandora.bot.services.discord
             return isWinner;
         }
 
-        private string getDisplayText(string textRaw, DiscordClient client)
+        private string getDisplayText(string textRaw, DiscordClient client, string prefix = "")
         {
-            var textithEmojis = textRaw;
-            for (int n = 0; n<=9; n++)
+            var compositeText = textRaw.Split('#');
+            var plusSeparator = "➕";
+            for (int i = 0; i < compositeText.Length; i ++)
             {
-                foreach(var s in HandParser.SUIT_NAMES.ToList())
-                {
-                    var emojiStr = n.ToString() + s;
-                    textithEmojis = textithEmojis.Replace(emojiStr, HandParser.GetEmojiCode(emojiStr, client));
-                }
-            }
-
-            var compositeText = textithEmojis.Split('#');
-            if(compositeText.Length != 0 && compositeText.Length % 3 == 0)
-            {
-                for(int i = 1; i < compositeText.Length; i+=3)
+                if ((i + 2) % 3 == 0)
                 {
                     var handText = compositeText[i].Split("+");
-                    for(int h = 0; h < handText.Length; h++)
+                    List<string> emojiHand = new List<string>();
+                    foreach (var part in handText)
                     {
-                        handText[h] = ""+HandParser.GetHandEmojiCodes(handText[h], client);
+                        emojiHand.Add(HandParser.GetHandEmojiString(part, client));
                     }
-                    compositeText[i] = String.Join("" + HandParser.GetEmojiCode(Reactions.PLUS, client), handText);
+                    compositeText[i] = "# " + String.Join(plusSeparator, emojiHand);
+                } else
+                {
+                    var textithEmojis = compositeText[i];
+                    for (int n = 0; n <= 9; n++)
+                    {
+                        foreach (var s in HandParser.SUIT_NAMES.ToList())
+                        {
+                            if (s == 'z' && (n > 4 || n == 0))
+                            {
+                                continue;
+                            }
+                            var emojiStr = n.ToString() + s;
+                            textithEmojis = textithEmojis.Replace(emojiStr, HandParser.GetEmojiCode(emojiStr, client));
+                        }
+                    }
+                    compositeText[i] = (textithEmojis.Length>0 ? prefix : "") + textithEmojis;
+
                 }
-                textithEmojis = String.Join("\n", compositeText);
             }
-            return textithEmojis;
+            return String.Join("\n", compositeText);
         }
 
-        public async Task OnProblemReaction(DiscordClient client, DiscordMessage msg, DiscordEmoji emoji, DiscordUser user, bool added)
+        private async Task DisplayAnswer(DiscordMessage msg)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine(HeaderMessage);
+            sb.AppendLine(Resources.quizz_nanikiru_answer);
+            sb.AppendLine("# " + SpecificQuestionData.AnswerEmoji);
+            sb.AppendLine(getDisplayText(SpecificQuestionData.Ukeire, Client, "### "));
+            sb.AppendLine(getDisplayText(SpecificQuestionData.Explanation, Client, "## "));
+            var winners = String.Join(", ", WinnersAndTiming.ToList().Select(winner =>
+                Client.GetUserAsync(winner.Key).Result.Mention));
+            if (winners.Length > 0)
+            {
+                sb.AppendLine(String.Format(Resources.quizz_nanikiru_winners, winners));
+            }
+            sb.AppendLine("### " + SpecificQuestionData.Source);
+            var mb = new DiscordMessageBuilder().WithContent(sb.ToString());
+            await msg.ModifyAsync(mb, attachments: msg.Attachments).ConfigureAwait(true);
+            await msg.DeleteAllReactionsAsync().ConfigureAwait(true);
+        }
+
+        public override async Task OnProblemReaction(DiscordClient client, DiscordMessage msg, DiscordEmoji emoji, DiscordUser user, bool added)
         {
             if(client.CurrentUser.Id == user.Id)
             {
                 return;
             }
             if(emoji.Id == DiscordEmoji.FromName(client, Reactions.EYES).Id){
-                var sb = new StringBuilder();
-
-                sb.AppendLine("||## "+getDisplayText(QuestionData.Ukeire, client)+"||");
-                var winners = String.Join(", ",WinnersAndTiming.ToList().Select(winner => 
-                    client.GetUserAsync(winner.Key).Result.Mention));
-                sb.AppendLine("||"+ winners + " got it right! ||");
-                var mb = new DiscordMessageBuilder().WithContent(sb.ToString());
-                await msg.ModifyAsync(mb, attachments: msg.Attachments).ConfigureAwait(true);
-                await msg.DeleteAllReactionsAsync().ConfigureAwait(true);
+                await DisplayAnswer(msg).ConfigureAwait(true);
                 OnQuestionEnd.Invoke(msg);
             }
-            if (!Options.Contains(emoji.Id))
+            else if (Options.Contains(emoji.Id))
             {
-                return;
+                ChangeUserAnswer(user.Id, emoji.Id, added);
             }
-            bool isWinner = ChangeUserAnswer(user.Id, emoji.Id, added);
+        }
+
+        public override async void OnQuestionTimeout(DiscordMessage msg)
+        {
+            await DisplayAnswer(msg).ConfigureAwait(true);
+            OnQuestionEnd.Invoke(msg);
         }
 
         public string GetProgress()
@@ -164,20 +186,20 @@ namespace kandora.bot.services.discord
             return $"**[{QuizzProgress}/{NbTotalQuestions}]** {(isOver ? Resources.quizz_isOver : "")}";
         }
 
-        public string HeaderMessage
+        public override string HeaderMessage
         {
             get => Timeout > 0
                 ? String.Format(QuestionData.MessageWithTimeout, QuizzProgress, NbTotalQuestions, Timeout)
                 : String.Format(QuestionData.Message, QuizzProgress, NbTotalQuestions);
         }
 
-        public OngoingNanikiru GetNextProblem()
+        public override OngoingNanikiru GetNextProblem()
         {
             if(QuizzProgress >= NbTotalQuestions)
             {
                 return null;
             }
-            return new OngoingNanikiru(Generator, Timeout, OnQuestionEnd, QuizzProgress + 1, NbTotalQuestions);
+            return new OngoingNanikiru(Generator, Client, Timeout, OnQuestionEnd, QuizzProgress + 1, NbTotalQuestions);
         }
 
     }
