@@ -24,6 +24,7 @@ namespace kandora.bot.services.discord
         }
         public Action<DiscordMessage> OnQuestionEnd { get; set; }
         public Dictionary<ulong, int> WinnersAndTiming { get; set; }
+        public Dictionary<ulong, int> LosersAndTiming { get; set; }
         public Dictionary<ulong, int> PlayersAndPoints { get; set; }
 
         public abstract void OnQuestionTimeout(DiscordMessage msg);

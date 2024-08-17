@@ -266,10 +266,12 @@ namespace kandora.bot.resources
         public const string quizz_nanikiru_questionMessage = "Question **[{0} / {1}]**. Find the best discard. React with :eyes: to display the answer.";
         public const string quizz_nanikiru_threadName = "Nanikiru series of {0} ({1} problems)";
         public const string quizz_nanikiru_startMessage = "A series of {0} nanikiru is starting!";
+        public const string quizz_nanikiru_problem_over = "(Question done)";
         public const string quizz_nanikiru_answer = "Answer:";
         public const string quizz_nanikiru_ukeire = "Ukeire:";
         public const string quizz_nanikiru_explanation = "Explanation:";
-        public const string quizz_nanikiru_winners = "{0} got it right!";
+        public const string quizz_nanikiru_winners = "✅: {0}";
+        public const string quizz_nanikiru_losers = "❌: {0}";
 
         // general
         public const string quizz_timer_disclaimer = ", {0} seconds per question.";

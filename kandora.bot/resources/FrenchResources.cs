@@ -270,11 +270,13 @@ namespace kandora.bot.resources
         public const string quizz_nanikiru_questionMessage = "Question **[{0} / {1}]**. Trouvez la meilleure défause. Réagissez avec :eyes: pour afficher la réponse.";
         public const string quizz_nanikiru_threadName = "Nanikiru du {0} ({1} problèmes)";
         public const string quizz_nanikiru_startMessage = "Une série de {0} nanikiru commence!";
+        public const string quizz_nanikiru_problem_over = "(Question finie)";
         public const string quizz_nanikiru_answer = "Réponse:";
         public const string quizz_nanikiru_ukeire = "Ukeire:";
         public const string quizz_nanikiru_explanation = "Explication:";
-        public const string quizz_nanikiru_winners = "{0} ont trouvé!";
-        
+        public const string quizz_nanikiru_winners = "✅: {0}";
+        public const string quizz_nanikiru_losers = "❌: {0}";
+
 
         // general
         public const string quizz_timer_disclaimer = ", {0} secondes par question.";

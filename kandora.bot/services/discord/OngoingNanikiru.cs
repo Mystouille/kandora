@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,6 +21,7 @@ namespace kandora.bot.services.discord
             this.SpecificQuestionData = generator.GetNewQuestion(); ;
             this.QuestionData = SpecificQuestionData;
             this.WinnersAndTiming = new Dictionary<ulong, int>();
+            this.LosersAndTiming = new Dictionary<ulong, int>();
             this.usersAnswers = new Dictionary<ulong, ISet<ulong>>();
             this.Timeout = timeout;
             ResetTimer();
@@ -35,6 +37,7 @@ namespace kandora.bot.services.discord
             this.SpecificQuestionData = generator.GetNewQuestion(); ;
             this.QuestionData = SpecificQuestionData;
             this.WinnersAndTiming = new Dictionary<ulong, int>();
+            this.LosersAndTiming = new Dictionary<ulong, int>();
             this.usersAnswers = new Dictionary<ulong, ISet<ulong>>();
             this.Timeout = timeout;
             ResetTimer();
@@ -79,11 +82,11 @@ namespace kandora.bot.services.discord
 
             var isWinner = usersAnswers.Count == 1 && usersAnswers[userId].Contains(Answer);
 
+            var endTime = DateTime.Now;
+            var duration = endTime - StartTime;
+            var millisecondDuration = (int)duration.TotalMilliseconds;
             if (isWinner)
             {
-                var endTime = DateTime.Now;
-                var duration = endTime - StartTime;
-                var millisecondDuration = (int)duration.TotalMilliseconds;
                 if (WinnersAndTiming.ContainsKey(userId))
                 {
                     WinnersAndTiming[userId] = millisecondDuration;
@@ -92,15 +95,24 @@ namespace kandora.bot.services.discord
                 {
                     WinnersAndTiming.Add(userId, millisecondDuration);
                 }
+                LosersAndTiming.Remove(userId);
             }
             else
             {
+                if (LosersAndTiming.ContainsKey(userId))
+                {
+                    LosersAndTiming[userId] = millisecondDuration;
+                }
+                else
+                {
+                    LosersAndTiming.Add(userId, millisecondDuration);
+                }
                 WinnersAndTiming.Remove(userId);
             }
             return isWinner;
         }
 
-        private string getDisplayText(string textRaw, DiscordClient client, string prefix = "")
+        private string getDisplayText(string textRaw, DiscordClient client, string prefix = "", bool spoiler = false)
         {
             var compositeText = textRaw.Split('#');
             var plusSeparator = "➕";
@@ -134,28 +146,46 @@ namespace kandora.bot.services.discord
 
                 }
             }
-            return String.Join("\n", compositeText);
+            var finalText = String.Join("\n", compositeText);
+            if (spoiler)
+            {
+                finalText = "||" + finalText + "||";
+            }
+            return finalText;
         }
 
         private async Task DisplayAnswer(DiscordMessage msg)
         {
             var sb = new StringBuilder();
-
+            sb.AppendLine(Resources.quizz_nanikiru_problem_over);
             sb.AppendLine(HeaderMessage);
-            sb.AppendLine(Resources.quizz_nanikiru_answer);
-            sb.AppendLine("# " + SpecificQuestionData.AnswerEmoji);
-            sb.AppendLine(getDisplayText(SpecificQuestionData.Ukeire, Client, "### "));
-            sb.AppendLine(getDisplayText(SpecificQuestionData.Explanation, Client, "## "));
+            var mb = new DiscordMessageBuilder().WithContent(sb.ToString());
+            await msg.ModifyAsync(mb, attachments: msg.Attachments).ConfigureAwait(true);
+            await msg.DeleteAllReactionsAsync().ConfigureAwait(true);
+
+            sb = new StringBuilder();
+            sb.AppendLine("# " + Resources.quizz_nanikiru_answer + " ||" + SpecificQuestionData.AnswerEmoji+"||");
+
             var winners = String.Join(", ", WinnersAndTiming.ToList().Select(winner =>
                 Client.GetUserAsync(winner.Key).Result.Mention));
+            var losers = String.Join(", ", LosersAndTiming.ToList().Select(losers =>
+                Client.GetUserAsync(losers.Key).Result.Mention));
             if (winners.Length > 0)
             {
                 sb.AppendLine(String.Format(Resources.quizz_nanikiru_winners, winners));
             }
+            if (losers.Length > 0)
+            {
+                sb.AppendLine(String.Format(Resources.quizz_nanikiru_losers, losers));
+            }
+
+            sb.AppendLine(getDisplayText(SpecificQuestionData.Ukeire, Client, "### ", spoiler: true));
+            sb.AppendLine(getDisplayText(SpecificQuestionData.Explanation, Client, "## ", spoiler: true));
+
             sb.AppendLine("### " + SpecificQuestionData.Source);
-            var mb = new DiscordMessageBuilder().WithContent(sb.ToString());
-            await msg.ModifyAsync(mb, attachments: msg.Attachments).ConfigureAwait(true);
-            await msg.DeleteAllReactionsAsync().ConfigureAwait(true);
+
+
+            await msg.RespondAsync(sb.ToString()).ConfigureAwait(true);
         }
 
         public override async Task OnProblemReaction(DiscordClient client, DiscordMessage msg, DiscordEmoji emoji, DiscordUser user, bool added)

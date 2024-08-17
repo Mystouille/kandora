@@ -16,6 +16,7 @@ namespace kandora.bot.services.discord
         public OngoingQuizz(IQuizzGenerator generator, int timeout, int nbQuestions = 1)
         {
             this.WinnersAndTiming = new Dictionary<ulong, int>();
+            this.LosersAndTiming = new Dictionary<ulong, int>();
             this.PlayersAndPoints = new Dictionary<ulong, int>();
             this.usersAnswers = new Dictionary<ulong, ISet<ulong>>();
             this.Timeout = timeout;
@@ -30,6 +31,7 @@ namespace kandora.bot.services.discord
         private OngoingQuizz(IQuizzGenerator generator, int timeout, Action<DiscordMessage> onQuestionEnd, int quizzProgress, int nbQuestions, Dictionary<ulong, int> playersAndPoints)
         {
             this.WinnersAndTiming = new Dictionary<ulong, int>();
+            this.LosersAndTiming = new Dictionary<ulong, int>();
             this.PlayersAndPoints = playersAndPoints;
             this.usersAnswers = new Dictionary<ulong, ISet<ulong>>();
             this.Timeout = timeout;
