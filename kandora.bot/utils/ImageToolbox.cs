@@ -1,6 +1,4 @@
-﻿using DSharpPlus;
-using kandora.bot.mahjong;
-using System;
+﻿
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -8,7 +6,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using static System.Net.WebRequestMethods;
 using File = System.IO.File;
 using ImageFormat = System.Drawing.Imaging.ImageFormat;
 

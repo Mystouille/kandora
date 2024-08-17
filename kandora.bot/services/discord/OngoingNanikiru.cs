@@ -22,6 +22,7 @@ namespace kandora.bot.services.discord
             this.QuestionData = SpecificQuestionData;
             this.WinnersAndTiming = new Dictionary<ulong, int>();
             this.LosersAndTiming = new Dictionary<ulong, int>();
+            this.PlayersAndPoints = new Dictionary<ulong, int>();
             this.usersAnswers = new Dictionary<ulong, ISet<ulong>>();
             this.Timeout = timeout;
             ResetTimer();
@@ -38,6 +39,7 @@ namespace kandora.bot.services.discord
             this.QuestionData = SpecificQuestionData;
             this.WinnersAndTiming = new Dictionary<ulong, int>();
             this.LosersAndTiming = new Dictionary<ulong, int>();
+            this.PlayersAndPoints = new Dictionary<ulong, int>();
             this.usersAnswers = new Dictionary<ulong, ISet<ulong>>();
             this.Timeout = timeout;
             ResetTimer();
@@ -156,6 +158,7 @@ namespace kandora.bot.services.discord
 
         private async Task DisplayAnswer(DiscordMessage msg)
         {
+            UpdateScores();
             var sb = new StringBuilder();
             sb.AppendLine(Resources.quizz_nanikiru_problem_over);
             sb.AppendLine(HeaderMessage);
@@ -206,6 +209,7 @@ namespace kandora.bot.services.discord
 
         public override async void OnQuestionTimeout(DiscordMessage msg)
         {
+            UpdateScores();
             await DisplayAnswer(msg).ConfigureAwait(true);
             OnQuestionEnd.Invoke(msg);
         }

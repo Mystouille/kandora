@@ -162,42 +162,6 @@ namespace kandora.bot.services.discord
             OnQuestionEnd.Invoke(msg);
         }
 
-        private void UpdateScores()
-        {
-            var timingList = WinnersAndTiming.ToList();
-            timingList.Sort((x, y) => {
-                return y.Value.CompareTo(x.Value);
-            });
-            if (Timeout == 0)
-            {
-                if (timingList.Count == 0)
-                {
-                    throw new Exception("No winner found");
-                }
-                var userId = timingList[0].Key;
-                AddPointsToUser(userId, 1);
-            }
-            else
-            {
-                for (int i = 0; i < ScoreTable.Length && i < timingList.Count(); i++)
-                {
-                    AddPointsToUser(timingList[i].Key, ScoreTable[i]);
-                }
-            }
-        }
-
-        private void AddPointsToUser(ulong userId, int nbPoints)
-        {
-            if (PlayersAndPoints.ContainsKey(userId))
-            {
-                PlayersAndPoints[userId] += nbPoints;
-            }
-            else
-            {
-                PlayersAndPoints.Add(userId, nbPoints);
-            }
-        }
-
         private string GetFinalScore()
         {
             var sb = new StringBuilder();
