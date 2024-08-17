@@ -1,13 +1,12 @@
 ﻿
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using File = System.IO.File;
-using ImageFormat = System.Drawing.Imaging.ImageFormat;
 
 namespace kandora.bot.utils
 {
@@ -25,18 +24,18 @@ namespace kandora.bot.utils
         static readonly string outputDirPath = string.Join(dirChar, Assembly.GetExecutingAssembly().Location.Split(dirChar).SkipLast(1).Append(resourcesDirName).Append(outputDirName));
 
 
-        static Bitmap GetAllTiles()
+        static Image GetAllTiles()
         {
             var inputFileStream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"{FileUtils.inputResourceLoc}.{inputfileName}");
-            var image = new Bitmap(inputFileStream);
+            var image = Image.Load(inputFileStream);
             inputFileStream.Close();
             return image;
         }
 
-        static Bitmap GetAllCalledTiles()
+        static Image GetAllCalledTiles()
         {
             var inputFileStream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"{FileUtils.inputResourceLoc}.{inputCalledfileName}");
-            var image = new Bitmap(inputFileStream);
+            var image = Image.Load(inputFileStream);
             inputFileStream.Close();
             return image;
         }
@@ -157,102 +156,62 @@ namespace kandora.bot.utils
             var nbMeldTilesCalled = meldTiles.Where(x => x.Contains('\'')).Count();
             destImageWidth += (int)((tileImgWidth * nbMeldTilesNotCalled + tileImgHeight * nbMeldTilesCalled) / shrinkFactor);
             int destImageHeight = (int)(tileImgHeight / shrinkFactor);
-            var destImage = new Bitmap(destImageWidth, destImageHeight);
-            destImage.SetResolution(resImage.HorizontalResolution, resImage.VerticalResolution);
+            var destImage = new Image<Rgba32>(destImageWidth, destImageHeight);
 
-            using (var graphics = Graphics.FromImage(destImage))
+         
+            var currentDestPosX = 0;
+            for(int idx=0;idx<tiles.Count;idx++)
             {
-                graphics.CompositingMode = CompositingMode.SourceCopy;
-                graphics.CompositingQuality = CompositingQuality.HighQuality;
-                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                graphics.SmoothingMode = SmoothingMode.HighQuality;
-                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-
-                using (var wrapMode = new ImageAttributes())
+                if (idx != 0)
                 {
-                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
-                    var currentDestPosX = 0;
-                    for(int idx=0;idx<tiles.Count;idx++)
+                    if (idx == tiles.Count - 1)
                     {
-                        if (idx != 0)
-                        {
-                            if (idx == tiles.Count - 1)
-                            {
-                                currentDestPosX += separateLastTile ? (int)(0.5 * tileImgWidth / shrinkFactor) : 0;
-                            }
-                            currentDestPosX += (int)(tileImgWidth / shrinkFactor);
-                        }
-                        var tile = tiles[idx];
-                        
-                        var srcRegion = getSourceRegion(tile);
-                        var destRegion = new Rectangle(
-                            currentDestPosX,
-                            0,
-                            (int)(tileImgWidth / shrinkFactor),
-                            (int)(tileImgHeight / shrinkFactor)
-                        );
-                        graphics.DrawImage(resImage, destRegion, srcRegion, GraphicsUnit.Pixel);
+                        currentDestPosX += separateLastTile ? (int)(0.5 * tileImgWidth / shrinkFactor) : 0;
                     }
-                    // arbitrary distance between hand and melds
-                    currentDestPosX += (int)(1.5 * tileImgWidth / shrinkFactor);
-                    for (int idx = 0; idx < meldTiles.Count; idx++)
-                    {
-
-                        var tile = meldTiles[idx];
-                        var isCalled = isTileCalled(tile);
-                        var srcRegion = getSourceRegion(tile);
-                        var srcImage = isCalled ? resImageCalled : resImage;
-                        
-                        if (isCalled)
-                        {
-                            srcRegion = getSourceRegionForCalledTile(tile);
-                        }
-                        var destRegion = new Rectangle(
-                            currentDestPosX,
-                            isCalled ? (int)((tileImgHeight-tileImgWidth)/ shrinkFactor) : 0,
-                            isCalled ? (int)(tileImgHeight / shrinkFactor) : (int)(tileImgWidth / shrinkFactor),
-                            isCalled ? (int)(tileImgWidth / shrinkFactor) :(int)(tileImgHeight / shrinkFactor)
-                        );
-                        graphics.DrawImage(srcImage, destRegion, srcRegion, GraphicsUnit.Pixel);
-                        currentDestPosX += isCalled ? (int)(tileImgHeight / shrinkFactor) : (int)(tileImgWidth / shrinkFactor);
-                    }
-
+                    currentDestPosX += (int)(tileImgWidth / shrinkFactor);
                 }
+                var tile = tiles[idx];
+                        
+                var srcRegion = getSourceRegion(tile);
+                var tileWidth = (int)(tileImgWidth / shrinkFactor);
+                var tileHeight = (int)(tileImgHeight / shrinkFactor);
+                var destRegion = new Rectangle(
+                    currentDestPosX,
+                    0,
+                    tileWidth,
+                    tileHeight
+                );
+                var tileImage = resImage.Clone(x => x.Crop(srcRegion).Resize(tileWidth, tileHeight));
+                destImage.Mutate(x=>x.DrawImage(tileImage, new Point(currentDestPosX,0),1));
             }
-            destImage.Save(outputFilePath, ImageFormat.Png);
-        }
-
-
-        /// <summary>
-        /// Resize the image to the specified width and height.
-        /// </summary>
-        /// <param name="image">The image to resize.</param>
-        /// <param name="width">The width to resize to.</param>
-        /// <param name="height">The height to resize to.</param>
-        /// <returns>The resized image.</returns>
-        public static Bitmap ResizeImage(Image image, int width, int height)
-        {
-            var destRect = new Rectangle(0, 0, width, height);
-            var destImage = new Bitmap(width, height);
-
-            destImage.SetResolution(image.HorizontalResolution, image.VerticalResolution);
-
-            using (var graphics = Graphics.FromImage(destImage))
+            // arbitrary distance between hand and melds
+            currentDestPosX += (int)(1.5 * tileImgWidth / shrinkFactor);
+            for (int idx = 0; idx < meldTiles.Count; idx++)
             {
-                graphics.CompositingMode = CompositingMode.SourceCopy;
-                graphics.CompositingQuality = CompositingQuality.HighQuality;
-                graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                graphics.SmoothingMode = SmoothingMode.HighQuality;
-                graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
 
-                using (var wrapMode = new ImageAttributes())
-                {
-                    wrapMode.SetWrapMode(WrapMode.TileFlipXY);
-                    graphics.DrawImage(image, destRect, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, wrapMode);
-                }
+                var tile = meldTiles[idx];
+                var isCalled = isTileCalled(tile);
+                var srcRegion = isCalled ? getSourceRegionForCalledTile(tile) :getSourceRegion(tile);
+                var srcImage = isCalled ? resImageCalled : resImage;
+
+                var tileWidth = isCalled ? (int)(tileImgHeight / shrinkFactor) : (int)(tileImgWidth / shrinkFactor);
+                var tileHeight = isCalled ? (int)(tileImgWidth / shrinkFactor) : (int)(tileImgHeight / shrinkFactor);
+                var destRegion = new Rectangle(
+                    currentDestPosX,
+                    isCalled ? (int)((tileImgHeight-tileImgWidth)/ shrinkFactor) : 0,
+                    tileWidth,
+                    tileHeight
+                );
+
+                var tileImage = srcImage.Clone(x => x.Crop(srcRegion).Resize(tileWidth, tileHeight));
+                destImage.Mutate(x => x.DrawImage(resImage, new Point(currentDestPosX, 0), srcRegion, 1));
+                currentDestPosX += isCalled ? (int)(tileImgHeight / shrinkFactor) : (int)(tileImgWidth / shrinkFactor);
+
             }
 
-            return destImage;
+            var outputStream = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write);
+            destImage.Save(outputStream, SixLabors.ImageSharp.Formats.Png.PngFormat.Instance);
+            outputStream.Close();
         }
     }
 }
