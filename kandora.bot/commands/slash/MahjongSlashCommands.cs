@@ -149,15 +149,17 @@ namespace kandora.bot.commands.slash
                 if (ukeireDisplay != "No")
                 {
                     var ukeires = shantenCalc.getUkeire(handStr, doras);
+                    
                     var shanten = ukeires.Item1;
                     var discardList = ukeires.Item2;
                     sb.AppendLine($"({shantenCalc.GetShantenStr(ukeires.Item1)})");
-                    foreach (var discard in discardList.Keys)
+                    foreach (var item in discardList)
                     {
+                        var discard = item.Item1;
                         var discardStr = TilesConverter.From34IdxTileToString(discard);
                         var discardEmoji = HandParser.GetHandEmojiString(discardStr, ctx.Client);
-                        var nbUkeire = discardList[discard].Item1;
-                        var ukeireListStr = TilesConverter.From34CountHandToString(discardList[discard].Item2.ToList());
+                        var nbUkeire = item.Item2.Item1;
+                        var ukeireListStr = TilesConverter.From34CountHandToString(item.Item2.Item2.ToList());
                         var ukeireListEmoji = HandParser.GetHandEmojiString(ukeireListStr, ctx.Client);
                         if(ukeireDisplay == "Full")
                         {

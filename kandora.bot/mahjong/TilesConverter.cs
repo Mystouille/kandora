@@ -358,7 +358,7 @@ namespace kandora.bot.mahjong
             var list = new List<List<int>>();
             list.Add(new List<int> { tile });
             var array = From34IxdHandTo136(list);
-            return ToString(array);
+            return ToString(array, print_aka_dora: false);
         }
 
         public static List<int> From34IxdHandTo136(List<List<int>> hand)

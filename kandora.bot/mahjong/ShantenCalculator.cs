@@ -27,7 +27,7 @@ namespace kandora.bot.mahjong
         int minShanten = 0;
 
         // return the shanten of a hand and the ukeire for each discard (except those increasing the shanten)
-        public (int, Dictionary<int, (int, int[])>) getUkeire(string handStr, string doras = "")
+        public (int, List<(int, (int, int[]))>) getUkeire(string handStr, string doras = "")
         {
             var tiles_34 = TilesConverter.FromStringTo34Count(handStr);
             var indicators_34 = TilesConverter.FromStringDoraTo34CountIndicator(doras);
@@ -78,7 +78,9 @@ namespace kandora.bot.mahjong
                 }
                 hand[discard]++;
             }
-            return (minShanten, potentialDiscards);
+            var sortedList = potentialDiscards.ToList().Select(x=>(x.Key,x.Value)).OrderByDescending(x => x.Value.Item1).ToList();
+
+            return (minShanten, sortedList);
         }
 
         // 
