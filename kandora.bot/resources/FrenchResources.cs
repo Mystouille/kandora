@@ -247,13 +247,18 @@ namespace kandora.bot.resources
         public const string mahjong_option_round_description = "Manche actuelle. Exemple: S3 [Optionel]";
         public const string mahjong_option_turn = "tour";
         public const string mahjong_option_turn_description = "Tour dans la manche [Optionel]";
+        public const string mahjong_option_ukeire = "attentes";
+        public const string mahjong_option_ukeire_No = "Non";
+        public const string mahjong_option_ukeire_Yes = "Oui";
+        public const string mahjong_option_ukeire_Full = "Complet";
+        public const string mahjong_option_ukeire_description = "Affiche le nombre d'attentes de chaque défausse (Complet affiche aussi les tuiles attendues)";
         public const string mahjong_option_thread = "fil";
         public const string mahjong_option_thread_description = "Crée un fil de discussion [Optionel]";
         public const string mahjong_nanikiru_seat = "Joueur {0}";
         public const string mahjong_nanikiru_round = "Pendant {0}";
         public const string mahjong_nanikiru_turn = "Tour {0}";
         public const string mahjong_nanikiru_dora = "Dora {0}";
-        public const string mahjong_nanikiru_wwyd = "Que feriez vous?";
+        public const string mahjong_nanikiru_wwyd = "Nanikiru?";
         public const string mahjong_nanikiru_discussHere = "Discutez-en ici!";
         public const string mahjong_info_description = "Affiche les améliorations d'une main";
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using C = kandora.bot.mahjong.Constants;
+using kandora.bot.models;
 
 namespace kandora.bot.mahjong
 {
@@ -317,10 +318,46 @@ namespace kandora.bot.mahjong
             return From136to34count(results);
         }
 
+        public static int[] FromStringDoraTo34CountIndicator(string str, bool has_aka_dora = false)
+        {
+            var results = FromStringTo34Count(str, has_aka_dora);
+            var indicators = new int[34];
+            foreach (var i in Enumerable.Range(0, 9))
+            {
+                indicators[i] = results[(i+1)%9];
+            }
+            foreach (var i in Enumerable.Range(9, 9))
+            {
+                indicators[i] = results[9 + (i + 1) % 9];
+            }
+            foreach (var i in Enumerable.Range(18, 9))
+            {
+                indicators[i] = results[18 + (i + 1) % 9];
+            }
+            foreach (var i in Enumerable.Range(27, 7))
+            {
+                indicators[i] = results[27 + (i + 1) % 7];
+            }
+            return indicators;
+        }
+
 
         public static string From34IdxHandToString(List<List<int>> hand)
         {
             var array = From34IxdHandTo136(hand);
+            return ToString(array);
+        }
+        public static string From34CountHandToString(List<int> hand)
+        {
+            var array = From34countTo136(hand);
+            return ToString(array, print_aka_dora: false);
+        }
+
+        public static string From34IdxTileToString(int tile)
+        {
+            var list = new List<List<int>>();
+            list.Add(new List<int> { tile });
+            var array = From34IxdHandTo136(list);
             return ToString(array);
         }
 

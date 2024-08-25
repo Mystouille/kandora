@@ -3,6 +3,7 @@ using System.Linq;
 using System;
 using C = kandora.bot.mahjong.Constants;
 using kandora.bot.resources;
+using kandora.bot.mahjong.handcalc.yaku.yakuman;
 
 namespace kandora.bot.mahjong
 {
@@ -24,6 +25,61 @@ namespace kandora.bot.mahjong
         int nbIsolatedTiles = 0;
 
         int minShanten = 0;
+
+        // return the shanten of a hand and the ukeire for each discard (except those increasing the shanten)
+        public (int, Dictionary<int, (int, int[])>) getUkeire(string handStr, string doras = "")
+        {
+            var tiles_34 = TilesConverter.FromStringTo34Count(handStr);
+            var indicators_34 = TilesConverter.FromStringDoraTo34CountIndicator(doras);
+            //get min shanten for each discard
+            int minShanten = 8;
+            var potentialDiscards = new Dictionary<int, (int, int[])>();
+            var hand = ((int[])tiles_34.Clone()).ToList();
+            for (var i = 0; i < tiles_34.Length; i++)
+            {
+                if(hand[i] == 0)
+                {
+                    continue;
+                }
+                hand[i]--;
+                var shanten = GetNbShanten(hand.ToArray());
+                if(shanten == minShanten)
+                {
+                    potentialDiscards.Add(i, (0, new int[34]));
+                } else if(shanten < minShanten)
+                {
+                    minShanten = shanten;
+                    potentialDiscards.Clear();
+                    potentialDiscards.Add(i, (0, new int[34]));
+                }
+                hand[i]++;
+            }
+            foreach (var discard in potentialDiscards.Keys)
+            {
+                hand[discard]--;
+                for (var i = 0; i<34; i++)
+                {
+                    var potentialUkeire = 4 - hand[i] - indicators_34[i];
+                    if (potentialUkeire <= 0)
+                    {
+                        continue;
+                    }
+                    hand[i]++;
+                    var shanten = GetNbShanten(hand.ToArray());
+                    hand[i]--;
+                    if (shanten < minShanten)
+                    {
+                        var count = potentialDiscards[discard].Item1;
+                        var ukeire = potentialDiscards[discard].Item2;
+                        count += potentialUkeire;
+                        ukeire[i]++;
+                        potentialDiscards[discard] = (count, ukeire);
+                    }
+                }
+                hand[discard]++;
+            }
+            return (minShanten, potentialDiscards);
+        }
 
         // 
         //         Return the minimum shanten for provided hand,
@@ -53,7 +109,7 @@ namespace kandora.bot.mahjong
         // 
         //         Return a pretty text for a given shanten
         //    
-        private string GetShantenStr(int shanten)
+        public string GetShantenStr(int shanten)
         {
             if (shanten < -1)
             {

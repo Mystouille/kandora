@@ -244,6 +244,11 @@ namespace kandora.bot.resources
         public const string mahjong_option_round_description = "Current round. Example: S3 [Optional]";
         public const string mahjong_option_turn = "turn";
         public const string mahjong_option_turn_description = "Current turn [Optional]";
+        public const string mahjong_option_ukeire = "waits";
+        public const string mahjong_option_ukeire_No = "No";
+        public const string mahjong_option_ukeire_Yes = "Yes";
+        public const string mahjong_option_ukeire_Full = "Full";
+        public const string mahjong_option_ukeire_description = "Displays the number of waits of each discard (Full also displays the waits)";
         public const string mahjong_option_thread = "thread";
         public const string mahjong_option_thread_description = "Create a thread about it [Optionel]";
         public const string mahjong_nanikiru_seat = "Player {0}";

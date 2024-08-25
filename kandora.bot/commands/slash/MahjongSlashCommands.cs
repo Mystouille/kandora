@@ -10,9 +10,8 @@ using System.Linq;
 using kandora.bot.mahjong;
 using System.Text;
 using System.IO;
-using kandora.bot.http;
-using kandora.bot.mahjong.handcalc.yaku.yakuman;
 using kandora.bot.services.nanikiru;
+using System.Threading;
 
 namespace kandora.bot.commands.slash
 {
@@ -96,7 +95,12 @@ namespace kandora.bot.commands.slash
             [Option(Resources.mahjong_option_seat, Resources.mahjong_option_seat_description)] string seat = "",
             [Option(Resources.mahjong_option_round, Resources.mahjong_option_round_description)] string round = "",
             [Option(Resources.mahjong_option_turn, Resources.mahjong_option_turn_description)] string turn = "",
-            [Option(Resources.mahjong_option_thread, Resources.mahjong_option_thread_description)] bool createThread = false)
+            [Option(Resources.mahjong_option_thread, Resources.mahjong_option_thread_description)] bool createThread = false,
+            [Choice(Resources.mahjong_option_ukeire_No,"No")]
+            [Choice(Resources.mahjong_option_ukeire_Yes,"Yes")]
+            [Choice(Resources.mahjong_option_ukeire_Full,"Full")]
+            [Option(Resources.mahjong_option_ukeire, Resources.mahjong_option_ukeire_description)] string ukeireDisplay = "No"
+            )
         {
             if (handStr == "x")
             {
@@ -116,26 +120,63 @@ namespace kandora.bot.commands.slash
                 var shantenCalc = new ShantenCalculator();
                 var nbTiles = hand34.Sum();
                 var sb = new StringBuilder();
-                if(discards != "")
+                if (discards != "")
                 {
                     optionsEmoji = HandParser.GetHandEmojiCodes(discards, ctx.Client).Distinct();
                 }
                 var context = getHandContext(seat, round, turn, dorasEmoji);
+                sb.AppendLine(Resources.mahjong_nanikiru_wwyd);
                 sb.AppendLine(context);
-                //sb.AppendLine(Resources.mahjong_nanikiru_wwyd);
+
 
                 var stream = ImageToolbox.GetImageFromTiles(closedHand, melds, separateLastTile: true);
                 var rb = new DiscordInteractionResponseBuilder().WithContent(sb.ToString());
                 await ctx.CreateResponseAsync(InteractionResponseType.ChannelMessageWithSource, rb.AddFile(stream)).ContinueWith(precedent => stream.Dispose()).ConfigureAwait(true);
                 var msg = await ctx.Interaction.GetOriginalResponseAsync().ConfigureAwait(true);
+
+                DiscordThreadChannel thread = null;
+                if (createThread)
+                {
+                    thread = await ctx.Channel.CreateThreadAsync(msg, $"nanikiru {handStr}", AutoArchiveDuration.Day).ConfigureAwait(true);
+                    msg = await thread.SendMessageAsync(Resources.mahjong_nanikiru_discussHere).ConfigureAwait(true);
+                }
                 foreach (var emoji in optionsEmoji)
                 {
                     await msg.CreateReactionAsync(emoji).ConfigureAwait(true);
                 }
-                if (createThread)
+
+                sb.Clear();
+                if (ukeireDisplay != "No")
                 {
-                    var thread = await ctx.Channel.CreateThreadAsync(msg, $"nanikiru {handStr}", AutoArchiveDuration.Day).ConfigureAwait(true);
-                    await thread.SendMessageAsync(Resources.mahjong_nanikiru_discussHere).ConfigureAwait(true);
+                    var ukeires = shantenCalc.getUkeire(handStr, doras);
+                    var shanten = ukeires.Item1;
+                    var discardList = ukeires.Item2;
+                    sb.AppendLine($"({shantenCalc.GetShantenStr(ukeires.Item1)})");
+                    foreach (var discard in discardList.Keys)
+                    {
+                        var discardStr = TilesConverter.From34IdxTileToString(discard);
+                        var discardEmoji = HandParser.GetHandEmojiString(discardStr, ctx.Client);
+                        var nbUkeire = discardList[discard].Item1;
+                        var ukeireListStr = TilesConverter.From34CountHandToString(discardList[discard].Item2.ToList());
+                        var ukeireListEmoji = HandParser.GetHandEmojiString(ukeireListStr, ctx.Client);
+                        if(ukeireDisplay == "Full")
+                        {
+                            sb.AppendLine($"{discardEmoji}:\t{nbUkeire} ({ukeireListEmoji})");
+                        }
+                        else
+                        {
+                            sb.Append($" {discardEmoji}x{nbUkeire}");
+                        }
+                    }
+
+                    if (createThread && thread != null)
+                    {
+                        await thread.SendMessageAsync(sb.ToString()).ConfigureAwait(true);
+                    }
+                    else
+                    {
+                        await msg.RespondAsync(sb.ToString()).ConfigureAwait(true);
+                    }
                 }
             }
             catch (Exception e)
