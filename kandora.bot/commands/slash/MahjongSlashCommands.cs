@@ -148,26 +148,42 @@ namespace kandora.bot.commands.slash
                 sb.Clear();
                 if (ukeireDisplay != "No")
                 {
-                    var ukeires = shantenCalc.getUkeire(handStr, doras);
-                    
-                    var shanten = ukeires.Item1;
-                    var discardList = ukeires.Item2;
-                    sb.AppendLine($"({shantenCalc.GetShantenStr(ukeires.Item1)})");
-                    foreach (var item in discardList)
+                    var ukeires = shantenCalc.getUkeire(closedHand, doras);
+
+                    var shanten = shantenCalc.GetNbShanten(TilesConverter.FromStringTo34Count(closedHand));
+                    var shantenStr = shantenCalc.GetShantenStr(shanten);
+                    sb.AppendLine($"({shantenStr})");
+                    if (shanten >= 0)
                     {
-                        var discard = item.Item1;
-                        var discardStr = TilesConverter.From34IdxTileToString(discard);
-                        var discardEmoji = HandParser.GetHandEmojiString(discardStr, ctx.Client);
-                        var nbUkeire = item.Item2.Item1;
-                        var ukeireListStr = TilesConverter.From34CountHandToString(item.Item2.Item2.ToList());
-                        var ukeireListEmoji = HandParser.GetHandEmojiString(ukeireListStr, ctx.Client);
-                        if(ukeireDisplay == "Full")
+                        foreach (var item in ukeires)
                         {
-                            sb.AppendLine($"{discardEmoji}:\t{nbUkeire} ({ukeireListEmoji})");
-                        }
-                        else
-                        {
-                            sb.Append($" {discardEmoji}x{nbUkeire}");
+                            var discard = item.Item1;
+                            var discardStr = TilesConverter.From34IdxTileToString(discard);
+                            var discardEmoji = HandParser.GetHandEmojiString(discardStr, ctx.Client);
+                            var nbUkeire = item.Item2.Item1;
+                            var ukeireListStr = TilesConverter.From34CountHandToString(item.Item2.Item2.Select(x => x.Item1).ToList());
+                            var ukeireListEmoji = HandParser.GetHandEmojiString(ukeireListStr, ctx.Client);
+                            if (ukeireDisplay == "Full")
+                            {
+                                var ukeireSb = new StringBuilder();
+                                var nbGoodTenpaiUkeire = 0;
+                                for (var idx = 0; idx < item.Item2.Item2.Length; idx++)
+                                {
+                                    if (item.Item2.Item2[idx].Item1 == 0) {
+                                        continue;
+                                    }
+                                    var ukeireStr = TilesConverter.From34IdxTileToString(idx);
+                                    var ukeireEmoji = HandParser.GetHandEmojiString(ukeireStr, ctx.Client);
+                                    var nbGoodUkeireForDraw = item.Item2.Item2[idx].Item2;
+                                    ukeireSb.Append($"{ukeireEmoji}{(nbGoodUkeireForDraw > 0 ? "\\*" : "")}");
+                                    nbGoodTenpaiUkeire += nbGoodUkeireForDraw;
+                                }
+                                sb.AppendLine($"{discardEmoji}:\t{nbUkeire}({nbGoodTenpaiUkeire}\\*) [{ukeireSb.ToString()}]");
+                            }
+                            else
+                            {
+                                sb.Append($" {discardEmoji}x{nbUkeire}");
+                            }
                         }
                     }
 

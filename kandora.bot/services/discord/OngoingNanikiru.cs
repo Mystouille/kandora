@@ -53,7 +53,7 @@ namespace kandora.bot.services.discord
         private NanikiruGenerator Generator { get; }
         private readonly Dictionary<ulong, ISet<ulong>> usersAnswers;
         private NanikiruQuestion SpecificQuestionData { get; set; }
-        public ulong Answer { get => QuestionData.AnswerEmojis.First().Id; }
+        public List<ulong> CorrectAnswers { get => QuestionData.AnswerEmojis.Select(x=>x.Id).ToList(); }
         public ISet<ulong> Options { get => QuestionData.OptionEmojis.Select(emoji => emoji.Id).ToHashSet(); }
         public int QuizzProgress { get; }
         public FileStream Image { get; }
@@ -81,8 +81,8 @@ namespace kandora.bot.services.discord
             {
                 return false;
             }
-
-            var isWinner = usersAnswers.Count == 1 && usersAnswers[userId].Contains(Answer);
+            var correctUserAnswer = usersAnswers[userId].Where(userAnswer => CorrectAnswers.Contains(userAnswer)).ToList();
+            var isWinner = correctUserAnswer.Count() == CorrectAnswers.Count && usersAnswers[userId].Count == CorrectAnswers.Count;
 
             var endTime = DateTime.Now;
             var duration = endTime - StartTime;
@@ -167,7 +167,7 @@ namespace kandora.bot.services.discord
             await msg.DeleteAllReactionsAsync().ConfigureAwait(true);
 
             sb = new StringBuilder();
-            sb.AppendLine("# " + Resources.quizz_nanikiru_answer + " ||" + SpecificQuestionData.AnswerEmoji+"||");
+            sb.AppendLine("# " + Resources.quizz_nanikiru_answer + " ||" + SpecificQuestionData.AnswerEmojis.Select(x=>x.ToString()).Aggregate((x,y)=>x+""+y) +"||");
 
             var winners = String.Join(", ", WinnersAndTiming.ToList().Select(winner =>
                 Client.GetUserAsync(winner.Key).Result.Mention));

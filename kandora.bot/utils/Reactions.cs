@@ -19,5 +19,7 @@ namespace kandora.bot.utils
         public const string WOW = ":kaaviwow:";
         public const string EYES = ":eyes:";
         public const string PLUS = ":heavy_plus_sign:";
+        public const string Riichi = ":riichi:";
+        public const string Kan = ":kan:";
     }
 }

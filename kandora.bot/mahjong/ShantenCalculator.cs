@@ -27,15 +27,19 @@ namespace kandora.bot.mahjong
         int minShanten = 0;
 
         // return the shanten of a hand and the ukeire for each discard (except those increasing the shanten)
-        public (int, List<(int, (int, int[]))>) getUkeire(string handStr, string doras = "")
+        public List<(int, (int, (int,int)[]))> getUkeire(string handStr, string doras = "")
         {
-            var tiles_34 = TilesConverter.FromStringTo34Count(handStr);
-            var indicators_34 = TilesConverter.FromStringDoraTo34CountIndicator(doras);
+            var tiles_34 = TilesConverter.FromStringTo34Count(handStr, has_aka_dora: true).ToList();
+            var indicators_34 = TilesConverter.FromStringDoraTo34CountIndicator(doras).ToList();
+            return getUkeire(tiles_34, indicators_34);
+        }
+        public List<(int, (int, (int,int)[]))> getUkeire(List<int> tiles_34, List<int> indicators_34)
+        {
             //get min shanten for each discard
             int minShanten = 8;
-            var potentialDiscards = new Dictionary<int, (int, int[])>();
-            var hand = ((int[])tiles_34.Clone()).ToList();
-            for (var i = 0; i < tiles_34.Length; i++)
+            var potentialDiscards = new Dictionary<int, (int, (int, int)[])>();
+            var hand = tiles_34.ToList();
+            for (var i = 0; i < tiles_34.Count; i++)
             {
                 if(hand[i] == 0)
                 {
@@ -45,12 +49,12 @@ namespace kandora.bot.mahjong
                 var shanten = GetNbShanten(hand.ToArray());
                 if(shanten == minShanten)
                 {
-                    potentialDiscards.Add(i, (0, new int[34]));
+                    potentialDiscards.Add(i, (0, new (int, int)[34]));
                 } else if(shanten < minShanten)
                 {
                     minShanten = shanten;
                     potentialDiscards.Clear();
-                    potentialDiscards.Add(i, (0, new int[34]));
+                    potentialDiscards.Add(i, (0, new (int, int)[34]));
                 }
                 hand[i]++;
             }
@@ -66,21 +70,27 @@ namespace kandora.bot.mahjong
                     }
                     hand[i]++;
                     var shanten = GetNbShanten(hand.ToArray());
-                    hand[i]--;
                     if (shanten < minShanten)
                     {
+                        var isGoodTenpai = false;
+                        if(shanten == 0)
+                        {
+                            var tenpaiUkeire = getUkeire(hand, indicators_34);
+                            isGoodTenpai = tenpaiUkeire.Where(discard => discard.Item2.Item1 >=6).Count() > 0;
+                        }
                         var count = potentialDiscards[discard].Item1;
                         var ukeire = potentialDiscards[discard].Item2;
                         count += potentialUkeire;
-                        ukeire[i]++;
+                        ukeire[i] = (1, isGoodTenpai ? potentialUkeire : 0);
                         potentialDiscards[discard] = (count, ukeire);
                     }
+                    hand[i]--;
                 }
                 hand[discard]++;
             }
             var sortedList = potentialDiscards.ToList().Select(x=>(x.Key,x.Value)).OrderByDescending(x => x.Value.Item1).ToList();
 
-            return (minShanten, sortedList);
+            return sortedList;
         }
 
         // 
@@ -119,7 +129,7 @@ namespace kandora.bot.mahjong
             }
             if (shanten == -1)
             {
-                return "AGARI";
+                return "TSUMO";
             }
             if (shanten == 0)
             {

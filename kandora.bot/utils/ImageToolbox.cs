@@ -55,7 +55,7 @@ namespace kandora.bot.utils
         {
             List<string> tiles = HandParser.SplitTiles(hand);
             List<string> meldTiles = HandParser.SplitTiles(melds);
-            var shouldSeparateLastTile = separateLastTile && tiles.Count == 14;
+            var shouldSeparateLastTile = separateLastTile && tiles.Count + meldTiles.Count == 14;
             var outputFilePath = string.Join(dirChar, new string[] { outputDirPath, GetFileName(hand, melds, shouldSeparateLastTile) });
             if (!ImageExists(hand, melds, shouldSeparateLastTile))
             {
@@ -154,13 +154,14 @@ namespace kandora.bot.utils
             int destImageWidth = (int)(tileImgWidth * (tiles.Count + lastTileSeparation + handMeldsSeparation) / shrinkFactor);
             var nbMeldTilesNotCalled = meldTiles.Where(x => !x.Contains('\'')).Count();
             var nbMeldTilesCalled = meldTiles.Where(x => x.Contains('\'')).Count();
-            destImageWidth += (int)((tileImgWidth * nbMeldTilesNotCalled + tileImgHeight * nbMeldTilesCalled) / shrinkFactor);
+            var imageOffset = (int)(tileImgWidth / (2 * shrinkFactor));
+            destImageWidth += (int)((tileImgWidth * nbMeldTilesNotCalled + tileImgHeight * nbMeldTilesCalled) / shrinkFactor) + imageOffset;
             int destImageHeight = (int)(tileImgHeight / shrinkFactor);
             var destImage = new Image<Rgba32>(destImageWidth, destImageHeight);
 
-         
-            var currentDestPosX = 0;
-            for(int idx=0;idx<tiles.Count;idx++)
+
+            var currentDestPosX = imageOffset;
+            for (int idx=0;idx<tiles.Count;idx++)
             {
                 if (idx != 0)
                 {
@@ -191,11 +192,12 @@ namespace kandora.bot.utils
 
                 var tile = meldTiles[idx];
                 var isCalled = isTileCalled(tile);
-                var srcRegion = isCalled ? getSourceRegionForCalledTile(tile) :getSourceRegion(tile);
+                var srcRegion = isCalled ? getSourceRegionForCalledTile(tile) : getSourceRegion(tile);
                 var srcImage = isCalled ? resImageCalled : resImage;
 
                 var tileWidth = isCalled ? (int)(tileImgHeight / shrinkFactor) : (int)(tileImgWidth / shrinkFactor);
                 var tileHeight = isCalled ? (int)(tileImgWidth / shrinkFactor) : (int)(tileImgHeight / shrinkFactor);
+                var currentDestPosY = isCalled ? tileWidth-tileHeight : 0;
                 var destRegion = new Rectangle(
                     currentDestPosX,
                     isCalled ? (int)((tileImgHeight-tileImgWidth)/ shrinkFactor) : 0,
@@ -204,7 +206,7 @@ namespace kandora.bot.utils
                 );
 
                 var tileImage = srcImage.Clone(x => x.Crop(srcRegion).Resize(tileWidth, tileHeight));
-                destImage.Mutate(x => x.DrawImage(resImage, new Point(currentDestPosX, 0), srcRegion, 1));
+                destImage.Mutate(x => x.DrawImage(tileImage, new Point(currentDestPosX, currentDestPosY), 1));
                 currentDestPosX += isCalled ? (int)(tileImgHeight / shrinkFactor) : (int)(tileImgWidth / shrinkFactor);
 
             }

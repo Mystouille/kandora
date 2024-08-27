@@ -6,6 +6,8 @@ using kandora.bot.services.nanikiru;
 using kandora.bot.resources;
 using DSharpPlus.Entities;
 using System.Text;
+using kandora.bot.mahjong;
+using Microsoft.VisualBasic;
 
 namespace kandora.bot.services.discord.problems
 {
@@ -42,12 +44,51 @@ namespace kandora.bot.services.discord.problems
 
             foreach (var problem in problemGroup)
             {
-                var optionEmojis = HandParser.GetHandEmojiCodes(problem.Hand, Client).Distinct();
-                if (!withTimeout) {
-                    optionEmojis = optionEmojis.Append(DiscordEmoji.FromName(Client, Reactions.EYES));
+                var basicHand = HandParser.GetSimpleHand(problem.Hand);
+                var closedHand = basicHand[0];
+                var melds = basicHand[1];
+
+                var optionEmojis = HandParser.GetHandEmojiCodes(closedHand, Client).ToList();
+
+                var source = problem.Source;
+
+                var answerEmojis = new List<DiscordEmoji> { HandParser.GetEmojiCode(problem.Answer.Substring(0, 2), Client) };
+                var riichiEmoji = DiscordEmoji.FromName(Client, Reactions.Riichi);
+                var kanEmoji = DiscordEmoji.FromName(Client, Reactions.Kan);
+                if (problem.Answer.Length > 2 && problem.Answer[2] == 'r')
+                {
+                    answerEmojis.Add(riichiEmoji);
+                    optionEmojis.Add(riichiEmoji);
                 }
-                var answerEmoji = HandParser.GetEmojiCode(problem.Answer, Client);
-                var stream = ImageToolbox.GetImageFromTiles(problem.Hand, separateLastTile: true);
+                else
+                {
+                    var shantenCalc = new ShantenCalculator();
+                    var shanten = shantenCalc.GetNbShanten(TilesConverter.FromStringTo34Count(closedHand));
+                    if (melds.Length == 0 && shanten == 0)
+                    {
+                        optionEmojis.Add(riichiEmoji);
+                    }
+                }
+                if (problem.Answer.Length > 2 && problem.Answer[2] == 'k')
+                {
+                    answerEmojis.Add(kanEmoji);
+                    optionEmojis.Add(kanEmoji);
+                }
+                else
+                {
+                    var tiles = TilesConverter.FromStringTo34Count(closedHand);
+                    if(tiles.Where(x=> x == 4).Count() > 0) {
+                        optionEmojis.Add(kanEmoji);
+                    }
+                }
+
+                if (!withTimeout)
+                {
+                    optionEmojis.Add(DiscordEmoji.FromName(Client, Reactions.EYES));
+                }
+
+
+                var stream = ImageToolbox.GetImageFromTiles(closedHand, melds, separateLastTile: true);
                 var explanation = problem.ExplanationEng;
                 if(Resources.cultureInfoStr == "fr-FR" && problem.ExplanationFr.Length > 0)
                 {
@@ -69,7 +110,7 @@ namespace kandora.bot.services.discord.problems
                     source: problem.Source,
                     explanation: explanation,
                     optionEmojis: optionEmojis,
-                    answerEmoji: answerEmoji,
+                    answerEmojis: answerEmojis,
                     message: Resources.quizz_nanikiru_questionMessage + "\n" + header,
                     messageWithTimeout: Resources.quizz_nanikiru_questionMessageWithTime + "\n" + header
                 ));

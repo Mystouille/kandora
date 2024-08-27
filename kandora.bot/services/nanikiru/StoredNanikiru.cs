@@ -13,7 +13,7 @@ namespace kandora.bot.services.nanikiru
         private StoredNanikiru() {
             Problems = NanikiruParser.ParseNanikiruProblems();
             UzakuProblems = Problems.Where(problem => problem.Source.StartsWith("300-") || problem.Source.StartsWith("301-")).ToList();
-            RemainingUzakuProblems = Enumerable.Range(0, (UzakuProblems.Count/3) -1).ToList();
+            RemainingUzakuProblems = UzakuProblems.Count > 0 ? Enumerable.Range(0, (UzakuProblems.Count/3) -1).ToList() : new List<int>();
         }
         private static StoredNanikiru instance = null;
         public static StoredNanikiru Instance
