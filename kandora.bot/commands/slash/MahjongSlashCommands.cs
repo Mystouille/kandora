@@ -144,13 +144,22 @@ namespace kandora.bot.commands.slash
                 {
                     await msg.CreateReactionAsync(emoji).ConfigureAwait(true);
                 }
+                var shanten = shantenCalc.GetNbShanten(TilesConverter.FromStringTo34Count(closedHand));
+                if (melds.Length == 0 && shanten == 0)
+                {
+                    await msg.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, Reactions.Riichi)).ConfigureAwait(true);
+                }
+                var tiles = TilesConverter.FromStringTo34Count(closedHand);
+                if (tiles.Where(x => x == 4).Count() > 0)
+                {
+                    await msg.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, Reactions.Kan)).ConfigureAwait(true);
+                }
 
                 sb.Clear();
                 if (ukeireDisplay != "No")
                 {
                     var ukeires = shantenCalc.getUkeire(closedHand, doras);
 
-                    var shanten = shantenCalc.GetNbShanten(TilesConverter.FromStringTo34Count(closedHand));
                     var shantenStr = shantenCalc.GetShantenStr(shanten);
                     sb.AppendLine($"({shantenStr})");
                     if (shanten >= 0)
