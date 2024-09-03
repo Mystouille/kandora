@@ -155,54 +155,17 @@ namespace kandora.bot.commands.slash
                     await msg.CreateReactionAsync(DiscordEmoji.FromName(ctx.Client, Reactions.Kan)).ConfigureAwait(true);
                 }
 
-                sb.Clear();
                 if (ukeireDisplay != "No")
                 {
-                    var ukeires = shantenCalc.getUkeire(closedHand, doras);
-
-                    var shantenStr = shantenCalc.GetShantenStr(shanten);
-                    sb.AppendLine($"({shantenStr})");
-                    if (shanten >= 0)
-                    {
-                        foreach (var item in ukeires)
-                        {
-                            var discard = item.Item1;
-                            var discardStr = TilesConverter.From34IdxTileToString(discard);
-                            var discardEmoji = HandParser.GetHandEmojiString(discardStr, ctx.Client);
-                            var nbUkeire = item.Item2.Item1;
-                            var ukeireListStr = TilesConverter.From34CountHandToString(item.Item2.Item2.Select(x => x.Item1).ToList());
-                            var ukeireListEmoji = HandParser.GetHandEmojiString(ukeireListStr, ctx.Client);
-                            if (ukeireDisplay == "Full")
-                            {
-                                var ukeireSb = new StringBuilder();
-                                var nbGoodTenpaiUkeire = 0;
-                                for (var idx = 0; idx < item.Item2.Item2.Length; idx++)
-                                {
-                                    if (item.Item2.Item2[idx].Item1 == 0) {
-                                        continue;
-                                    }
-                                    var ukeireStr = TilesConverter.From34IdxTileToString(idx);
-                                    var ukeireEmoji = HandParser.GetHandEmojiString(ukeireStr, ctx.Client);
-                                    var nbGoodUkeireForDraw = item.Item2.Item2[idx].Item2;
-                                    ukeireSb.Append($"{ukeireEmoji}{(nbGoodUkeireForDraw > 0 ? "\\*" : "")}");
-                                    nbGoodTenpaiUkeire += nbGoodUkeireForDraw;
-                                }
-                                sb.AppendLine($"{discardEmoji}:\t{nbUkeire}({nbGoodTenpaiUkeire}\\*) [{ukeireSb.ToString()}]");
-                            }
-                            else
-                            {
-                                sb.Append($" {discardEmoji}x{nbUkeire}");
-                            }
-                        }
-                    }
+                    string shantenDisplay = shantenCalc.getUkeireDisplayForHand(closedHand, doras, ctx.Client, ukeireDisplay, discards);
 
                     if (createThread && thread != null)
                     {
-                        await thread.SendMessageAsync(sb.ToString()).ConfigureAwait(true);
+                        await thread.SendMessageAsync(shantenDisplay).ConfigureAwait(true);
                     }
                     else
                     {
-                        await msg.RespondAsync(sb.ToString()).ConfigureAwait(true);
+                        await msg.RespondAsync(shantenDisplay).ConfigureAwait(true);
                     }
                 }
             }

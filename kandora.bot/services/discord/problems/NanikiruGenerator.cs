@@ -106,6 +106,8 @@ namespace kandora.bot.services.discord.problems
 
                 questions.Add(new NanikiruQuestion(
                     image: stream,
+                    hand: problem.Hand,
+                    doras: problem.Dora,
                     ukeire: problem.Ukeire,
                     source: problem.Source,
                     explanation: explanation,

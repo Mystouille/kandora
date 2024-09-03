@@ -1,4 +1,5 @@
-﻿using kandora.bot.utils;
+﻿using kandora.bot.mahjong;
+using kandora.bot.utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,7 +41,7 @@ namespace kandora.bot.services.nanikiru
         {
             if (RemainingUzakuProblems.Count == 0)
             {
-                RemainingUzakuProblems = Enumerable.Range(0, (UzakuProblems.Count/3) -1).ToList();
+                RemainingUzakuProblems = Enumerable.Range(0, (UzakuProblems.Count/3)).ToList();
             }
             int startIndex = RemainingUzakuProblems.ElementAt(Random.Next(RemainingUzakuProblems.Count));
             RemainingUzakuProblems.Remove(startIndex);

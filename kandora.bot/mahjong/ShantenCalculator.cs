@@ -4,6 +4,10 @@ using System;
 using C = kandora.bot.mahjong.Constants;
 using kandora.bot.resources;
 using kandora.bot.mahjong.handcalc.yaku.yakuman;
+using kandora.bot.utils;
+using System.Text;
+using DSharpPlus.SlashCommands;
+using DSharpPlus;
 
 namespace kandora.bot.mahjong
 {
@@ -26,69 +30,154 @@ namespace kandora.bot.mahjong
 
         int minShanten = 0;
 
+
+        public string getUkeireDisplayForHand(string hand, string doras, DiscordClient client, string ukeireDisplay = "Yes", string discards = "")
+        {
+
+            var sb = new StringBuilder();
+            var ukeires = this.getUkeire(hand, doras, discards);
+            var oldShanten = -2;
+
+            var shanten = this.GetNbShanten(TilesConverter.FromStringTo34Count(hand));
+            if(shanten == -1)
+            {
+                sb.AppendLine("Tsumo?");
+            }
+            sb.Append($"Ukeire:");
+            foreach (var discard in ukeires)
+            {
+                var tileDiscarded = discard.TileDiscarded;
+                var discardStr = TilesConverter.From34IdxTileToString(tileDiscarded);
+                var discardEmoji = HandParser.GetHandEmojiString(discardStr, client);
+                var nbUkeire = discard.NbAcceptedTiles;
+                var ukeireListStr = TilesConverter.From34CountHandToString(discard.DrawnTileData.ToList().Select(x=>x.IsAccepted?1:0).ToList());
+                var ukeireListEmoji = HandParser.GetHandEmojiString(ukeireListStr, client);
+                if (oldShanten != discard.Shanten)
+                {
+                    var shantenStr = this.GetShantenStr(discard.Shanten);
+                    sb.AppendLine($"\n- {shantenStr}:");
+                    oldShanten = discard.Shanten;
+                }
+                if (ukeireDisplay == "Full")
+                {
+                    var ukeireSb = new StringBuilder();
+                    for (var tileDrawn = 0; tileDrawn < discard.DrawnTileData.Length; tileDrawn++)
+                    {
+                        if (!discard.DrawnTileData[tileDrawn].IsAccepted)
+                        {
+                            continue;
+                        }
+                        var ukeireStr = TilesConverter.From34IdxTileToString(tileDrawn);
+                        var ukeireEmoji = HandParser.GetHandEmojiString(ukeireStr, client);
+                        var leadToGoodTenpai = discard.DrawnTileData[tileDrawn].LeadToGoodTenpai;
+                        ukeireSb.Append($"{ukeireEmoji}{(leadToGoodTenpai ? "\\*" : "")}");
+                    }
+                    sb.AppendLine($"{discardEmoji}:\t{nbUkeire}({discard.NbAcceptedTilesForGoodTenpai}\\*) [{ukeireSb.ToString()}]");
+                }
+                else
+                {
+                    sb.Append($"{discardEmoji}x{nbUkeire} ");
+                }
+            }
+            return sb.ToString();
+        }
+
         // return the shanten of a hand and the ukeire for each discard (except those increasing the shanten)
-        public List<(int, (int, (int,int)[]))> getUkeire(string handStr, string doras = "")
+        public List<AcceptanceData> getUkeire(string handStr, string doras = "", string forcedTiles = "")
         {
             var tiles_34 = TilesConverter.FromStringTo34Count(handStr, has_aka_dora: true).ToList();
             var indicators_34 = TilesConverter.FromStringDoraTo34CountIndicator(doras).ToList();
-            return getUkeire(tiles_34, indicators_34);
+            var forcedTiles_34 = TilesConverter.FromStringTo34Count(forcedTiles, has_aka_dora: true).ToList();
+            return getUkeire(tiles_34, indicators_34, forcedTiles_34);
         }
-        public List<(int, (int, (int,int)[]))> getUkeire(List<int> tiles_34, List<int> indicators_34)
+
+        public List<AcceptanceData> getUkeire(List<int> tiles_34, List<int> indicators_34, List<int> forcedTiles_34)
         {
-            //get min shanten for each discard
             int minShanten = 8;
-            var potentialDiscards = new Dictionary<int, (int, (int, int)[])>();
+            var potentialDiscards = new List<AcceptanceData>();
             var hand = tiles_34.ToList();
+
+            //get min shanten for each discard and init return struct
             for (var i = 0; i < tiles_34.Count; i++)
             {
-                if(hand[i] == 0)
+                if (hand[i] == 0)
                 {
                     continue;
                 }
                 hand[i]--;
                 var shanten = GetNbShanten(hand.ToArray());
-                if(shanten == minShanten)
+                if (shanten == minShanten)
                 {
-                    potentialDiscards.Add(i, (0, new (int, int)[34]));
-                } else if(shanten < minShanten)
+                    potentialDiscards.Add(new AcceptanceData(i, shanten));
+                }
+                else if (shanten < minShanten)
                 {
                     minShanten = shanten;
                     potentialDiscards.Clear();
-                    potentialDiscards.Add(i, (0, new (int, int)[34]));
+                    potentialDiscards.Add(new AcceptanceData(i, shanten));
                 }
                 hand[i]++;
             }
-            foreach (var discard in potentialDiscards.Keys)
+
+            //if ukeire display is forced, fix the return struct
+            if (forcedTiles_34.Count > 0)
             {
-                hand[discard]--;
-                for (var i = 0; i<34; i++)
+                potentialDiscards.Clear();
+                for (var i = 0; i < forcedTiles_34.Count; i++)
                 {
-                    var potentialUkeire = 4 - hand[i] - indicators_34[i];
-                    if (potentialUkeire <= 0)
+                    if (hand[i] == 0 || forcedTiles_34[i] == 0)
                     {
                         continue;
                     }
-                    hand[i]++;
+                    hand[i]--;
                     var shanten = GetNbShanten(hand.ToArray());
-                    if (shanten < minShanten)
+                    potentialDiscards.Add(new AcceptanceData(i, shanten));
+                    hand[i]++;
+                }
+            }
+
+            for (int i = 0; i<potentialDiscards.Count; i++)
+            {
+                var discardData = potentialDiscards[i];
+                var tileDiscarded = discardData.TileDiscarded;
+                hand[tileDiscarded]--;
+                for (var tileDrawn = 0; tileDrawn<34; tileDrawn++)
+                {
+                    var potentialUkeire = 4 - hand[tileDrawn] - indicators_34[tileDrawn];
+                    if (potentialUkeire <= 0)
+                    {
+                        discardData.DrawnTileData[tileDrawn] = new DrawnTileInfo(false, false);
+                        continue;
+                    }
+                    hand[tileDrawn]++;
+                    var shantenAfterDraw = GetNbShanten(hand.ToArray());
+                    // iterate only over the draws that improve the hand
+                    if (shantenAfterDraw < discardData.Shanten)
                     {
                         var isGoodTenpai = false;
-                        if(shanten == 0)
+                        //add additional "good tenpai info" if it's a tenpai
+                        if(shantenAfterDraw == 0)
                         {
-                            var tenpaiUkeire = getUkeire(hand, indicators_34);
-                            isGoodTenpai = tenpaiUkeire.Where(discard => discard.Item2.Item1 >=6).Count() > 0;
+                            var tenpaiUkeire = getUkeire(hand, indicators_34, new List<int>());
+                            isGoodTenpai = tenpaiUkeire.Where(acceptance => acceptance.NbAcceptedTiles >= 6).Count() > 0;
                         }
-                        var count = potentialDiscards[discard].Item1;
-                        var ukeire = potentialDiscards[discard].Item2;
-                        count += potentialUkeire;
-                        ukeire[i] = (1, isGoodTenpai ? potentialUkeire : 0);
-                        potentialDiscards[discard] = (count, ukeire);
+                        discardData.AddNbAcceptedTiles(potentialUkeire);
+                        if (isGoodTenpai)
+                        {
+                            discardData.AddNbAcceptedTilesForGoodTenpai(potentialUkeire);
+                        }
+                        discardData.DrawnTileData[tileDrawn] = new DrawnTileInfo(true, isGoodTenpai);
                     }
-                    hand[i]--;
+                    else
+                    {
+                        discardData.DrawnTileData[tileDrawn] = new DrawnTileInfo(false, false);
+                    }
+                    hand[tileDrawn]--;
                 }
-                hand[discard]++;
+                hand[tileDiscarded]++;
             }
-            var sortedList = potentialDiscards.ToList().Select(x=>(x.Key,x.Value)).OrderByDescending(x => x.Value.Item1).ToList();
+            //sort by shanten and ukeire
+            var sortedList = potentialDiscards.ToList().OrderByDescending(x => 9000 - x.Shanten*1000 + x.NbAcceptedTiles).ToList();
 
             return sortedList;
         }

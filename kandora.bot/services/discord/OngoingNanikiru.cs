@@ -1,5 +1,6 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
+using kandora.bot.mahjong;
 using kandora.bot.resources;
 using kandora.bot.services.discord.problems;
 using kandora.bot.utils;
@@ -182,8 +183,19 @@ namespace kandora.bot.services.discord
                 sb.AppendLine(String.Format(Resources.quizz_nanikiru_losers, losers));
             }
 
-            sb.AppendLine(getDisplayText(SpecificQuestionData.Ukeire, Client, "### ", spoiler: true));
-            sb.AppendLine(getDisplayText(SpecificQuestionData.Explanation, Client, "## ", spoiler: true));
+            if (!SpecificQuestionData.Ukeire.StartsWith("#"))
+            {
+                sb.AppendLine(getDisplayText(SpecificQuestionData.Ukeire, Client, "### ", spoiler: true));
+            }
+            else
+            {
+                var basicHand = HandParser.GetSimpleHand(SpecificQuestionData.Hand);
+                var closedHand = basicHand[0];
+                var shantenCalc = new ShantenCalculator();
+                var ukeireStr = shantenCalc.getUkeireDisplayForHand(closedHand, SpecificQuestionData.Doras, Client, discards: SpecificQuestionData.Ukeire.Split('#')[1]);
+                sb.AppendLine("||"+ukeireStr+"||");
+            }
+            sb.AppendLine(getDisplayText(SpecificQuestionData.Explanation, Client, "### ", spoiler: true));
 
             sb.AppendLine("### " + SpecificQuestionData.Source);
 
