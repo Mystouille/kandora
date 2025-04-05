@@ -24,13 +24,18 @@ namespace kandora.bot.resources
         public const string admin_endLeague_leagueEnded = "{0} est terminée";
         public const string admin_editLeague_description = "Change les paramètre de la ligue";
         public const string admin_editLeague_leagueChanged = "La ligue actuelle a été modifiée";
+        public const string admin_addSub_description = "Ajoute une substitution de joueur pour la ligue actuelle";
+        public const string admin_addBotSub_description = "Ajoute une substitution de joueur par un bot pour la ligue actuelle";
         public const string admin_addSub_userOut = "absent";
         public const string admin_addSub_userOut_description = "Le joueur qui était absent (@ mention ou nom d'invité)";
         public const string admin_addSub_userIn = "remplacant";
         public const string admin_addSub_userIn_description = "Le joueur qui l'a remplacé (@ mention ou nom d'invité)";
+        public const string admin_addSub_botIn = "botId";
+        public const string admin_addSub_botIn_description = "L'id RC de l'IA qui l'a remplacé";
         public const string admin_addSub_gameId = "gameId";
         public const string admin_addSub_gameId_description = "L'id de partie Riici City (log id)";
         public const string admin_addSub_playerHasBeenSubbed = "Le joueur {0} a été remplacé par {1} pour la partie {2}";
+        public const string admin_addBotSub_playerHasBeenSubbed = "Le joueur {0} a été remplacé par le bot {1} pour la partie {2}";
         public const string admin_createTeam_description = "Crée une équipe pour la ligue actuelle";
         public const string admin_createTeam_teamName = "teamName";
         public const string admin_createTeam_teamName_description = "Le nom de l'équipe (sans espace ni caractères spéciaux)";
@@ -135,6 +140,9 @@ namespace kandora.bot.resources
         public const string admin_seeLeagueRanking_description = "Affiche le classement de la ligue en cours";
         public const string admin_seeLeagueRanking_displayInChat = "displayInChat";
         public const string admin_seeLeagueRanking_displayInChat_description = "Affiche le score publiquement";
+        public const string admin_seeLeagueDelta_description = "Affiche les résultats combinés des N dernères parties";
+        public const string admin_seeLeagueDelta_numberOfGames = "numberOfGames";
+        public const string admin_seeLeagueDelta_numberOfGames_description = "Si spécifié, montre le delta sur les N dernieres parties";
 
 
         //Leaderboard commands

@@ -21,5 +21,7 @@ namespace kandora.bot.utils
         public const string PLUS = ":heavy_plus_sign:";
         public const string Riichi = ":riichi:";
         public const string Kan = ":kan:";
+        public const string Up = ":arrow_up:";
+        public const string Down = ":arrow_down:";
     }
 }

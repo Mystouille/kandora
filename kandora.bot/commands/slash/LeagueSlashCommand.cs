@@ -39,7 +39,8 @@ namespace kandora.bot.commands.slash
 
         [SlashCommand("seeranking", Resources.admin_seeLeagueRanking_description)]
         public async Task SeeRanking(InteractionContext ctx,
-            [Option(Resources.admin_seeLeagueRanking_displayInChat, Resources.admin_seeLeagueRanking_displayInChat_description)] bool displayInChat=false)
+            [Option(Resources.admin_seeLeagueRanking_displayInChat, Resources.admin_seeLeagueRanking_displayInChat_description)] bool displayInChat=false,
+            [Option(Resources.admin_seeLeagueDelta_numberOfGames, Resources.admin_seeLeagueDelta_numberOfGames_description)] double nbGames = 0)
         {
             try{
                 await ctx.DeferAsync(ephemeral: !displayInChat);
@@ -61,13 +62,21 @@ namespace kandora.bot.commands.slash
                 var cutoffDate = league.FinalsCutoffDate;
                 var logs = await RiichiCityService.Instance.GetAllTournamentLogs(league.Id);
 
-                var teamsScoreDoubled = new Dictionary<int,int>();
+                var teamsScoreDoubled = new Dictionary<int, int>();
+                var teamsDelta = new Dictionary<int, int>();
                 var userToTeam = new Dictionary<string, int>();
                 foreach ( var team in teams)
                 {
                     teamsScoreDoubled.Add(team.teamId, 0);
+                    teamsDelta.Add(team.teamId, 0);
                 }
                 var teamsAfterCutoff = new List<int>();
+
+                logs.Sort(delegate (GameData a, GameData b) {
+                    return b.Rounds[0].Hands[0].Time.Ticks.CompareTo(a.Rounds[0].Hands[0].Time.Ticks);
+                });
+                var latestGameIndex = 0;
+
                 logs.ForEach(log => {
                     var isBeforeCutoff = cutoffDate == null ? false : log.Rounds[0].Hands[0].Time < cutoffDate;
                     var cutoffMultiplier = isBeforeCutoff ? 1 : 2;
@@ -76,10 +85,11 @@ namespace kandora.bot.commands.slash
                     gameEndData.ToImmutableList().ForEach(playerData =>
                     {
                         var teamId = 0;
-                        var userId = users.Values.Where(u => u.RiichiCityId == playerData.UserId || u.RiichiCitySecondaryId == playerData.UserId).First().Id;
+                        var foundUsers = users.Values.Where(u => u.RiichiCityId == playerData.UserId || u.RiichiCitySecondaryId == playerData.UserId);
+                        var userId = foundUsers.Any() ? foundUsers.First().Id : playerData.UserId.ToString();
                         var sub = subList.Where(s => s.gameId == log.GameId && s.inId == userId);
                         var actualPlayerId = sub.Count() == 0 ? userId : sub.First().outId;
-                        var actualScore = sub.Count() == 0 ? playerData.FinalScore : -300;
+                        var actualScore = sub.Count() == 0 ? playerData.FinalScore : -450;
 
                         if (!userToTeam.ContainsKey(actualPlayerId))
                         {
@@ -94,13 +104,17 @@ namespace kandora.bot.commands.slash
                         {
                             teamsAfterCutoff.Add(teamId);
                         }
-
+                        if (latestGameIndex < nbGames)
+                        {
+                            teamsDelta[teamId] = teamsDelta[teamId] + actualScore;
+                        }
                         teamsScoreDoubled[teamId] = teamsScoreDoubled[teamId] + actualScore * cutoffMultiplier;
                     });
+                    latestGameIndex++;
                 });
                 var rankingData = new List<(string, int)>();
-                var sortedData = teamsScoreDoubled.Select(kv => (teams.Where(t => t.teamId == kv.Key).First().fancyName, ((float)(kv.Value)) / 2)).OrderByDescending(x => x.Item2);
-                var finalistData = teamsScoreDoubled.Where(ts=>teamsAfterCutoff.Contains(ts.Key)).Select(kv => (teams.Where(t => t.teamId == kv.Key).First().fancyName, ((float)(kv.Value)) / 2)).OrderByDescending(x => x.Item2);
+                var sortedData = teamsScoreDoubled.Select(kv => (teams.Where(t => t.teamId == kv.Key).First().fancyName, ((float)(kv.Value)) / 2, teamsDelta[kv.Key])).OrderByDescending(x => x.Item2);
+                var finalistData = teamsScoreDoubled.Where(ts=>teamsAfterCutoff.Contains(ts.Key)).Select(kv => (teams.Where(t => t.teamId == kv.Key).First().fancyName, ((float)(kv.Value)) / 2, teamsDelta[kv.Key])).OrderByDescending(x => x.Item2);
                 var sb = new StringBuilder();
                 sb.AppendLine("Live ranking!");
 
@@ -108,16 +122,16 @@ namespace kandora.bot.commands.slash
                 if (!cutoffHappened)
                 {
                     sortedData.ToList().GetRange(0, 4).ForEach(x => {
-                        sb.AppendLine($"`{formatScore(x.Item2)}`  \t| {x.Item1}");
+                        sb.AppendLine($"`{formatScore(x.Item2 * 2)}`\t| {formatDelta(x.Item3, nbGames>0)}  {x.Item1}");
                     });
 
                     sb.AppendLine("\n");
                     sortedData.ToList().GetRange(4, sortedData.Count() - 4).ForEach(x => {
-                        sb.AppendLine($"`{formatScore(x.Item2 * 2)}`  \t| {x.Item1}");
+                        sb.AppendLine($"`{formatScore(x.Item2 * 2)}`\t| {formatDelta(x.Item3, nbGames > 0)}  {x.Item1}");
                     });
                 } else {
                     finalistData.ToList().GetRange(0, 4).ForEach(x => {
-                        sb.AppendLine($"`{formatScore(x.Item2)}`  \t| {x.Item1}");
+                        sb.AppendLine($"`{formatScore(x.Item2)}`\t| {formatDelta(x.Item3, nbGames > 0)}  {x.Item1}");
                     });
                 }
                 var wb = new DiscordWebhookBuilder().WithContent(sb.ToString());
@@ -132,12 +146,32 @@ namespace kandora.bot.commands.slash
 
         private string formatScore(float score)
         {
+            if (score == 0)
+            {
+                return $"`{"0".PadLeft(7, ' ')}`";
+            }
             var floatScore = (float)(score) / 10;
             var absScore = floatScore > 0 ? floatScore : floatScore * -1;
-            var stringScore = absScore.ToString("0.00");
-            return $"`{(floatScore > 0 ? "+" : "-")}{stringScore.PadLeft(6,' ')}`";
+            var stringScore = absScore.ToString("0.0");
+            return $"`{(floatScore > 0 ? "+" : "-")}{stringScore.PadLeft(6, ' ')}`";
         }
 
-        
+        private string formatDelta(int score, bool displayDelta)
+        {
+            if (!displayDelta)
+            {
+                return "";
+            }
+            if (score == 0)
+            {
+                return $"`{"".PadLeft(7, ' ')}`\t|";
+            }
+            var floatScore = (float)(score) / 10;
+            var absScore = floatScore > 0 ? floatScore : floatScore * -1;
+            var stringScore = absScore.ToString("0.0");
+            return $"`{(floatScore > 0 ? "+" : "-")}{stringScore.PadLeft(6, ' ')}`\t|";
+        }
+
+
     }
 }

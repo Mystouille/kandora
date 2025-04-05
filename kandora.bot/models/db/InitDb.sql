@@ -144,7 +144,7 @@ CREATE TABLE LeagueSub (
     rcGameId  VARCHAR (40) NOT NULL,
     outId  VARCHAR(20) NOT NULL,
     inId   VARCHAR(20) NOT NULL,
+    isBot   BOOL default false NOT NULL,
     FOREIGN KEY (leagueId) REFERENCES League (Id),
-    FOREIGN KEY (outId) REFERENCES DiscordUser (Id),
-    FOREIGN KEY (inId) REFERENCES DiscordUser (Id)
+    FOREIGN KEY (outId) REFERENCES DiscordUser (Id)
 );

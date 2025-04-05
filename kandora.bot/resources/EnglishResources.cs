@@ -22,13 +22,18 @@ namespace kandora.bot.resources
         public const string admin_endLeague_leagueEnded = "{0} just ended";
         public const string admin_editLeague_description = "Changes league parameters";
         public const string admin_editLeague_leagueChanged = "The current league has been modified";
+        public const string admin_addSub_description = "Add a sub for a game in the current league";
+        public const string admin_addBotSub_description = "Add a sub but a bot for a game in the current league";
         public const string admin_addSub_userOut = "subbedOutUser";
         public const string admin_addSub_userOut_description = "The user that is subbed out (@ mention or guest name)";
         public const string admin_addSub_userIn = "subbedInUser";
         public const string admin_addSub_userIn_description = "The user that is subbed in (@ mention or guest name)";
+        public const string admin_addSub_botIn = "botId";
+        public const string admin_addSub_botIn_description = "The id of the bot that is subbed in";
         public const string admin_addSub_gameId = "gameId";
         public const string admin_addSub_gameId_description = "The Riichi City game id (log id)";
         public const string admin_addSub_playerHasBeenSubbed = "Player {0} has been subbed by {1} for game id {2}";
+        public const string admin_addBotSub_playerHasBeenSubbed = "Player {0} has been subbed by bot {1} for game id {2}";
         public const string admin_startLeague_cutoff = "finalsCutoff";
         public const string admin_startLeague_cutoff_description = "Start date of the finals phase (yyyy/MM/dd)";
         public const string admin_createTeam_description = "Create a team for the current league";
@@ -133,8 +138,11 @@ namespace kandora.bot.resources
         public const string admin_seeLeagueRanking_description = "Displays the ranking of the ongoing league";
         public const string admin_seeLeagueRanking_displayInChat = "displayInChat";
         public const string admin_seeLeagueRanking_displayInChat_description = "Displays the ranking publicly";
-        
-        
+        public const string admin_seeLeagueDelta_description = "Displays the combined results of the last N games.";
+        public const string admin_seeLeagueDelta_numberOfGames = "numberOfGames";
+        public const string admin_seeLeagueDelta_numberOfGames_description = "If spêcified, shows the delta over the last N games";
+
+
         //Leaderboard commands
         public const string leaderboard_groupDescription = "Leaderboard commands";
         public const string leaderboard_register_description = "Register to the leaderboard or change your info";

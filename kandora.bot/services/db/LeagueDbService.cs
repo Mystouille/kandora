@@ -40,6 +40,7 @@ namespace kandora.bot.services
         public static string rcGameIdCol = "rcGameId";
         public static string outIdCol = "outId";
         public static string inIdCol = "inId";
+        public static string isBotCol = "isBot";
 
 
 
@@ -308,7 +309,7 @@ namespace kandora.bot.services
             throw new DbConnectionException();
         }
 
-        public static void AddSubToGame(string rcGameId, int leagueId, string outId, string inId)
+        public static void AddSubToGame(string rcGameId, int leagueId, string outId, string inId, bool isBot)
         {
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
@@ -316,12 +317,13 @@ namespace kandora.bot.services
                 using var command = new NpgsqlCommand("", dbCon.Connection);
                 command.Connection = dbCon.Connection;
                 command.CommandType = CommandType.Text;
-                command.CommandText = $"INSERT INTO {leagueSubTableName} ({leagueIdCol}, {rcGameIdCol}, {outIdCol}, {inIdCol}) VALUES (@leagueId, @rcGameId, @outId, @inId);";
+                command.CommandText = $"INSERT INTO {leagueSubTableName} ({leagueIdCol}, {rcGameIdCol}, {outIdCol}, {inIdCol}, {isBotCol}) VALUES (@leagueId, @rcGameId, @outId, @inId, @isBotSub);";
 
                 command.Parameters.AddWithValue("@leagueId", NpgsqlDbType.Integer, leagueId);
                 command.Parameters.AddWithValue("@rcGameId", NpgsqlDbType.Varchar, rcGameId);
                 command.Parameters.AddWithValue("@outId", NpgsqlDbType.Varchar, outId);
                 command.Parameters.AddWithValue("@inId", NpgsqlDbType.Varchar, inId);
+                command.Parameters.AddWithValue("@isBotSub", NpgsqlDbType.Boolean, isBot);
                 command.CommandType = CommandType.Text;
 
                 command.ExecuteNonQuery();
@@ -330,15 +332,15 @@ namespace kandora.bot.services
             throw new DbConnectionException();
         }
 
-        public static List<(string gameId, string outId, string inId)> GetSubs(int leagueId)
+        public static List<(string gameId, string outId, string inId, bool isBot)> GetSubs(int leagueId)
         {
-             var subList = new List<(string gameId, string outId, string inId)>();
+             var subList = new List<(string gameId, string outId, string inId, bool isBot)>();
 
             var dbCon = DBConnection.Instance();
             if (dbCon.IsConnect())
             {
                 using var command = new NpgsqlCommand("", dbCon.Connection);
-                command.CommandText = $"SELECT {rcGameIdCol}, {outIdCol}, {inIdCol} FROM {leagueSubTableName} " +
+                command.CommandText = $"SELECT {rcGameIdCol}, {outIdCol}, {inIdCol}, {isBotCol} FROM {leagueSubTableName} " +
                     $"WHERE {leagueIdCol} = @leagueId;";
                 command.CommandType = CommandType.Text;
                 command.Parameters.AddWithValue("@leagueId", NpgsqlDbType.Integer, leagueId);
@@ -349,7 +351,8 @@ namespace kandora.bot.services
                     string gameId = reader.GetString(0);
                     string outId = reader.GetString(1);
                     string inId = reader.GetString(2);
-                    subList.Add((gameId, outId, inId));
+                    bool isBot = reader.GetBoolean(3);
+                    subList.Add((gameId, outId, inId, isBot));
                 }
                 reader.Close();
                 return subList;
